@@ -7,15 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="ExternalServices\" />
-    <Folder Include="Migrations\" />
-    <Folder Include="Persistence\Configurations\" />
-    <Folder Include="Persistence\Repositories\" />
+    <Compile Remove="ExternalServices\**" />
+    <Compile Remove="Migrations\**" />
+    <Compile Remove="Persistence\**" />
+    <EmbeddedResource Remove="ExternalServices\**" />
+    <EmbeddedResource Remove="Migrations\**" />
+    <EmbeddedResource Remove="Persistence\**" />
+    <None Remove="ExternalServices\**" />
+    <None Remove="Migrations\**" />
+    <None Remove="Persistence\**" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TechHaven.Application\TechHaven.Application.csproj" />
-    <ProjectReference Include="..\TechHaven.Domain\TechHaven.Domain.csproj" />
   </ItemGroup>
 
 </Project>
