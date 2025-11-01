@@ -21,8 +21,4 @@
     <None Remove="ValueObjects\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Entities\" />
-  </ItemGroup>
-
 </Project>
