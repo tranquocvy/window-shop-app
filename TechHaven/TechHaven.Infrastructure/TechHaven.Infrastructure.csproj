@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ExternalServices\**" />
+    <Compile Remove="Migrations\**" />
+    <Compile Remove="Persistence\**" />
+    <EmbeddedResource Remove="ExternalServices\**" />
+    <EmbeddedResource Remove="Migrations\**" />
+    <EmbeddedResource Remove="Persistence\**" />
+    <None Remove="ExternalServices\**" />
+    <None Remove="Migrations\**" />
+    <None Remove="Persistence\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TechHaven.Application\TechHaven.Application.csproj" />
+  </ItemGroup>
+
+</Project>

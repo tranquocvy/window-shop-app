@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TechHaven.Presentation.WinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "TechHaven.Presentation.WinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

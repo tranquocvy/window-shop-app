@@ -1,0 +1,6 @@
+@TechHaven.Presentation.WebAPI_HostAddress = http://localhost:5207
+
+GET {{TechHaven.Presentation.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
