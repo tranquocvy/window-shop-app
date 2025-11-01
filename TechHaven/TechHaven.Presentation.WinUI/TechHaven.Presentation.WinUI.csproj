@@ -12,16 +12,6 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Helpers\**" />
-    <Compile Remove="Services\**" />
-    <EmbeddedResource Remove="Helpers\**" />
-    <EmbeddedResource Remove="Services\**" />
-    <None Remove="Helpers\**" />
-    <None Remove="Services\**" />
-    <Page Remove="Helpers\**" />
-    <Page Remove="Services\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />

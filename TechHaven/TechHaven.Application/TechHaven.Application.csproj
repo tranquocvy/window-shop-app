@@ -7,24 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Common\**" />
-    <Compile Remove="DTOs\**" />
-    <Compile Remove="Interfaces\**" />
-    <Compile Remove="Mappings\**" />
-    <Compile Remove="UseCases\**" />
-    <EmbeddedResource Remove="Common\**" />
-    <EmbeddedResource Remove="DTOs\**" />
-    <EmbeddedResource Remove="Interfaces\**" />
-    <EmbeddedResource Remove="Mappings\**" />
-    <EmbeddedResource Remove="UseCases\**" />
-    <None Remove="Common\**" />
-    <None Remove="DTOs\**" />
-    <None Remove="Interfaces\**" />
-    <None Remove="Mappings\**" />
-    <None Remove="UseCases\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\TechHaven.Domain\TechHaven.Domain.csproj" />
     <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
   </ItemGroup>
