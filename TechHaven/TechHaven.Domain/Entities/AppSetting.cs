@@ -9,7 +9,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents an application setting that can be configured and stored in the database.
 /// </summary>
-[Table("AppSettings")]
 public class AppSetting
 {
     /// <summary>
@@ -120,11 +119,6 @@ public static class SettingKeys
     /// Key for store name setting.
     /// </summary>
     public const string StoreName = "Store.Name";
-
-    /// <summary>
-    /// Key for store phone number setting.
-    /// </summary>
-    public const string StorePhone = "Store.Phone";
 
     /// <summary>
     /// Key for store address setting.

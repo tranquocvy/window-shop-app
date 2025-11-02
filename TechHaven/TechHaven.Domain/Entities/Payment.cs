@@ -74,10 +74,5 @@ public enum PaymentMethod
     /// <summary>
     /// Credit card payment method.
     /// </summary>
-    CreditCard = 3,
-
-    /// <summary>
-    /// Installment payment method.
-    /// </summary>
-    Installment = 4
+    CreditCard = 3
 }

@@ -6,7 +6,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a line item detail in an order, containing product and quantity information.
 /// </summary>
-[Table("OrderDetails")]
 public class OrderDetail
 {
     /// <summary>

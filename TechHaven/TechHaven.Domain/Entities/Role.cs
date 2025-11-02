@@ -7,7 +7,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a role in the system that defines user permissions and access levels.
 /// </summary>
-[Table("Roles")]
 public class Role
 {
     /// <summary>
@@ -23,7 +22,6 @@ public class Role
     [Required(ErrorMessage = "Role name is required.")]
     [MaxLength(100, ErrorMessage = "Role name cannot exceed 100 characters.")]
     [Display(Name = "Role Name")]
-    [StringLength(100)]
     public string RoleName { get; set; } = string.Empty;
 
     /// <summary>

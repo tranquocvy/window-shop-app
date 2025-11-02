@@ -8,7 +8,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents an order in the system.
 /// </summary>
-[Table("Orders")]
 public class Order
 {
     /// <summary>
@@ -55,7 +54,7 @@ public class Order
     [Column(TypeName = "decimal(18,2)")]
     [Display(Name = "Subtotal")]
     [Range(0, double.MaxValue, ErrorMessage = "Subtotal cannot be negative.")]
-    public decimal Subtotal { get; set; }
+    public decimal SubtotalAmount { get; set; }
 
     /// <summary>
     /// Gets or sets the discount amount applied to the order.
@@ -133,30 +132,4 @@ public enum OrderStatus
     /// Order has been returned.
     /// </summary>
     Returned = 5
-}
-
-/// <summary>
-/// Defines the available payment methods.
-/// </summary>
-public enum PaymentMethod
-{
-    /// <summary>
-    /// Cash payment method.
-    /// </summary>
-    Cash = 1,
-
-    /// <summary>
-    /// Bank transfer payment method.
-    /// </summary>
-    BankTransfer = 2,
-
-    /// <summary>
-    /// Credit card payment method.
-    /// </summary>
-    CreditCard = 3,
-
-    /// <summary>
-    /// Installment payment method.
-    /// </summary>
-    Installment = 4
 }
