@@ -29,10 +29,9 @@ public class Payment
     /// Gets or sets the payment method used (e.g., Cash, Card, BankTransfer).
     /// </summary>
     [Required(ErrorMessage = "Payment method is required.")]
-    [MaxLength(50, ErrorMessage = "Payment method cannot exceed 50 characters.")]
     [Display(Name = "Payment Method")]
     [StringLength(50)]
-    public string PaymentMethod { get; set; } = string.Empty;
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
 
     /// <summary>
     /// Gets or sets the amount paid.
@@ -55,4 +54,30 @@ public class Payment
     /// Gets or sets the order navigation property.
     /// </summary>
     public Order? Order { get; set; }
+}
+
+/// <summary>
+/// Defines the available payment methods.
+/// </summary>
+public enum PaymentMethod
+{
+    /// <summary>
+    /// Cash payment method.
+    /// </summary>
+    Cash = 1,
+
+    /// <summary>
+    /// Bank transfer payment method.
+    /// </summary>
+    BankTransfer = 2,
+
+    /// <summary>
+    /// Credit card payment method.
+    /// </summary>
+    CreditCard = 3,
+
+    /// <summary>
+    /// Installment payment method.
+    /// </summary>
+    Installment = 4
 }
