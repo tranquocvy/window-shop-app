@@ -64,6 +64,20 @@ public class User
     public bool HasSeenGuide { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the date and time when the user was created.
+    /// </summary>
+    [Display(Name = "Created At")]
+    [DataType(DataType.DateTime)]
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    /// <summary>
+    /// Gets or sets the date and time when the user was activated.
+    /// </summary>
+    [Display(Name = "Activated At")]
+    [DataType(DataType.DateTime)]
+    public DateTime ActivatedAt { get; set; }
+
+    /// <summary>
     /// Gets or sets the role navigation property.
     /// </summary>
     public Role? Role { get; set; }

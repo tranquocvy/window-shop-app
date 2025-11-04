@@ -7,7 +7,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a payment transaction for an order.
 /// </summary>
-[Table("Payments")]
 public class Payment
 {
     /// <summary>

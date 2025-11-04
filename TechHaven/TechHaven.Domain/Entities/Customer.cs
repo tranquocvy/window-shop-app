@@ -23,7 +23,6 @@ public class Customer
     [Required(ErrorMessage = "Customer name is required.")]
     [MaxLength(150, ErrorMessage = "Customer name cannot exceed 150 characters.")]
     [Display(Name = "Customer Name")]
-    [StringLength(150)]
     public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>

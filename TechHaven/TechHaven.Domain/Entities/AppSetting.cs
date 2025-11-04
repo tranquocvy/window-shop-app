@@ -76,7 +76,7 @@ public class AppSetting
     [Display(Name = "Updated At")]
     [DataType(DataType.DateTime)]
     // [Comment("Timestamp of the last update to this configuration")]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }
 
 /// <summary>
