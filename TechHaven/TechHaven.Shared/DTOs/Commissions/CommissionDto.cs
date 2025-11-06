@@ -1,0 +1,24 @@
+namespace TechHaven.Shared.DTOs.Commissions;
+
+public class CommissionDto
+{
+    public int CommissionId { get; set; }
+
+    public int UserId { get; set; }
+
+    public string? UserFullName { get; set; }
+
+    public int Month { get; set; }
+
+    public int Year { get; set; }
+
+    public decimal TotalSales { get; set; }
+
+    public decimal CommissionRate { get; set; }
+
+    public decimal CommissionAmount { get; set; }
+
+    public string? Note { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+}
