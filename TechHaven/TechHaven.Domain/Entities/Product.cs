@@ -8,7 +8,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a product in the inventory.
 /// </summary>
-[Table("Products")]
 public class Product
 {
     /// <summary>
@@ -22,9 +21,8 @@ public class Product
     /// Gets or sets the name of the product.
     /// </summary>
     [Required(ErrorMessage = "Product name is required.")]
-    [MaxLength(200, ErrorMessage = "Product name cannot exceed 200 characters.")]
     [Display(Name = "Product Name")]
-    [StringLength(200)]
+    [StringLength(200, ErrorMessage = "Product name cannot exceed 200 characters.")]
     public string ProductName { get; set; } = string.Empty;
 
     /// <summary>
@@ -38,6 +36,7 @@ public class Product
     /// <summary>
     /// Gets or sets the brand name of the product.
     /// </summary>
+    [Required(ErrorMessage = "Brand name is required.")]
     [MaxLength(100, ErrorMessage = "Brand name cannot exceed 100 characters.")]
     [Display(Name = "Brand Name")]
     public string BrandName { get; set; } = string.Empty;

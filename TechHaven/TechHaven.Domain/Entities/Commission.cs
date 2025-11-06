@@ -6,7 +6,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a commission record for a user based on their sales performance.
 /// </summary>
-[Table("Commissions")]
 public class Commission
 {
     /// <summary>
@@ -61,11 +60,24 @@ public class Commission
     /// <summary>
     /// Gets or sets the calculated commission amount based on total sales and rate.
     /// </summary>
-    [Required(ErrorMessage = "Commission amount is required.")]
-    [Column(TypeName = "decimal(18,2)")]
+    [NotMapped]
     [Display(Name = "Commission Amount")]
-    [Range(0, double.MaxValue, ErrorMessage = "Commission amount cannot be negative.")]
-    public decimal CommissionAmount { get; set; }
+    public decimal CommissionAmount => TotalSales * CommissionRate / 100;
+
+    /// <summary>
+    /// Gets or sets the note of the commission.
+    /// </summary>
+    [MaxLength(255, ErrorMessage = "Note cannot exceed 255 characters.")]
+    [Display(Name = "Note")]
+    [DataType(DataType.MultilineText)]
+    public string? Note { get; set; }
+
+    /// <summary>
+    /// Gets or sets the date and time when the commission record was created.
+    /// </summary>
+    [Display(Name = "Created At")]
+    [DataType(DataType.DateTime)]
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     /// <summary>
     /// Gets or sets the user navigation property.

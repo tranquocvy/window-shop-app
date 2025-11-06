@@ -8,7 +8,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a customer in the system.
 /// </summary>
-[Table("Customers")]
 public class Customer
 {
     /// <summary>
@@ -24,7 +23,6 @@ public class Customer
     [Required(ErrorMessage = "Customer name is required.")]
     [MaxLength(150, ErrorMessage = "Customer name cannot exceed 150 characters.")]
     [Display(Name = "Customer Name")]
-    [StringLength(150)]
     public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
@@ -75,6 +73,21 @@ public class Customer
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     /// <summary>
+    /// Gets or sets the date and time when the customer was last updated.
+    /// </summary>
+    [Display(Name = "Updated At")]
+    [DataType(DataType.DateTime)]
+    public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the note of the commission.
+    /// </summary>
+    [MaxLength(255, ErrorMessage = "Note cannot exceed 255 characters.")]
+    [Display(Name = "Note")]
+    [DataType(DataType.MultilineText)]
+    public string? Note { get; set; }
+
+    /// <summary>
     /// Gets or sets the collection of orders associated with this customer.
     /// </summary>
     public ICollection<Order>? Orders { get; set; }
@@ -91,12 +104,12 @@ public enum CustomerType
     Regular = 1,
 
     /// <summary>
-    /// VIP customer type with special privileges.
-    /// </summary>
-    VIP = 2,
-
-    /// <summary>
     /// Student customer type with discounts.
     /// </summary>
-    Student = 3
+    Student = 2,
+
+    /// <summary>
+    /// VIP customer type with special privileges.
+    /// </summary>
+    VIP = 3
 }

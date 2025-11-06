@@ -7,7 +7,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a product category in the system.
 /// </summary>
-[Table("Categories")]
 public class Category
 {
     /// <summary>
@@ -23,13 +22,12 @@ public class Category
     [Required(ErrorMessage = "Category name is required.")]
     [MaxLength(100, ErrorMessage = "Category name cannot exceed 100 characters.")]
     [Display(Name = "Category Name")]
-    [StringLength(100)]
     public string CategoryName { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the description of the category.
     /// </summary>
-    [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+    [MaxLength(255, ErrorMessage = "Description cannot exceed 255 characters.")]
     [Display(Name = "Description")]
     [DataType(DataType.MultilineText)]
     public string? Description { get; set; }

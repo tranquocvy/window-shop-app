@@ -7,7 +7,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a payment transaction for an order.
 /// </summary>
-[Table("Payments")]
 public class Payment
 {
     /// <summary>
@@ -74,10 +73,5 @@ public enum PaymentMethod
     /// <summary>
     /// Credit card payment method.
     /// </summary>
-    CreditCard = 3,
-
-    /// <summary>
-    /// Installment payment method.
-    /// </summary>
-    Installment = 4
+    CreditCard = 3
 }

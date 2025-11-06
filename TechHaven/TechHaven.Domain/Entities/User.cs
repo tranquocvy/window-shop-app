@@ -7,7 +7,6 @@ namespace TechHaven.Domain.Entities;
 /// <summary>
 /// Represents a user (employee) in the system.
 /// </summary>
-[Table("Users")]
 public class User
 {
     /// <summary>
@@ -21,9 +20,8 @@ public class User
     /// Gets or sets the full name of the user.
     /// </summary>
     [Required(ErrorMessage = "Full name is required.")]
-    [MaxLength(150, ErrorMessage = "Full name cannot exceed 150 characters.")]
     [Display(Name = "Full Name")]
-    [StringLength(150)]
+    [StringLength(150, ErrorMessage = "Full name cannot exceed 150 characters.")]
     public string UserFullName { get; set; } = string.Empty;
 
     /// <summary>
@@ -64,6 +62,20 @@ public class User
     /// </summary>
     [Display(Name = "Has Seen Guide")]
     public bool HasSeenGuide { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the date and time when the user was created.
+    /// </summary>
+    [Display(Name = "Created At")]
+    [DataType(DataType.DateTime)]
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    /// <summary>
+    /// Gets or sets the date and time when the user was activated.
+    /// </summary>
+    [Display(Name = "Activated At")]
+    [DataType(DataType.DateTime)]
+    public DateTime ActivatedAt { get; set; }
 
     /// <summary>
     /// Gets or sets the role navigation property.
