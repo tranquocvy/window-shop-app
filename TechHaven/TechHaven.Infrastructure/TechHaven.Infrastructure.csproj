@@ -7,19 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ExternalServices\**" />
-    <Compile Remove="Migrations\**" />
-    <Compile Remove="Persistence\**" />
-    <EmbeddedResource Remove="ExternalServices\**" />
-    <EmbeddedResource Remove="Migrations\**" />
-    <EmbeddedResource Remove="Persistence\**" />
-    <None Remove="ExternalServices\**" />
-    <None Remove="Migrations\**" />
-    <None Remove="Persistence\**" />
+    <ProjectReference Include="..\TechHaven.Application\TechHaven.Application.csproj" />
+    <ProjectReference Include="..\TechHaven.Domain\TechHaven.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TechHaven.Application\TechHaven.Application.csproj" />
+    <PackageReference Include="EFCore.NamingConventions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
   </ItemGroup>
 
 </Project>
