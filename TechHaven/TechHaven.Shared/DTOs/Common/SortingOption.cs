@@ -6,5 +6,3 @@ public class SortingOption
 
     public bool Desc { get; set; } = false;
 }
-
-

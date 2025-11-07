@@ -10,5 +10,3 @@ public class PaymentQueryDto : PagingRequest
 
     public SortingOption? Sorting { get; set; }
 }
-
-

@@ -40,7 +40,7 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ViewModels\" />
+    <Folder Include="ViewModel\" />
     <Folder Include="Views\" />
   </ItemGroup>
 
@@ -61,12 +61,16 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
   <ItemGroup>
-    <PRIResource Remove="Services\**" />
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Remove="ViewModels\**" />
+    <EmbeddedResource Remove="ViewModels\**" />
+    <None Remove="ViewModels\**" />
+    <Page Remove="ViewModels\**" />
     <PRIResource Remove="Helpers\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="ViewModels\**" />
   </ItemGroup>
 </Project>

@@ -12,5 +12,3 @@ public class UserCreateUpdateDto
 
     public bool IsActive { get; set; } = true;
 }
-
-

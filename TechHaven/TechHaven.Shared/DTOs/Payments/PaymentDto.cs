@@ -12,5 +12,3 @@ public class PaymentDto
 
     public DateTime PaymentDate { get; set; }
 }
-
-

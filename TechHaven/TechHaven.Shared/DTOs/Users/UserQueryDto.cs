@@ -12,5 +12,3 @@ public class UserQueryDto : PagingRequest
 
     public SortingOption? Sorting { get; set; }
 }
-
-

@@ -6,5 +6,3 @@ public class DateRangeFilter
 
     public DateTime? EndDate { get; set; }
 }
-
-

@@ -7,8 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Registering the DbContext with PostgreSQL provider
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .UseSnakeCaseNamingConvention()
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        // Bảo EF Core rằng thư mục Migrations nằm trong project TechHaven.Infrastructure
+        o => o.MigrationsAssembly("TechHaven.Infrastructure")
+    ).UseSnakeCaseNamingConvention()
 );
 
 builder.Services.AddControllers();

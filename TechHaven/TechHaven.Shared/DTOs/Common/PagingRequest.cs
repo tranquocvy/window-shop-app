@@ -6,5 +6,3 @@ public class PagingRequest
 
     public int PageSize { get; set; } = 20;
 }
-
-

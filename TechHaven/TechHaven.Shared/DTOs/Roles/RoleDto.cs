@@ -8,5 +8,3 @@ public class RoleDto
 
     public string? Description { get; set; }
 }
-
-

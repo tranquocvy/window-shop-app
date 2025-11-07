@@ -8,5 +8,3 @@ public class RoleQueryDto : PagingRequest
 
     public SortingOption? Sorting { get; set; }
 }
-
-
