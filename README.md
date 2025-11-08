@@ -1,97 +1,162 @@
-# 🪟 Window Shop App
+# Window Shop App
 
-Ứng dụng hỗ trợ chủ cửa hàng nhỏ trong việc quản lý **sản phẩm, đơn hàng, khách hàng và báo cáo doanh thu**, được phát triển bằng **WinUI 3** và **C#**.
+Kho lưu trữ **mã nguồn dự án WinUI 3 - Ứng dụng bán hàng cho cửa hàng nhỏ**.
+Repo này bao gồm toàn bộ code của ứng dụng: UI (WinUI 3), business logic, data access, repository/service và unit test.
 
----
+Mục tiêu:
 
-## 🚀 Tính năng chính
-
-- 🛍️ Quản lý sản phẩm, danh mục và tồn kho
-- 💰 Tạo và theo dõi đơn hàng bán
-- 👥 Quản lý khách hàng và nhân viên
-- 📊 Tạo báo cáo và thống kê doanh thu
-- 🧩 Kiến trúc module theo mô hình **MVVM + Dependency Injection**
-- 💾 Cơ sở dữ liệu cục bộ, hỗ trợ **backup / restore**
-- 🔐 Phân quyền truy cập (Admin, Sales, Moderator)
+- Lưu trữ và phát triển mã nguồn chính
+- Tổ chức kiến trúc theo mô hình **MVVM + Dependency Injection**
+- Làm việc theo quy trình **Gitflow** để FE/BE phát triển song song
 
 ---
 
-## 🧱 Cấu trúc dự án
+## Cấu trúc thư mục
 
-```bash
-window-shop-app/
-├── src/
-│   ├── WindowShop.App/            # Ứng dụng WinUI chính
-│   ├── WindowShop.Core/           # Business logic & data models
-│   ├── WindowShop.Infrastructure/ # Database, repository, service
-│   └── WindowShop.Tests/          # Unit tests
-│
-├── assets/                        # Hình ảnh, icon, mock data
-└── README.md
+```
+
 ```
 
 ---
 
-## 🧩 Công nghệ sử dụng
+## Chiến lược làm việc với Git
 
-| Thành phần           | Công nghệ                                |
-| -------------------- | ---------------------------------------- |
-| Giao diện            | WinUI 3                                  |
-| Logic                | C#, MVVM Toolkit                         |
-| Cơ sở dữ liệu        | SQL                                      |
-| Dependency Injection | Microsoft.Extensions.DependencyInjection |
-| Testing              | MSTest / xUnit                           |
+Repo áp dụng **Gitflow cơ bản** nhằm giữ `main` ổn định, trong khi `develop` là nơi tích hợp các tính năng FE/BE.
 
----
+### 1. Nhánh chính
 
-## ⚙️ Hướng dẫn cài đặt và chạy
+- **main**
 
-### 1️⃣ Yêu cầu môi trường
+  - Code ổn định, dùng để demo/release
+  - Chỉ merge từ `develop`
 
-- Visual Studio 2022 (đã cài workload **.NET Desktop Development**)
-- .NET 8 SDK
-- Windows App SDK (>= 1.5)
+- **develop**
 
-### 2️⃣ Clone dự án
+  - Nhánh tích hợp chung
+  - Mọi feature đều xuất phát từ đây
 
-```bash
-git clone https://github.com/tranquocvy/window-shop-app.git
-cd window-shop-app
+### 2. Feature branches
+
+Mỗi tính năng tạo **một nhánh riêng** từ `develop`:
+
+```
+feature/login-frontend
+feature/product-backend
+feature/customer-frontend
+feature/order-backend
 ```
 
-### 3️⃣ Build và chạy
+Lợi ích:
 
-Mở solution bằng **Visual Studio** → nhấn **F5** để chạy.
+- FE và BE làm song song
+- Ít xung đột
+- Dễ review và theo dõi phạm vi thay đổi
 
----
+### 3. Quy trình làm việc
 
-## 🧭 Chiến lược nhánh (Branching Strategy)
-
-| Nhánh           | Mục đích                        |
-| --------------- | ------------------------------- |
-| `main`          | Phiên bản ổn định, dùng để demo |
-| `vuong, hau`    | Nhánh phát triển FE             |
-| `duong, hoang*` | Nhánh phát triển BE             |
-
----
-
-## 👥 Thành viên nhóm
-
-| Họ tên    | Vai trò                      |
-| --------- | ---------------------------- |
-| **Vỹ**    | Team Lead / Middle Developer |
-| **Vượng** | Frontend Lead                |
-| **Hậu**   | Frontend Developer           |
-| **Hoàng** | Backend Lead                 |
-| **Dương** | Backend Developer            |
+1. Lead tạo `develop` từ `main`
+2. Dev tạo `feature/*` từ `develop`
+3. Commit & push thường xuyên
+4. Hoàn thành → Tạo **Pull Request** về `develop`
+5. Lead/team review → yêu cầu chỉnh sửa nếu cần
+6. Review đạt → merge vào `develop`
+7. Khi `develop` ổn định → merge vào `main`
 
 ---
 
-## 🗂️ Repository liên quan
+## Quy tắc đặt tên branch
 
-📘 [Window Shop Docs](https://github.com/tranquocvy/window-shop-docs)
-Lưu trữ tài liệu, biên bản họp và báo cáo tiến độ của nhóm.
+### Feature branch
+
+```
+feature/<module>-<frontend|backend>
+```
+
+Ví dụ:
+
+- `feature/login-frontend`
+- `feature/product-backend`
+
+### Bugfix branch
+
+```
+bugfix/<mô-tả-ngắn>
+```
 
 ---
 
-> 📝 _Đây là đồ án môn Lập trình Windows, thuộc chương trình đào tạo ngành Kỹ thuật phần mềm._
+## Quy tắc đặt tên commit
+
+### Prefix chuẩn
+
+| Prefix      | Ý nghĩa                                  |
+| ----------- | ---------------------------------------- |
+| `add:`      | thêm file/tính năng mới                  |
+| `update:`   | cập nhật logic hiện có                   |
+| `fix:`      | sửa lỗi                                  |
+| `refactor:` | chỉnh lại cấu trúc code, không đổi logic |
+| `remove:`   | xóa code/file                            |
+| `style:`    | format, rename, chỉnh style              |
+| `test:`     | thêm/chỉnh unit test                     |
+
+### Ví dụ commit tốt
+
+```bash
+add: create product viewmodel
+fix: handle null customer email
+refactor: move repository to Core project
+style: format order service
+```
+
+---
+
+## Quy tắc tạo Pull Request (PR)
+
+### 1. Mỗi PR xử lý **một nhiệm vụ cụ thể**
+
+Tốt: “Thêm ProductPage UI”
+
+Không tốt: “Thêm UI + sửa random bug + refactor backend”
+
+### 2. Tiêu đề PR
+
+Theo format:
+
+```
+[feature] <tên tính năng>
+[bugfix] <mô tả lỗi>
+[refactor] <mô tả>
+```
+
+### 3. Nội dung PR cần có
+
+```
+### Nội dung
+- Thêm ProductPage
+- Bind dữ liệu từ ProductViewModel
+- Đăng ký IProductRepository vào DI
+
+### Testing
+- Build pass
+- Điều hướng ProductPage
+- CRUD mock data
+```
+
+### 4. Reviewer kiểm tra
+
+- Code style
+- Logic đúng MVVM
+- Không xung đột
+- Kiểm tra exception & edge case
+
+### 5. Merge PR
+
+- Chỉ merge khi **Approved**
+- Không conflict
+- Build OK
+
+---
+
+## Tài liệu dự án
+
+Tất cả tài liệu kỹ thuật được lưu trong: [**Window Shop Docs**](https://github.com/tranquocvy/window-shop-docs)
