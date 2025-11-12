@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace TechHaven.Application.Common.Abstractions;
+namespace TechHaven.Application.Interfaces;
 
 /// <summary>
 /// Marker interface for commands that don't return a value.

@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace TechHaven.Application.Common.Abstractions;
+namespace TechHaven.Application.Interfaces;
 
 /// <summary>
 /// Interface for queries that return a result.

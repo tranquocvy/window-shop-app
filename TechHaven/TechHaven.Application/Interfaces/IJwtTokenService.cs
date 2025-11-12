@@ -1,6 +1,6 @@
 using TechHaven.Domain.Entities;
 
-namespace TechHaven.Application.Services;
+namespace TechHaven.Application.Interfaces;
 
 /// <summary>
 /// Service for generating JWT authentication tokens.

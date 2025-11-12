@@ -1,4 +1,4 @@
-namespace TechHaven.Application.Services;
+namespace TechHaven.Application.Interfaces;
 
 /// <summary>
 /// Service for generating and validating One-Time Passwords (OTP).
