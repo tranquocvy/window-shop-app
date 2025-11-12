@@ -1,23 +1,16 @@
-using TechHaven.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using TechHaven.Application;
+using TechHaven.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Registering the DbContext with PostgreSQL provider
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        // Bảo EF Core rằng thư mục Migrations nằm trong project TechHaven.Infrastructure
-        o => o.MigrationsAssembly("TechHaven.Infrastructure")
-    ).UseSnakeCaseNamingConvention()
-);
-
+// Add services to the container
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register Application & Infrastructure layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
@@ -30,6 +23,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// IMPORTANT: Authentication must come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
