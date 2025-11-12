@@ -1,0 +1,83 @@
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using TechHaven.Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Application.Features.Auth.Login;
+using TechHaven.Application.Features.Auth.VerifyOtp;
+
+namespace TechHaven.Presentation.WebAPI.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
+{
+  private readonly IMediator _mediator;
+
+  public AuthController(IMediator mediator)
+  {
+    _mediator = mediator;
+  }
+
+  /// <summary>
+  /// Step 1: Login with username and password. Returns user info and triggers OTP email.
+  /// </summary>
+  [HttpPost("login")]
+  [ProducesResponseType(typeof(ResponseWrapper<LoginResponseDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<ResponseWrapper<LoginResponseDto>>> Login([FromBody] LoginRequestDto request)
+  {
+    try
+    {
+      var command = new LoginCommand(request.UserName, request.Password);
+
+      var result = await _mediator.Send(command);
+
+      return Ok(new ResponseWrapper<LoginResponseDto>
+      {
+        Success = true,
+        Message = "OTP sent to your email. Please verify to complete login.",
+        Data = result
+      });
+    }
+    catch (Exception ex)
+    {
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Login failed",
+        Errors = new List<string> { ex.Message }
+      });
+    }
+  }
+
+  /// <summary>
+  /// Step 2: Verify OTP code and receive JWT access token.
+  /// </summary>
+  [HttpPost("verify-otp")]
+  [ProducesResponseType(typeof(ResponseWrapper<OtpVerifyResponseDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<ResponseWrapper<OtpVerifyResponseDto>>> VerifyOtp([FromBody] OtpVerifyRequestDto request)
+  {
+    try
+    {
+      var command = new VerifyOtpCommand(request.UserId, request.OtpCode);
+      var result = await _mediator.Send(command);
+
+      return Ok(new ResponseWrapper<OtpVerifyResponseDto>
+      {
+        Success = true,
+        Message = "Login successful",
+        Data = result
+      });
+    }
+    catch (Exception ex)
+    {
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "OTP verification failed",
+        Errors = new List<string> { ex.Message }
+      });
+    }
+  }
+}
