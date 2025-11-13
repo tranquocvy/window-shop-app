@@ -79,6 +79,7 @@
     <None Remove="Views\ShellWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Page Remove="Views\AddCustomerDialog.xaml" />
     <Page Remove="Views\CustomersPage.xaml" />
     <Page Remove="Views\MainShellPage.xaml" />
     <Page Remove="Views\OrdersPage.xaml" />
@@ -98,6 +99,9 @@
     <Page Update="Views\CustomerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <None Update="Views\AddCustomerDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
     <None Update="Views\CustomersPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
@@ -158,8 +162,5 @@
     <None Update="Views\SettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ViewModel\" />
   </ItemGroup>
 </Project>

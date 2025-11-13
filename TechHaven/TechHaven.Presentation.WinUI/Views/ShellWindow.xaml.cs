@@ -83,10 +83,9 @@ namespace TechHaven.Presentation.WinUI.Views
                         Title = "Log Out ",
                         Content = "Do you want log out?",
                         PrimaryButtonText = "Log Out",
-                        CloseButtonText = "Cancel" // Dùng CloseButtonText cho nút "Hủy"s
+                        CloseButtonText = "Cancel"
                     };
 
-                    // 2. Cực kỳ quan trọng: Phải set XamlRoot
                     logoutDialog.XamlRoot = this.Content.XamlRoot; // Hoặc navView.XamlRoot
 
                     // 3. Hiển thị Dialog và chờ kết quả
