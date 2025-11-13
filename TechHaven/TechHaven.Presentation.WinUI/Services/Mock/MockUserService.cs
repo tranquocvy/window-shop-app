@@ -99,60 +99,6 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(true);
         }
 
-        // Truy vấn nâng cao (lọc, sắp xếp, phân trang)
-        public Task<List<UserDto>> QueryUsersAsync(UserQueryDto query)
-        {
-            IEnumerable<UserDto> result = _mockUsers;
-
-            // Lọc theo từ khóa
-            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
-            {
-                result = result.Where(u =>
-                    u.UserFullName.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.UserName.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.RoleName.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Lọc theo vai trò
-            if (query.RoleId.HasValue)
-            {
-                result = result.Where(u => u.RoleId == query.RoleId.Value);
-            }
-
-            // Lọc theo trạng thái
-            if (query.IsActive.HasValue)
-            {
-                result = result.Where(u => u.IsActive == query.IsActive.Value);
-            }
-
-            // Sắp xếp
-            if (query.Sorting != null)
-            {
-                if (query.Sorting.SortBy?.Equals("name", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    result = query.Sorting.Desc
-                        ? result.OrderByDescending(u => u.UserFullName)
-                        : result.OrderBy(u => u.UserFullName);
-                }
-                else if (query.Sorting.SortBy?.Equals("role", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    result = query.Sorting.Desc
-                        ? result.OrderByDescending(u => u.RoleName)
-                        : result.OrderBy(u => u.RoleName);
-                }
-            }
-
-            // Phân trang
-            if (query.PageNumber > 0 && query.PageSize > 0)
-            {
-                result = result
-                    .Skip((query.PageNumber - 1) * query.PageSize)
-                    .Take(query.PageSize);
-            }
-
-            return Task.FromResult(result.ToList());
-        }
-
         // Helper: Lấy tên role theo ID
         private static string GetRoleName(int roleId)
         {

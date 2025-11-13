@@ -14,6 +14,5 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         Task<UserDto> CreateUserAsync(UserCreateUpdateDto dto);
         Task<UserDto?> UpdateUserAsync(int id, UserCreateUpdateDto dto);
         Task<bool> DeleteUserAsync(int id);
-        Task<List<UserDto>> QueryUsersAsync(UserQueryDto query);
     }
 }
