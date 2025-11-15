@@ -12,43 +12,28 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
     {
         private readonly List<CustomerDto> _mockCustomers;
 
-        public MockCustomerService()
-        {
-            _mockCustomers = new List<CustomerDto>
-            {
-                new CustomerDto
-                {
-                    CustomerId = 1,
-                    CustomerName = "Nguyễn Văn A",
-                    PhoneNumber = "0901234567",
-                    Email = "a.nguyen@example.com",
-                    Address = "Hà Nội",
-                    Type = CustomerType.Regular,
-                    TotalPurchased = 12_000_000,
-                    Note = "Khách hàng thường xuyên"
-                },
-                new CustomerDto
-                {
-                    CustomerId = 2,
-                    CustomerName = "Trần Thị B",
-                    PhoneNumber = "0912345678",
-                    Email = "b.tran@example.com",
-                    Address = "TP.HCM",
-                    Type = CustomerType.Student,
-                    TotalPurchased = 3_500_000,
-                    Note = "Sinh viên, được giảm 10%"
-                },
-                new CustomerDto
-                {
-                    CustomerId = 3,
-                    CustomerName = "Phạm Minh C",
-                    PhoneNumber = "0988888888",
-                    Email = "c.pham@example.com",
-                    Address = "Đà Nẵng",
-                    Type = CustomerType.VIP,
-                    TotalPurchased = 75_000_000,
-                    Note = "Khách VIP, ưu tiên hỗ trợ"
-                }
+        public MockCustomerService(){
+            _mockCustomers = new List<CustomerDto>{
+                new CustomerDto { CustomerId = 1, CustomerName = "Nguyễn Văn A", PhoneNumber = "0901234567", Email = "a.nguyen@example.com", Address = "Hà Nội", Type = CustomerType.Regular, TotalPurchased = 12_000_000, Note = "Khách hàng thường xuyên" },
+                new CustomerDto { CustomerId = 2, CustomerName = "Trần Thị B", PhoneNumber = "0912345678", Email = "b.tran@example.com", Address = "TP.HCM", Type = CustomerType.Student, TotalPurchased = 3_500_000, Note = "Sinh viên, được giảm 10%" },
+                new CustomerDto { CustomerId = 3, CustomerName = "Phạm Minh C", PhoneNumber = "0988888888", Email = "c.pham@example.com", Address = "Đà Nẵng", Type = CustomerType.VIP, TotalPurchased = 75_000_000, Note = "Khách VIP, ưu tiên hỗ trợ" },
+                new CustomerDto { CustomerId = 4, CustomerName = "Lê Thị D", PhoneNumber = "0901112233", Email = "d.le@example.com", Address = "Hải Phòng", Type = CustomerType.Regular, TotalPurchased = 8_200_000, Note = "Khách mới" },
+                new CustomerDto { CustomerId = 5, CustomerName = "Vũ Văn E", PhoneNumber = "0911223344", Email = "e.vu@example.com", Address = "Cần Thơ", Type = CustomerType.Student, TotalPurchased = 1_500_000, Note = "Sinh viên, hay mua online" },
+                new CustomerDto { CustomerId = 6, CustomerName = "Ngô Thị F", PhoneNumber = "0922334455", Email = "f.ngo@example.com", Address = "Hà Nội", Type = CustomerType.VIP, TotalPurchased = 60_000_000, Note = "Khách VIP" },
+                new CustomerDto { CustomerId = 7, CustomerName = "Đặng Văn G", PhoneNumber = "0933445566", Email = "g.dang@example.com", Address = "TP.HCM", Type = CustomerType.Regular, TotalPurchased = 15_000_000, Note = "" },
+                new CustomerDto { CustomerId = 8, CustomerName = "Phan Thị H", PhoneNumber = "0944556677", Email = "h.phan@example.com", Address = "Đà Nẵng", Type = CustomerType.Student, TotalPurchased = 2_800_000, Note = "Mua theo nhóm" },
+                new CustomerDto { CustomerId = 9, CustomerName = "Trương Minh I", PhoneNumber = "0955667788", Email = "i.truong@example.com", Address = "Hải Phòng", Type = CustomerType.VIP, TotalPurchased = 90_000_000, Note = "Khách VIP" },
+                new CustomerDto { CustomerId = 10, CustomerName = "Bùi Thị J", PhoneNumber = "0966778899", Email = "j.bui@example.com", Address = "Cần Thơ", Type = CustomerType.Regular, TotalPurchased = 5_000_000, Note = "" },
+                new CustomerDto { CustomerId = 11, CustomerName = "Nguyễn Văn K", PhoneNumber = "0977889900", Email = "k.nguyen@example.com", Address = "Hà Nội", Type = CustomerType.Student, TotalPurchased = 4_500_000, Note = "Đang theo học lớp học online" },
+                new CustomerDto { CustomerId = 12, CustomerName = "Trần Thị L", PhoneNumber = "0988990011", Email = "l.tran@example.com", Address = "TP.HCM", Type = CustomerType.Regular, TotalPurchased = 7_300_000, Note = "" },
+                new CustomerDto { CustomerId = 13, CustomerName = "Phạm Minh M", PhoneNumber = "0999001122", Email = "m.pham@example.com", Address = "Đà Nẵng", Type = CustomerType.VIP, TotalPurchased = 120_000_000, Note = "Khách VIP thân thiết" },
+                new CustomerDto { CustomerId = 14, CustomerName = "Lê Thị N", PhoneNumber = "0901122334", Email = "n.le@example.com", Address = "Hải Phòng", Type = CustomerType.Regular, TotalPurchased = 6_500_000, Note = "" },
+                new CustomerDto { CustomerId = 15, CustomerName = "Vũ Văn O", PhoneNumber = "0912233445", Email = "o.vu@example.com", Address = "Cần Thơ", Type = CustomerType.Student, TotalPurchased = 3_200_000, Note = "" },
+                new CustomerDto { CustomerId = 16, CustomerName = "Ngô Thị P", PhoneNumber = "0923344556", Email = "p.ngo@example.com", Address = "Hà Nội", Type = CustomerType.VIP, TotalPurchased = 80_000_000, Note = "Khách VIP ưu tiên" },
+                new CustomerDto { CustomerId = 17, CustomerName = "Đặng Văn Q", PhoneNumber = "0934455667", Email = "q.dang@example.com", Address = "TP.HCM", Type = CustomerType.Regular, TotalPurchased = 9_800_000, Note = "" },
+                new CustomerDto { CustomerId = 18, CustomerName = "Phan Thị R", PhoneNumber = "0945566778", Email = "r.phan@example.com", Address = "Đà Nẵng", Type = CustomerType.Student, TotalPurchased = 2_500_000, Note = "" },
+                new CustomerDto { CustomerId = 19, CustomerName = "Trương Minh S", PhoneNumber = "0956677889", Email = "s.truong@example.com", Address = "Hải Phòng", Type = CustomerType.VIP, TotalPurchased = 100_000_000, Note = "Khách VIP thân thiết" },
+                new CustomerDto { CustomerId = 20, CustomerName = "Bùi Thị T", PhoneNumber = "0967788990", Email = "t.bui@example.com", Address = "Cần Thơ", Type = CustomerType.Regular, TotalPurchased = 5_500_000, Note = "" }
             };
         }
 

@@ -36,7 +36,7 @@ namespace TechHaven.Presentation.WinUI
         /// </summary>
         public App()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         /// <summary>
