@@ -10,6 +10,6 @@ public record GetProductsQuery : IQuery<PagingResponse<ProductDto>>
   public bool? IsDraft { get; init; }
   public int PageNumber { get; init; } = 1;
   public int PageSize { get; init; } = 20;
-  public string SortBy { get; init; } = nameof(ProductDto.ProductName);
+  public string? SortBy { get; init; }
   public bool SortDescending { get; init; } = false;
 }
