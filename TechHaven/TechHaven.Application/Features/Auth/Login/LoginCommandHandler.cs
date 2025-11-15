@@ -52,9 +52,9 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponseDt
     // 4. Generate OTP
     var otpCode = _otpService.GenerateOtp(user.UserId);
 
-    // 5. Send OTP via email (mock for now)
+    // 5. Send OTP via email
     await _emailService.SendOtpEmailAsync(
-        user.UserName + "@techhaven.com", // Mock email - replace with real email field
+        user.Email ?? string.Empty,
         user.UserFullName,
         otpCode);
 

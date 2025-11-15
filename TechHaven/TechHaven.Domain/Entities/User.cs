@@ -25,6 +25,14 @@ public class User
     public string UserFullName { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the email address of the user.
+    /// </summary>
+    [EmailAddress(ErrorMessage = "Invalid email address format.")]
+    [MaxLength(150, ErrorMessage = "Email address cannot exceed 150 characters.")]
+    [Display(Name = "Email Address")]
+    public string? Email { get; set; }
+
+    /// <summary>
     /// Gets or sets the username used for login.
     /// </summary>
     [Required(ErrorMessage = "Username is required.")]
