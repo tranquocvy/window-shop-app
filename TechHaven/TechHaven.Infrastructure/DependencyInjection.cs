@@ -9,6 +9,7 @@ using TechHaven.Domain.Interfaces;
 using TechHaven.Infrastructure.Persistence;
 using TechHaven.Infrastructure.Persistence.Repositories;
 using TechHaven.Infrastructure.Services;
+using AutoMapper;
 
 namespace TechHaven.Infrastructure;
 
@@ -64,14 +65,13 @@ public static class DependencyInjection
         // 2. Unit of Work Registration
         // ============================================
         // CRITICAL: Must be Scoped to ensure one instance per request
-        // services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // ============================================
         // 3. Individual Repository Registration (Optional)
         // ============================================
         // Uncomment if you need to inject individual repositories
         // However, it's recommended to only inject IUnitOfWork
-        /*
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -80,19 +80,50 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<ICommissionRepository, CommissionRepository>();
         services.AddScoped<IAppSettingRepository, AppSettingRepository>();
-        */
 
         // ============================================
         // 4. Application Services
         // ============================================
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IOtpService, OtpService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         // ============================================
         // 5. Memory Cache for OTP
         // ============================================
+        services.AddMemoryCache();
 
         // ============================================
         // 6. JWT Authentication
         // ============================================
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"]
+            ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
+        services.AddAuthorization();
+
+        services.AddAutoMapper(typeof(DependencyInjection).Assembly);
 
         return services;
     }

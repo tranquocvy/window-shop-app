@@ -12,7 +12,7 @@ using TechHaven.Infrastructure.Persistence;
 namespace TechHaven.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251106175725_InitialCreate")]
+    [Migration("20251115155848_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -80,36 +80,6 @@ namespace TechHaven.Infrastructure.Migrations
                         .HasDatabaseName("ix_app_settings_key");
 
                     b.ToTable("app_settings", (string)null);
-                });
-
-            modelBuilder.Entity("TechHaven.Domain.Entities.Category", b =>
-                {
-                    b.Property<int>("CategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("category_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("category_name");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("description");
-
-                    b.HasKey("CategoryId")
-                        .HasName("pk_categories");
-
-                    b.HasIndex("CategoryName")
-                        .IsUnique()
-                        .HasDatabaseName("ix_categories_category_name");
-
-                    b.ToTable("categories", (string)null);
                 });
 
             modelBuilder.Entity("TechHaven.Domain.Entities.Commission", b =>
@@ -396,10 +366,6 @@ namespace TechHaven.Infrastructure.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("brand_name");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("category_id");
-
                     b.Property<string>("Color")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -471,14 +437,11 @@ namespace TechHaven.Infrastructure.Migrations
                     b.HasIndex("BrandName")
                         .HasDatabaseName("ix_products_brand_name");
 
-                    b.HasIndex("CategoryId")
-                        .HasDatabaseName("ix_products_category_id");
+                    b.HasIndex("IsDraft")
+                        .HasDatabaseName("ix_products_is_draft");
 
                     b.HasIndex("ProductName")
                         .HasDatabaseName("ix_products_product_name");
-
-                    b.HasIndex("CategoryId", "IsDraft")
-                        .HasDatabaseName("ix_products_category_id_is_draft");
 
                     b.ToTable("products", (string)null);
                 });
@@ -529,6 +492,11 @@ namespace TechHaven.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("email");
 
                     b.Property<bool>("HasSeenGuide")
                         .ValueGeneratedOnAdd()
@@ -645,18 +613,6 @@ namespace TechHaven.Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("TechHaven.Domain.Entities.Product", b =>
-                {
-                    b.HasOne("TechHaven.Domain.Entities.Category", "Category")
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_products_categories_category_id");
-
-                    b.Navigation("Category");
-                });
-
             modelBuilder.Entity("TechHaven.Domain.Entities.User", b =>
                 {
                     b.HasOne("TechHaven.Domain.Entities.Role", "Role")
@@ -667,11 +623,6 @@ namespace TechHaven.Infrastructure.Migrations
                         .HasConstraintName("fk_users_roles_role_id");
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("TechHaven.Domain.Entities.Category", b =>
-                {
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("TechHaven.Domain.Entities.Customer", b =>
