@@ -5,7 +5,6 @@ using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Application.Common.Exceptions;
 
-
 namespace TechHaven.Application.Features.Product.Queries.GetProductById;
 
 public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, ProductDto>
