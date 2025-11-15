@@ -14,9 +14,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(e => e.CategoryId)
-            .IsRequired();
-
         builder.Property(e => e.BrandName)
             .IsRequired()
             .HasMaxLength(100)
@@ -54,15 +51,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(e => e.IsDraft)
             .HasDefaultValue(false);
 
-        builder.HasIndex(e => e.CategoryId);
         builder.HasIndex(e => e.ProductName);
         builder.HasIndex(e => e.BrandName);
-        builder.HasIndex(e => new { e.CategoryId, e.IsDraft }); // Products search optimization
-
-        // Relationship: Category -> Product (One-to-Many)
-        builder.HasOne(p => p.Category)
-            .WithMany(c => c.Products)
-            .HasForeignKey(p => p.CategoryId)
-            .OnDelete(DeleteBehavior.Restrict); // Prevent deletion of category with products
+        builder.HasIndex(e => new { e.IsDraft }); // Products search optimization
     }
 }

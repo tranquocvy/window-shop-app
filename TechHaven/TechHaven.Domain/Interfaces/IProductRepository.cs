@@ -6,15 +6,11 @@ namespace TechHaven.Domain.Interfaces
 {
     public interface IProductRepository : IGenericRepository<Product>
     {
-        // Tìm kiếm sản phẩm theo tên, category, trạng thái
+        // Tìm kiếm sản phẩm theo tên, trạng thái
         Task<IReadOnlyList<Product>> SearchAsync(
             string? searchTerm = null,
-            string? categoryName = null,
             bool? isDraft = null,
             CancellationToken cancellationToken = default);
-
-        // Lấy sản phẩm kèm category (Master data)
-        Task<IReadOnlyList<Product>> GetWithCategoryAsync(CancellationToken cancellationToken = default);
 
         // Lấy sản phẩm tồn kho thấp hơn ngưỡng (bao gồm hết hàng nếu threshold = 0)
         Task<IReadOnlyList<Product>> GetLowStockAsync(int threshold = 0, CancellationToken cancellationToken = default);

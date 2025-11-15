@@ -28,11 +28,6 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products { get; set; }
 
     /// <summary>
-    /// Gets or sets the Categories database set.
-    /// </summary>
-    public DbSet<Category> Categories { get; set; }
-
-    /// <summary>
     /// Gets or sets the Orders database set.
     /// </summary>
     public DbSet<Order> Orders { get; set; }

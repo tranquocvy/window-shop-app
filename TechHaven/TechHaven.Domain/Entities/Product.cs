@@ -26,14 +26,6 @@ public class Product
     public string ProductName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the identifier of the category this product belongs to.
-    /// </summary>
-    [Required(ErrorMessage = "Category is required.")]
-    [Display(Name = "Category")]
-    [ForeignKey(nameof(Category))]
-    public int CategoryId { get; set; }
-
-    /// <summary>
     /// Gets or sets the brand name of the product.
     /// </summary>
     [Required(ErrorMessage = "Brand name is required.")]
@@ -144,11 +136,6 @@ public class Product
     [Display(Name = "Updated At")]
     [DataType(DataType.DateTime)]
     public DateTime? UpdatedAt { get; set; }
-
-    /// <summary>
-    /// Gets or sets the category navigation property.
-    /// </summary>
-    public Category? Category { get; set; }
 
     /// <summary>
     /// Gets or sets the collection of order details that include this product.
