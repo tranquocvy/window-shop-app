@@ -13,13 +13,10 @@ public static class DependencyInjection
         var assembly = Assembly.GetExecutingAssembly();
         
         // Đăng ký AutoMapper với tất cả Profiles trong Assembly hiện tại
-        services.AddAutoMapper(assembly);
+        services.AddAutoMapper(typeof(DependencyInjection).Assembly);
         
         // Đăng ký MediatR với tất cả handlers trong Assembly
-        services.AddMediatR(cfg => 
-        {
-            cfg.RegisterServicesFromAssembly(assembly);
-        });
+        services.AddMediatR(assembly);
         
         // Đăng ký FluentValidation validators
         services.AddValidatorsFromAssembly(assembly);
