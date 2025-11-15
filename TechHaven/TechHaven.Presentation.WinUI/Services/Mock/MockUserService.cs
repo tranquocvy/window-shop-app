@@ -19,7 +19,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 {
                     UserId = 1,
                     UserFullName = "Nguyễn Khắc Vượng",
-                    UserName = "khacvuong",
+                    UserName = "admin",
                     RoleId = 1,
                     RoleName = "Admin",
                     IsActive = true
@@ -28,7 +28,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 {
                     UserId = 2,
                     UserFullName = "Nguyễn Phúc Hậu",
-                    UserName = "phuchau",
+                    UserName = "seller",
                     RoleId = 2,
                     RoleName = "Seller",
                     IsActive = true
