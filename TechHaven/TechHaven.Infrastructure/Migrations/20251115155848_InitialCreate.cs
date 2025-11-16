@@ -32,20 +32,6 @@ namespace TechHaven.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "categories",
-                columns: table => new
-                {
-                    category_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    category_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_categories", x => x.category_id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "customers",
                 columns: table => new
                 {
@@ -67,27 +53,12 @@ namespace TechHaven.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "roles",
-                columns: table => new
-                {
-                    role_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    role_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_roles", x => x.role_id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "products",
                 columns: table => new
                 {
                     product_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     product_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    category_id = table.Column<int>(type: "integer", nullable: false),
                     brand_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, defaultValue: ""),
                     color = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     storage_capacity = table.Column<int>(type: "integer", nullable: true),
@@ -107,12 +78,20 @@ namespace TechHaven.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_products", x => x.product_id);
-                    table.ForeignKey(
-                        name: "fk_products_categories_category_id",
-                        column: x => x.category_id,
-                        principalTable: "categories",
-                        principalColumn: "category_id",
-                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "roles",
+                columns: table => new
+                {
+                    role_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    role_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_roles", x => x.role_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -122,6 +101,7 @@ namespace TechHaven.Infrastructure.Migrations
                     user_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_full_name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     user_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     password_hash = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     role_id = table.Column<int>(type: "integer", nullable: false),
@@ -260,12 +240,6 @@ namespace TechHaven.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_categories_category_name",
-                table: "categories",
-                column: "category_name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_commissions_user_id",
                 table: "commissions",
                 column: "user_id");
@@ -347,14 +321,9 @@ namespace TechHaven.Infrastructure.Migrations
                 column: "brand_name");
 
             migrationBuilder.CreateIndex(
-                name: "ix_products_category_id",
+                name: "ix_products_is_draft",
                 table: "products",
-                column: "category_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_products_category_id_is_draft",
-                table: "products",
-                columns: new[] { "category_id", "is_draft" });
+                column: "is_draft");
 
             migrationBuilder.CreateIndex(
                 name: "ix_products_product_name",
@@ -404,9 +373,6 @@ namespace TechHaven.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "orders");
-
-            migrationBuilder.DropTable(
-                name: "categories");
 
             migrationBuilder.DropTable(
                 name: "customers");
