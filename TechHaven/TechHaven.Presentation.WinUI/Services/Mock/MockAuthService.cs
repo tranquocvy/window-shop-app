@@ -1,27 +1,30 @@
-using System;
+using Shared.DTOs.Common;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using TechHaven.Shared.DTOs.Users;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
-    public class MockAuthService
+    public class MockAuthService : IAuthService
     {
         private readonly MockUserService _userService = new();
         private readonly Dictionary<int, string> _otpStore = new();
 
-        public async Task<LoginResponseDto?> VerifyLoginAsync(string username, string password)
+        public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginAsync(string username, string password)
         {
-            var users = await _userService.GetAllUsersAsync();
-            var user = users.FirstOrDefault(u => u.UserName == username);
+            var usersResponse = await _userService.GetAllUsersAsync();
+            if (!usersResponse.Success || usersResponse.Data == null)
+                return new ResponseWrapper<LoginResponseDto> { Success = false, Message = "No users available" };
+
+            var user = usersResponse.Data.FirstOrDefault(u => u.UserName == username);
 
             if (user == null || !user.IsActive || password != username)
-                return null;
+                return new ResponseWrapper<LoginResponseDto> { Success = false, Message = "Invalid username or password" };
 
-            var response = new LoginResponseDto
+            var loginResponse = new LoginResponseDto
             {
                 UserId = user.UserId,
                 UserName = user.UserName ?? string.Empty,
@@ -33,35 +36,40 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
 
             _otpStore[user.UserId] = "000000";
 
-            return response;
+            return new ResponseWrapper<LoginResponseDto> { Success = true, Message = "Login accepted, OTP required", Data = loginResponse };
         }
 
-        public Task<bool> VerifyOtpAsync(OtpVerifyRequestDto dto)
+        public Task<ResponseWrapper<bool>> VerifyOtpAsync(OtpVerifyRequestDto dto)
         {
             if (!_otpStore.TryGetValue(dto.UserId, out var entry))
-                return Task.FromResult(false);
+                return Task.FromResult(new ResponseWrapper<bool> { Success = false, Message = "OTP not found" });
 
             if (entry == dto.OtpCode)
             {
                 _otpStore.Remove(dto.UserId);
-                return Task.FromResult(true);
+                return Task.FromResult(new ResponseWrapper<bool> { Success = true, Message = "OTP verified", Data = true });
             }
 
-            return Task.FromResult(false);
+            return Task.FromResult(new ResponseWrapper<bool> { Success = false, Message = "Invalid OTP" });
         }
 
-        public Task<bool> ResendOtpAsync(int userId)
+        public async Task<ResponseWrapper<bool>> ResendOtpAsync(int userId)
         {
-            var user = _userService.GetUserByIdAsync(userId).Result;
-            if (user == null) return Task.FromResult(false);
+            var userResponse = await _userService.GetUserByIdAsync(userId);
+            if (!userResponse.Success || userResponse.Data == null)
+                return new ResponseWrapper<bool> { Success = false, Message = "User not found" };
 
             _otpStore[userId] = "000000";
-            return Task.FromResult(true);
+            return new ResponseWrapper<bool> { Success = true, Message = "OTP resent", Data = true };
         }
 
-        public Task<UserDto?> GetUserDtoAsync(int userId)
+        public async Task<ResponseWrapper<UserDto>> GetUserDtoAsync(int userId)
         {
-            return _userService.GetUserByIdAsync(userId);
+            var userResponse = await _userService.GetUserByIdAsync(userId);
+            if (!userResponse.Success)
+                return new ResponseWrapper<UserDto> { Success = false, Message = userResponse.Message };
+
+            return new ResponseWrapper<UserDto> { Success = true, Message = "User retrieved", Data = userResponse.Data };
         }
     }
 }

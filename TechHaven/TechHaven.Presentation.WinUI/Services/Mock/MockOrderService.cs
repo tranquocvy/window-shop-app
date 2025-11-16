@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Shared.DTOs.Orders;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using Shared.DTOs.Common;
+
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
     public class MockOrderService : IOrderService
@@ -72,15 +74,30 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             };
         }
 
-        public Task<List<OrderDto>> GetAllOrdersAsync() => Task.FromResult(_mockOrders);
-
-        public Task<OrderDto?> GetOrderByIdAsync(int id)
+        public Task<ResponseWrapper<List<OrderDto>>> GetAllOrdersAsync()
         {
-            var order = _mockOrders.FirstOrDefault(o => o.OrderId == id);
-            return Task.FromResult<OrderDto?>(order);
+            var response = new ResponseWrapper<List<OrderDto>>
+            {
+                Success = true,
+                Message = "Orders retrieved successfully",
+                Data = _mockOrders
+            };
+            return Task.FromResult(response);
         }
 
-        public Task<OrderDto> CreateOrderAsync(OrderCreateDto dto)
+        public Task<ResponseWrapper<OrderDto>> GetOrderByIdAsync(int id)
+        {
+            var order = _mockOrders.FirstOrDefault(o => o.OrderId == id);
+            var response = new ResponseWrapper<OrderDto>
+            {
+                Success = order != null,
+                Message = order != null ? "Order retrieved successfully" : "Order not found",
+                Data = order
+            };
+            return Task.FromResult(response);
+        }
+
+        public Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderCreateDto dto)
         {
             var newId = _mockOrders.Any() ? _mockOrders.Max(o => o.OrderId) + 1 : 1;
 
@@ -115,25 +132,55 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             };
 
             _mockOrders.Add(order);
-            return Task.FromResult(order);
+            
+            var response = new ResponseWrapper<OrderDto>
+            {
+                Success = true,
+                Message = "Order created successfully",
+                Data = order
+            };
+            return Task.FromResult(response);
         }
 
-        public Task<bool> DeleteOrderAsync(int id)
+        public Task<ResponseWrapper<bool>> DeleteOrderAsync(int id)
         {
             var existing = _mockOrders.FirstOrDefault(o => o.OrderId == id);
-            if (existing == null) return Task.FromResult(false);
-            _mockOrders.Remove(existing);
-            return Task.FromResult(true);
+            bool success = false;
+            
+            if (existing != null)
+            {
+                _mockOrders.Remove(existing);
+                success = true;
+            }
+            
+            var response = new ResponseWrapper<bool>
+            {
+                Success = success,
+                Message = success ? "Order deleted successfully" : "Order not found",
+                Data = success
+            };
+            return Task.FromResult(response);
         }
 
-        public Task<OrderDto?> UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
+        public Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
         {
             var existing = _mockOrders.FirstOrDefault(o => o.OrderId == dto.OrderId);
-            if (existing == null) return Task.FromResult<OrderDto?>(null);
-            existing.Status = dto.Status;
-            return Task.FromResult<OrderDto?>(existing);
+            
+            if (existing != null)
+            {
+                existing.Status = dto.Status;
+            }
+            
+            var response = new ResponseWrapper<OrderDto>
+            {
+                Success = existing != null,
+                Message = existing != null ? "Order status updated successfully" : "Order not found",
+                Data = existing
+            };
+            return Task.FromResult(response);
         }
-        public Task<List<OrderDto>> QueryOrdersAsync(OrderQueryDto query)
+
+        public Task<ResponseWrapper<List<OrderDto>>> QueryOrdersAsync(OrderQueryDto query)
         {
             IEnumerable<OrderDto> result = _mockOrders;
 
@@ -191,7 +238,13 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                     .Take(query.PageSize);
             }
 
-            return Task.FromResult(result.ToList());
+            var response = new ResponseWrapper<List<OrderDto>>
+            {
+                Success = true,
+                Message = "Orders queried successfully",
+                Data = result.ToList()
+            };
+            return Task.FromResult(response);
         }
     }
 }

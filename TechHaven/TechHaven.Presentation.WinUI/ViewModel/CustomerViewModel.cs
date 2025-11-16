@@ -55,18 +55,21 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 PageSize = this.PageSize
             };
 
-            var customers = await _customerService.QueryCustomersAsync(query);
+            var response = await _customerService.QueryCustomersAsync(query);
 
-            foreach (var customer in customers)
+            if (response.Success && response.Data != null)
             {
-                Customers.Add(customer);
-            }
+                foreach (var customer in response.Data)
+                {
+                    Customers.Add(customer);
+                }
 
-            // Update paging state
-            CanGoPrevious = PageNumber > 1;
-            // If returned items count equals page size, there might be a next page
-            CanGoNext = customers.Count >= PageSize;
-            PageInfo = $"Trang {PageNumber}";
+                // Update paging state
+                CanGoPrevious = PageNumber > 1;
+                // If returned items count equals page size, there might be a next page
+                CanGoNext = response.Data.Count >= PageSize;
+                PageInfo = $"Trang {PageNumber}";
+            }
         }
 
         // 6. Tạo một Command cho nút "Thêm"

@@ -4,15 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Shared.DTOs.Orders;
+using Shared.DTOs.Common;
+
 namespace TechHaven.Presentation.WinUI.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<List<OrderDto>> GetAllOrdersAsync();
-        Task<OrderDto?> GetOrderByIdAsync(int id);
-        Task<OrderDto> CreateOrderAsync(OrderCreateDto dto);
-        Task<bool> DeleteOrderAsync(int id);
-        Task<OrderDto?> UpdateOrderStatusAsync(OrderUpdateStatusDto dto);
-        Task<List<OrderDto>> QueryOrdersAsync(OrderQueryDto query);
+        Task<ResponseWrapper<List<OrderDto>>> GetAllOrdersAsync();
+        Task<ResponseWrapper<OrderDto>> GetOrderByIdAsync(int id);
+        Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderCreateDto dto);
+        Task<ResponseWrapper<bool>> DeleteOrderAsync(int id);
+        Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto);
+        Task<ResponseWrapper<List<OrderDto>>> QueryOrdersAsync(OrderQueryDto query);
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Customers;
+using Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -38,20 +39,32 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Lấy tất cả khách hàng
-        public Task<List<CustomerDto>> GetAllCustomersAsync()
+        public Task<ResponseWrapper<List<CustomerDto>>> GetAllCustomersAsync()
         {
-            return Task.FromResult(_mockCustomers);
+            var response = new ResponseWrapper<List<CustomerDto>>
+            {
+                Success = true,
+                Message = "Customers retrieved successfully",
+                Data = _mockCustomers
+            };
+            return Task.FromResult(response);
         }
 
         // Lấy khách hàng theo ID
-        public Task<CustomerDto?> GetCustomerByIdAsync(int id)
+        public Task<ResponseWrapper<CustomerDto>> GetCustomerByIdAsync(int id)
         {
             var customer = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
-            return Task.FromResult(customer);
+            var response = new ResponseWrapper<CustomerDto>
+            {
+                Success = customer != null,
+                Message = customer != null ? "Customer retrieved successfully" : "Customer not found",
+                Data = customer
+            };
+            return Task.FromResult(response);
         }
 
         // Tạo khách hàng mới
-        public Task<CustomerDto> CreateCustomerAsync(CustomerCreateUpdateDto dto)
+        public Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerCreateUpdateDto dto)
         {
             var newCustomer = new CustomerDto
             {
@@ -65,37 +78,62 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 Note = dto.Note
             };
             _mockCustomers.Add(newCustomer);
-            return Task.FromResult(newCustomer);
+            
+            var response = new ResponseWrapper<CustomerDto>
+            {
+                Success = true,
+                Message = "Customer created successfully",
+                Data = newCustomer
+            };
+            return Task.FromResult(response);
         }
 
         // Cập nhật thông tin khách hàng
-        public Task<CustomerDto?> UpdateCustomerAsync(int id, CustomerCreateUpdateDto dto)
+        public Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerCreateUpdateDto dto)
         {
             var existing = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
-            if (existing == null)
-                return Task.FromResult<CustomerDto?>(null);
+            if (existing != null)
+            {
+                existing.CustomerName = dto.CustomerName;
+                existing.PhoneNumber = dto.PhoneNumber;
+                existing.Email = dto.Email;
+                existing.Address = dto.Address;
+                existing.Type = dto.Type;
+                existing.Note = dto.Note;
+            }
 
-            existing.CustomerName = dto.CustomerName;
-            existing.PhoneNumber = dto.PhoneNumber;
-            existing.Email = dto.Email;
-            existing.Address = dto.Address;
-            existing.Type = dto.Type;
-            existing.Note = dto.Note;
-
-            return Task.FromResult<CustomerDto?>(existing);
+            var response = new ResponseWrapper<CustomerDto>
+            {
+                Success = existing != null,
+                Message = existing != null ? "Customer updated successfully" : "Customer not found",
+                Data = existing
+            };
+            return Task.FromResult(response);
         }
 
         // Xoá khách hàng
-        public Task<bool> DeleteCustomerAsync(int id)
+        public Task<ResponseWrapper<bool>> DeleteCustomerAsync(int id)
         {
             var existing = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
-            if (existing == null) return Task.FromResult(false);
-            _mockCustomers.Remove(existing);
-            return Task.FromResult(true);
+            bool success = false;
+            
+            if (existing != null)
+            {
+                _mockCustomers.Remove(existing);
+                success = true;
+            }
+            
+            var response = new ResponseWrapper<bool>
+            {
+                Success = success,
+                Message = success ? "Customer deleted successfully" : "Customer not found",
+                Data = success
+            };
+            return Task.FromResult(response);
         }
 
         // Lọc & sắp xếp (CustomerQueryDto)
-        public Task<List<CustomerDto>> QueryCustomersAsync(CustomerQueryDto query)
+        public Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerQueryDto query)
         {
             IEnumerable<CustomerDto> result = _mockCustomers;
 
@@ -137,7 +175,13 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                     .Take(query.PageSize);
             }
 
-            return Task.FromResult(result.ToList());
+            var response = new ResponseWrapper<List<CustomerDto>>
+            {
+                Success = true,
+                Message = "Customers queried successfully",
+                Data = result.ToList()
+            };
+            return Task.FromResult(response);
         }
     }
 }
