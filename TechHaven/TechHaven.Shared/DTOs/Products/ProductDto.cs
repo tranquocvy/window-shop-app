@@ -6,10 +6,6 @@ public class ProductDto
 
     public string ProductName { get; set; } = string.Empty;
 
-    public int CategoryId { get; set; }
-
-    public string? CategoryName { get; set; }
-
     public string BrandName { get; set; } = string.Empty;
 
     public string? Color { get; set; }

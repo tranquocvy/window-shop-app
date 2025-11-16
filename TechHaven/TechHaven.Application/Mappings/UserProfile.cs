@@ -14,6 +14,7 @@ public class UserProfile : Profile
 
 		CreateMap<UserCreateUpdateDto, User>()
 			.ForMember(dest => dest.UserId, opt => opt.Ignore())
+			.ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
 			.ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
 			.ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
 			.ForMember(dest => dest.ActivatedAt, opt => opt.Ignore())

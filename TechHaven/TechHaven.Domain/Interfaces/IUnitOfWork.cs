@@ -10,7 +10,6 @@ public interface IUnitOfWork : IDisposable
     IUserRepository Users { get; }
     IRoleRepository Roles { get; }
     IProductRepository Products { get; }
-    ICategoryRepository Categories { get; }
     ICustomerRepository Customers { get; }
     IOrderRepository Orders { get; }
     IPaymentRepository Payments { get; }

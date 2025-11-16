@@ -1,4 +1,4 @@
-namespace Shared.DTOs.Common
+namespace TechHaven.Shared.DTOs.Common
 {
     public class ResponseWrapper<T>
     {
