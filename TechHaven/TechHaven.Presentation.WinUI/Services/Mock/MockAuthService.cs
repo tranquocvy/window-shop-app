@@ -15,8 +15,11 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
 
         public async Task<LoginResponseDto?> VerifyLoginAsync(string username, string password)
         {
-            var users = await _userService.GetAllUsersAsync();
-            var user = users.FirstOrDefault(u => u.UserName == username);
+            var usersResponse = await _userService.GetAllUsersAsync();
+            if (!usersResponse.Success || usersResponse.Data == null)
+                return null;
+
+            var user = usersResponse.Data.FirstOrDefault(u => u.UserName == username);
 
             if (user == null || !user.IsActive || password != username)
                 return null;
@@ -50,18 +53,20 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(false);
         }
 
-        public Task<bool> ResendOtpAsync(int userId)
+        public async Task<bool> ResendOtpAsync(int userId)
         {
-            var user = _userService.GetUserByIdAsync(userId).Result;
-            if (user == null) return Task.FromResult(false);
+            var userResponse = await _userService.GetUserByIdAsync(userId);
+            if (!userResponse.Success || userResponse.Data == null) 
+                return false;
 
             _otpStore[userId] = "000000";
-            return Task.FromResult(true);
+            return true;
         }
 
-        public Task<UserDto?> GetUserDtoAsync(int userId)
+        public async Task<UserDto?> GetUserDtoAsync(int userId)
         {
-            return _userService.GetUserByIdAsync(userId);
+            var userResponse = await _userService.GetUserByIdAsync(userId);
+            return userResponse.Success ? userResponse.Data : null;
         }
     }
 }

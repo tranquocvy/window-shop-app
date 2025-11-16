@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Shared.DTOs.Users;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
-    public class MockUserService
+    public class MockUserService : IUserService
     {
         private readonly List<UserDto> _mockUsers;
 
@@ -46,20 +48,32 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Lấy toàn bộ người dùng
-        public Task<List<UserDto>> GetAllUsersAsync()
+        public Task<ResponseWrapper<List<UserDto>>> GetAllUsersAsync()
         {
-            return Task.FromResult(_mockUsers);
+            var response = new ResponseWrapper<List<UserDto>>
+            {
+                Success = true,
+                Message = "Users retrieved successfully",
+                Data = _mockUsers
+            };
+            return Task.FromResult(response);
         }
 
         // Lấy người dùng theo ID
-        public Task<UserDto?> GetUserByIdAsync(int id)
+        public Task<ResponseWrapper<UserDto>> GetUserByIdAsync(int id)
         {
             var user = _mockUsers.FirstOrDefault(u => u.UserId == id);
-            return Task.FromResult(user);
+            var response = new ResponseWrapper<UserDto>
+            {
+                Success = user != null,
+                Message = user != null ? "User retrieved successfully" : "User not found",
+                Data = user
+            };
+            return Task.FromResult(response);
         }
 
         // Tạo người dùng mới
-        public Task<UserDto> CreateUserAsync(UserCreateUpdateDto dto)
+        public Task<ResponseWrapper<UserDto>> CreateUserAsync(UserCreateUpdateDto dto)
         {
             var newUser = new UserDto
             {
@@ -71,32 +85,57 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 IsActive = dto.IsActive
             };
             _mockUsers.Add(newUser);
-            return Task.FromResult(newUser);
+            
+            var response = new ResponseWrapper<UserDto>
+            {
+                Success = true,
+                Message = "User created successfully",
+                Data = newUser
+            };
+            return Task.FromResult(response);
         }
 
         // Cập nhật thông tin người dùng
-        public Task<UserDto?> UpdateUserAsync(int id, UserCreateUpdateDto dto)
+        public Task<ResponseWrapper<UserDto>> UpdateUserAsync(int id, UserCreateUpdateDto dto)
         {
             var existing = _mockUsers.FirstOrDefault(u => u.UserId == id);
-            if (existing == null)
-                return Task.FromResult<UserDto?>(null);
+            if (existing != null)
+            {
+                existing.UserFullName = dto.UserFullName;
+                existing.UserName = dto.UserName;
+                existing.RoleId = dto.RoleId;
+                existing.RoleName = GetRoleName(dto.RoleId);
+                existing.IsActive = dto.IsActive;
+            }
 
-            existing.UserFullName = dto.UserFullName;
-            existing.UserName = dto.UserName;
-            existing.RoleId = dto.RoleId;
-            existing.RoleName = GetRoleName(dto.RoleId);
-            existing.IsActive = dto.IsActive;
-
-            return Task.FromResult<UserDto?>(existing);
+            var response = new ResponseWrapper<UserDto>
+            {
+                Success = existing != null,
+                Message = existing != null ? "User updated successfully" : "User not found",
+                Data = existing
+            };
+            return Task.FromResult(response);
         }
 
         // Xóa người dùng
-        public Task<bool> DeleteUserAsync(int id)
+        public Task<ResponseWrapper<bool>> DeleteUserAsync(int id)
         {
             var existing = _mockUsers.FirstOrDefault(u => u.UserId == id);
-            if (existing == null) return Task.FromResult(false);
-            _mockUsers.Remove(existing);
-            return Task.FromResult(true);
+            bool success = false;
+            
+            if (existing != null)
+            {
+                _mockUsers.Remove(existing);
+                success = true;
+            }
+            
+            var response = new ResponseWrapper<bool>
+            {
+                Success = success,
+                Message = success ? "User deleted successfully" : "User not found",
+                Data = success
+            };
+            return Task.FromResult(response);
         }
 
         // Helper: Lấy tên role theo ID
@@ -106,7 +145,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             {
                 1 => "Admin",
                 2 => "Seller",
-                _ => "Khác"
+                _ => "Other"
             };
         }
     }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -53,20 +54,32 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 };
         }
         // Lấy tất cả sản phẩm
-        public Task<List<ProductDto>> GetAllProductsAsync()
+        public Task<ResponseWrapper<List<ProductDto>>> GetAllProductsAsync()
         {
-            return Task.FromResult(_mockProducts);
+            var response = new ResponseWrapper<List<ProductDto>>
+            {
+                Success = true,
+                Message = "Products retrieved successfully",
+                Data = _mockProducts
+            };
+            return Task.FromResult(response);
         }
 
         // Lấy theo ID
-        public Task<ProductDto?> GetProductsByIdAsync(int id)
+        public Task<ResponseWrapper<ProductDto>> GetProductsByIdAsync(int id)
         {
             var product = _mockProducts.FirstOrDefault(p => p.ProductId == id);
-            return Task.FromResult(product);
+            var response = new ResponseWrapper<ProductDto>
+            {
+                Success = product != null,
+                Message = product != null ? "Product retrieved successfully" : "Product not found",
+                Data = product
+            };
+            return Task.FromResult(response);
         }
 
         // Tạo mới
-        public Task<ProductDto> CreateProductsAsync(ProductCreateUpdateDto dto)
+        public Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto)
         {
             var newProduct = new ProductDto
             {
@@ -88,45 +101,70 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 IsDraft = dto.IsDraft
             };
             _mockProducts.Add(newProduct);
-            return Task.FromResult(newProduct);
+            
+            var response = new ResponseWrapper<ProductDto>
+            {
+                Success = true,
+                Message = "Product created successfully",
+                Data = newProduct
+            };
+            return Task.FromResult(response);
         }
 
         // Cập nhật
-        public Task<ProductDto?> UpdateProductsAsync(int id, ProductCreateUpdateDto dto)
+        public Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto)
         {
             var existing = _mockProducts.FirstOrDefault(p => p.ProductId == id);
-            if (existing == null)
-                return Task.FromResult<ProductDto?>(null);
+            if (existing != null)
+            {
+                existing.ProductName = dto.ProductName;
+                existing.CategoryId = dto.CategoryId;
+                existing.BrandName = dto.BrandName;
+                existing.Color = dto.Color;
+                existing.StorageCapacity = dto.StorageCapacity;
+                existing.Processor = dto.Processor;
+                existing.ScreenSize = dto.ScreenSize;
+                existing.BatteryCapacity = dto.BatteryCapacity;
+                existing.ImageUrl = dto.ImageUrl;
+                existing.ImageGalleryJson = dto.ImageGalleryJson;
+                existing.SellPrice = dto.SellPrice;
+                existing.StockQuantity = dto.StockQuantity;
+                existing.Description = dto.Description;
+                existing.IsDraft = dto.IsDraft;
+            }
 
-            existing.ProductName = dto.ProductName;
-            existing.CategoryId = dto.CategoryId;
-            existing.BrandName = dto.BrandName;
-            existing.Color = dto.Color;
-            existing.StorageCapacity = dto.StorageCapacity;
-            existing.Processor = dto.Processor;
-            existing.ScreenSize = dto.ScreenSize;
-            existing.BatteryCapacity = dto.BatteryCapacity;
-            existing.ImageUrl = dto.ImageUrl;
-            existing.ImageGalleryJson = dto.ImageGalleryJson;
-            existing.SellPrice = dto.SellPrice;
-            existing.StockQuantity = dto.StockQuantity;
-            existing.Description = dto.Description;
-            existing.IsDraft = dto.IsDraft;
-
-            return Task.FromResult<ProductDto?>(existing);
+            var response = new ResponseWrapper<ProductDto>
+            {
+                Success = existing != null,
+                Message = existing != null ? "Product updated successfully" : "Product not found",
+                Data = existing
+            };
+            return Task.FromResult(response);
         }
 
         // Xoá sản phẩm
-        public Task<bool> DeleteProductsAsync(int id)
+        public Task<ResponseWrapper<bool>> DeleteProductsAsync(int id)
         {
             var existing = _mockProducts.FirstOrDefault(p => p.ProductId == id);
-            if (existing == null) return Task.FromResult(false);
-            _mockProducts.Remove(existing);
-            return Task.FromResult(true);
+            bool success = false;
+            
+            if (existing != null)
+            {
+                _mockProducts.Remove(existing);
+                success = true;
+            }
+            
+            var response = new ResponseWrapper<bool>
+            {
+                Success = success,
+                Message = success ? "Product deleted successfully" : "Product not found",
+                Data = success
+            };
+            return Task.FromResult(response);
         }
 
         // Truy vấn theo ProductQueryDto (lọc + sắp xếp + phân trang)
-        public Task<List<ProductDto>> QueryProductsAsync(ProductQueryDto query)
+        public Task<ResponseWrapper<List<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
         {
             IEnumerable<ProductDto> result = _mockProducts;
 
@@ -176,7 +214,13 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                     .Take(query.PageSize);
             }
 
-            return Task.FromResult(result.ToList());
+            var response = new ResponseWrapper<List<ProductDto>>
+            {
+                Success = true,
+                Message = "Products queried successfully",
+                Data = result.ToList()
+            };
+            return Task.FromResult(response);
         }
     }
 }
