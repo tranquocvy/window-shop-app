@@ -89,6 +89,7 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         }
 
         // Apply specific sorting based on sortBy parameter
+        // Todo: fix hardcode
         return sortBy.ToLower() switch
         {
             "name" or "productname" => sortDescending

@@ -25,28 +25,28 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
   {
     // Get existing product
     var product = await _unitOfWork.Products.GetByIdAsync(
-      request.productDto.ProductId,
+      request.ProductId,
       cancellationToken);
 
     if (product == null)
     {
-      throw new NotFoundException(nameof(Domain.Entities.Product), request.productDto.ProductId);
+      throw new NotFoundException(nameof(Domain.Entities.Product), request.ProductId);
     }
 
     // Update properties
-    product.ProductName = request.productDto.ProductName;
-    product.BrandName = request.productDto.BrandName;
-    product.Color = request.productDto.Color;
-    product.StorageCapacity = request.productDto.StorageCapacity;
-    product.Processor = request.productDto.Processor;
-    product.ScreenSize = request.productDto.ScreenSize;
-    product.BatteryCapacity = request.productDto.BatteryCapacity;
-    product.ImageUrl = request.productDto.ImageUrl;
-    product.ImageGalleryJson = request.productDto.ImageGalleryJson;
-    product.SellPrice = request.productDto.SellPrice;
-    product.StockQuantity = request.productDto.StockQuantity;
-    product.Description = request.productDto.Description;
-    product.IsDraft = request.productDto.IsDraft;
+    product.ProductName = request.ProductName;
+    product.BrandName = request.BrandName;
+    product.Color = request.Color;
+    product.StorageCapacity = request.StorageCapacity;
+    product.Processor = request.Processor;
+    product.ScreenSize = request.ScreenSize;
+    product.BatteryCapacity = request.BatteryCapacity;
+    product.ImageUrl = request.ImageUrl;
+    product.ImageGalleryJson = request.ImageGalleryJson;
+    product.SellPrice = request.SellPrice;
+    product.StockQuantity = request.StockQuantity;
+    product.Description = request.Description;
+    product.IsDraft = request.IsDraft;
     product.UpdatedAt = DateTime.Now;
 
     await _unitOfWork.Products.UpdateAsync(product);

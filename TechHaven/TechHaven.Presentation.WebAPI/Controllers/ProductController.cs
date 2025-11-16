@@ -25,22 +25,17 @@ public class ProductController : ControllerBase
   [HttpGet]
   [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<ProductDto>>), StatusCodes.Status200OK)]
   public async Task<ActionResult<ResponseWrapper<PagingResponse<ProductDto>>>> GetProducts(
-    [FromQuery] string? searchTerm = null,
-    [FromQuery] bool? isDraft = null,
-    [FromQuery] int pageNumber = 1,
-    [FromQuery] int pageSize = 20,
-    [FromQuery] string? sortBy = null,
-    [FromQuery] bool sortDescending = false,
+    [FromQuery] ProductQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
     var query = new GetProductsQuery
     {
-      SearchTerm = searchTerm,
-      IsDraft = isDraft,
-      PageNumber = pageNumber,
-      PageSize = pageSize,
-      SortBy = sortBy,
-      SortDescending = sortDescending
+      SearchTerm = queryDto.SearchTerm,
+      IsDraft = queryDto.IsDraft,
+      PageNumber = queryDto.PageNumber,
+      PageSize = queryDto.PageSize,
+      SortBy = queryDto.Sorting?.SortBy,
+      SortDescending = queryDto.Sorting?.Desc ?? false
     };
 
     var result = await _mediator.Send(query, cancellationToken);
@@ -90,11 +85,29 @@ public class ProductController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   public async Task<ActionResult<ResponseWrapper<ProductDto>>> CreateProduct(
-      [FromBody] CreateProductCommand command,
+      [FromBody] ProductCreateUpdateDto request,
       CancellationToken cancellationToken)
   {
     try
     {
+      // Map DTO to Command
+      var command = new CreateProductCommand
+      {
+        ProductName = request.ProductName,
+        BrandName = request.BrandName,
+        Color = request.Color,
+        StorageCapacity = request.StorageCapacity,
+        Processor = request.Processor,
+        ScreenSize = request.ScreenSize,
+        BatteryCapacity = request.BatteryCapacity,
+        ImageUrl = request.ImageUrl,
+        ImageGalleryJson = request.ImageGalleryJson,
+        CostPrice = request.CostPrice,
+        SellPrice = request.SellPrice,
+        StockQuantity = request.StockQuantity,
+        Description = request.Description,
+        IsDraft = request.IsDraft
+      };
       var result = await _mediator.Send(command, cancellationToken);
       return CreatedAtAction(
         nameof(GetProductById),
@@ -126,21 +139,31 @@ public class ProductController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<ActionResult<ResponseWrapper<ProductDto>>> UpdateProduct(
       int id,
-      [FromBody] UpdateProductCommand command,
+      [FromBody] ProductCreateUpdateDto request,
       CancellationToken cancellationToken)
   {
-    // Ensure ID in route matches ID in body
-    if (id != command.productDto.ProductId)
-    {
-      return BadRequest(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = "Product ID in route does not match ID in request body."
-      });
-    }
-
     try
     {
+      // Map DTO to Command with ID from route
+      var command = new UpdateProductCommand
+      {
+        ProductId = id,
+        ProductName = request.ProductName,
+        BrandName = request.BrandName,
+        Color = request.Color,
+        StorageCapacity = request.StorageCapacity,
+        Processor = request.Processor,
+        ScreenSize = request.ScreenSize,
+        BatteryCapacity = request.BatteryCapacity,
+        ImageUrl = request.ImageUrl,
+        ImageGalleryJson = request.ImageGalleryJson,
+        CostPrice = request.CostPrice,
+        SellPrice = request.SellPrice,
+        StockQuantity = request.StockQuantity,
+        Description = request.Description,
+        IsDraft = request.IsDraft
+      };
+
       var result = await _mediator.Send(command, cancellationToken);
       return Ok(new ResponseWrapper<ProductDto>
       {

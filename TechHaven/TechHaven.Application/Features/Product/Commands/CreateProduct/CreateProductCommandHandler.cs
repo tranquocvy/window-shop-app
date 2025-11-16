@@ -22,8 +22,8 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
     CreateProductCommand request,
     CancellationToken cancellationToken)
   {
-    // map command (dto) to entity
-    var product = _mapper.Map<Domain.Entities.Product>(request.productDto);
+    // map command to entity
+    var product = _mapper.Map<Domain.Entities.Product>(request);
 
     // set timestamps
     product.CreatedAt = DateTime.Now;

@@ -10,5 +10,3 @@ public class ProductQueryDto : PagingRequest
 
     public SortingOption? Sorting { get; set; }
 }
-
-
