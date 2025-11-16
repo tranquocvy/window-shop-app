@@ -7,6 +7,7 @@ using TechHaven.Application.Features.Product.Queries.GetProductById;
 using TechHaven.Application.Features.Product.Commands.CreateProduct;
 using TechHaven.Application.Features.Product.Commands.UpdateProduct;
 using TechHaven.Application.Features.Product.Commands.DeleteProduct;
+using TechHaven.Application.Common.Exceptions;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -22,8 +23,8 @@ public class ProductController : ControllerBase
   }
 
   [HttpGet]
-  [ProducesResponseType(typeof(PagingResponse<ProductDto>), StatusCodes.Status200OK)]
-  public async Task<ActionResult<PagingResponse<ProductDto>>> GetProducts(
+  [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<ProductDto>>), StatusCodes.Status200OK)]
+  public async Task<ActionResult<ResponseWrapper<PagingResponse<ProductDto>>>> GetProducts(
     [FromQuery] string? searchTerm = null,
     [FromQuery] bool? isDraft = null,
     [FromQuery] int pageNumber = 1,
@@ -43,49 +44,87 @@ public class ProductController : ControllerBase
     };
 
     var result = await _mediator.Send(query, cancellationToken);
-    return Ok(result);
+    return Ok(new ResponseWrapper<PagingResponse<ProductDto>>
+    {
+      Success = true,
+      Message = "Products retrieved successfully.",
+      Data = result
+    });
   }
 
   /// <summary>
   /// Get a single product by ID
   /// </summary>
   [HttpGet("{id}")]
-  [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-  [ProducesResponseType(StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ProductDto>> GetProductById(
+  [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
+  public async Task<ActionResult<ResponseWrapper<ProductDto>>> GetProductById(
       int id,
       CancellationToken cancellationToken)
   {
-    var query = new GetProductByIdQuery(id);
-    var result = await _mediator.Send(query, cancellationToken);
-    return Ok(result);
+    try
+    {
+      var query = new GetProductByIdQuery(id);
+      var result = await _mediator.Send(query, cancellationToken);
+      return Ok(new ResponseWrapper<ProductDto>
+      {
+        Success = true,
+        Message = "Product retrieved successfully.",
+        Data = result
+      });
+    }
+    catch (NotFoundException ex)
+    {
+      return NotFound(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = ex.Message
+      });
+    }
   }
 
   /// <summary>
   /// Create a new product
   /// </summary>
   [HttpPost]
-  [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
-  [ProducesResponseType(StatusCodes.Status400BadRequest)]
-  public async Task<ActionResult<ProductDto>> CreateProduct(
+  [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status201Created)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<ResponseWrapper<ProductDto>>> CreateProduct(
       [FromBody] CreateProductCommand command,
       CancellationToken cancellationToken)
   {
-    var result = await _mediator.Send(command, cancellationToken);
-    return CreatedAtAction(
+    try
+    {
+      var result = await _mediator.Send(command, cancellationToken);
+      return CreatedAtAction(
         nameof(GetProductById),
         new { id = result.ProductId },
-        result);
+        new ResponseWrapper<ProductDto>
+        {
+          Success = true,
+          Message = "Product created successfully.",
+          Data = result
+        });
+    }
+    catch (Exception ex)
+    {
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Failed to create product.",
+        Errors = new List<string> { ex.Message }
+      });
+    }
   }
 
   /// <summary>
   /// Update an existing product
   /// </summary>
   [HttpPut("{id}")]
-  [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-  [ProducesResponseType(StatusCodes.Status400BadRequest)]
-  [ProducesResponseType(StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ProductDto>> UpdateProduct(
+  [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
+  public async Task<ActionResult<ResponseWrapper<ProductDto>>> UpdateProduct(
       int id,
       [FromBody] UpdateProductCommand command,
       CancellationToken cancellationToken)
@@ -93,26 +132,56 @@ public class ProductController : ControllerBase
     // Ensure ID in route matches ID in body
     if (id != command.productDto.ProductId)
     {
-      return BadRequest("Product ID in route does not match ID in request body.");
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Product ID in route does not match ID in request body."
+      });
     }
 
-    var result = await _mediator.Send(command, cancellationToken);
-    return Ok(result);
+    try
+    {
+      var result = await _mediator.Send(command, cancellationToken);
+      return Ok(new ResponseWrapper<ProductDto>
+      {
+        Success = true,
+        Message = "Product updated successfully.",
+        Data = result
+      });
+    }
+    catch (NotFoundException ex)
+    {
+      return NotFound(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = ex.Message
+      });
+    }
   }
 
   /// <summary>
   /// Delete a product
   /// </summary>
   [HttpDelete("{id}")]
-  [ProducesResponseType(StatusCodes.Status204NoContent)]
-  [ProducesResponseType(StatusCodes.Status400BadRequest)]
-  [ProducesResponseType(StatusCodes.Status404NotFound)]
-  public async Task<IActionResult> DeleteProduct(
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status204NoContent)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
+  public async Task<ActionResult<ResponseWrapper<object>>> DeleteProduct(
       int id,
       CancellationToken cancellationToken)
   {
-    var command = new DeleteProductCommand(id);
-    await _mediator.Send(command, cancellationToken);
-    return NoContent();
+    try
+    {
+      var command = new DeleteProductCommand(id);
+      await _mediator.Send(command, cancellationToken);
+      return NoContent();
+    }
+    catch (NotFoundException ex)
+    {
+      return NotFound(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = ex.Message
+      });
+    }
   }
 }

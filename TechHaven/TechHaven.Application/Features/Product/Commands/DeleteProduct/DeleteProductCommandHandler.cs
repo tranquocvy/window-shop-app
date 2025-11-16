@@ -26,7 +26,7 @@ public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand>
       throw new NotFoundException(nameof(Domain.Entities.Product), request.ProductId);
     }
 
-    await _unitOfWork.Products.RemoveAsync(product, cancellationToken);
+    await _unitOfWork.Products.DeleteAsync(product, cancellationToken);
     await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     return Unit.Value;

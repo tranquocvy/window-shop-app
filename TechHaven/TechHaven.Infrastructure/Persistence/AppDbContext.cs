@@ -93,7 +93,17 @@ public class AppDbContext : DbContext
     /// <returns>The number of state entries written to the database.</returns>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        UpdateTimestamps();
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is Product product)
+            {
+                if (product.CreatedAt.Kind != DateTimeKind.Utc)
+                {
+                    product.CreatedAt = DateTime.SpecifyKind(product.CreatedAt, DateTimeKind.Utc);
+                }
+            }
+        }
+
         return base.SaveChangesAsync(cancellationToken);
     }
 
@@ -103,7 +113,7 @@ public class AppDbContext : DbContext
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is not null && 
+            .Where(e => e.Entity is not null &&
                         (e.State == EntityState.Added || e.State == EntityState.Modified));
 
         foreach (var entry in entries)

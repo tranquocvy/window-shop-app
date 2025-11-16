@@ -12,7 +12,7 @@ using TechHaven.Infrastructure.Persistence;
 namespace TechHaven.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251115155848_InitialCreate")]
+    [Migration("20251116074608_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

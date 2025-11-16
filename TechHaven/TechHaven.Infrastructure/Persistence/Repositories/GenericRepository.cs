@@ -98,13 +98,13 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return Task.CompletedTask;
     }
 
-    public virtual Task RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public virtual Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
         _dbSet.Remove(entity);
         return Task.CompletedTask;
     }
 
-    public virtual Task RemoveRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+    public virtual Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
         _dbSet.RemoveRange(entities);
         return Task.CompletedTask;
