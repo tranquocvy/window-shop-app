@@ -8,7 +8,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "TechHaven API",
+        Version = "v1",
+        Description = "API for TechHaven Store Management System"
+    });
+});
 
 // Register Application & Infrastructure layers
 builder.Services.AddApplication();
