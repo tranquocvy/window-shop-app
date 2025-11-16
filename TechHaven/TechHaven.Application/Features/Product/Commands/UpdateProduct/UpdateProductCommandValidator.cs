@@ -1,30 +1,33 @@
+
+
 using FluentValidation;
+using TechHaven.Application.Features.Product.Commands.UpdateProduct;
 using TechHaven.Domain.Interfaces;
 
-namespace TechHaven.Application.Features.Product.Commands.CreateProduct;
 
-public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
+/// <summary>
+/// Validator for UpdateProductCommand
+/// </summary>
+public class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
 {
   private readonly IUnitOfWork _unitOfWork;
 
-  public CreateProductCommandValidator(IUnitOfWork unitOfWork)
+  public UpdateProductCommandValidator(IUnitOfWork unitOfWork)
   {
     _unitOfWork = unitOfWork;
 
+    RuleFor(x => x.productDto.ProductId)
+      .GreaterThan(0).WithMessage("Product ID is required.")
+      .MustAsync(ProductExists)
+          .WithMessage("Product not found.");
+
     RuleFor(x => x.productDto.ProductName)
       .NotEmpty().WithMessage("Product name is required.")
-      .MaximumLength(200).WithMessage("Product name cannot exceed 200 characters.");
-
-    RuleFor(x => x.productDto.BrandName)
-      .NotEmpty().WithMessage("Brand name is required.")
-      .MaximumLength(100).WithMessage("Brand name cannot exceed 100 characters.");
-
-    RuleFor(x => x.productDto.CostPrice)
-      .GreaterThanOrEqualTo(0).WithMessage("Cost price cannot be negative.");
+      .MaximumLength(200).WithMessage("Product name cannot exceed 200 characters.")
+          .WithMessage("A product with this name already exists in the selected category.");
 
     RuleFor(x => x.productDto.SellPrice)
     .GreaterThanOrEqualTo(0).WithMessage("Sell price cannot be negative.")
-    .GreaterThanOrEqualTo(x => x.productDto.CostPrice)
     .WithMessage("Sell price must be greater than or equal to cost price.");
 
     RuleFor(x => x.productDto.StockQuantity)
@@ -49,5 +52,16 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
     RuleFor(x => x.productDto.BatteryCapacity)
       .GreaterThan(0).WithMessage("Battery capacity must be greater than 0.")
       .When(x => x.productDto.BatteryCapacity.HasValue);
+
+    RuleFor(x => x.productDto.BrandName)
+      .NotEmpty().WithMessage("Brand name is required.")
+      .MaximumLength(100).WithMessage("Brand name cannot exceed 100 characters.");
+  }
+
+  private async Task<bool> ProductExists(int productId, CancellationToken cancellationToken)
+  {
+    return await _unitOfWork.Products.AnyAsync(
+        p => p.ProductId == productId,
+        cancellationToken);
   }
 }

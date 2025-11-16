@@ -3,8 +3,6 @@ using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Domain.Interfaces;
 using AutoMapper;
-using TechHaven.Application.Common.Helper;
-using Microsoft.EntityFrameworkCore;
 
 namespace TechHaven.Application.Features.Product.Queries.GetProducts;
 
@@ -23,25 +21,17 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, PagingRes
     GetProductsQuery request,
     CancellationToken cancellationToken)
   {
-    var productsQuery = _unitOfWork.Products.Search(
-      searchTerm: request.SearchTerm,
-      isDraft: request.IsDraft
-    );
-
-    productsQuery = SortingHelper.ApplySorting(
-      productsQuery,
+    var (products, totalCount) = await _unitOfWork.Products.SearchWithPaginationAsync(
+      request.SearchTerm,
+      request.IsDraft,
+      request.PageNumber,
+      request.PageSize,
       request.SortBy,
-      request.SortDescending
+      request.SortDescending,
+      cancellationToken
     );
 
-    int totalCount = productsQuery.Count();
-
-    var items = await productsQuery
-      .Skip((request.PageNumber - 1) * request.PageSize)
-      .Take(request.PageSize)
-      .ToListAsync(cancellationToken);
-
-    var productsDto = _mapper.Map<List<ProductDto>>(items);
+    var productsDto = _mapper.Map<IReadOnlyList<ProductDto>>(products);
 
     return new PagingResponse<ProductDto>
     {
