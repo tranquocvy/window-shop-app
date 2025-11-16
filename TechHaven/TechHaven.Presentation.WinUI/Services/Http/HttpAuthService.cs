@@ -1,8 +1,9 @@
+using Shared.DTOs.Common;
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Shared.DTOs.Common;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
@@ -21,34 +22,27 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginAsync(string username, string password)
         {
-            // TODO: Implement after creating HttpClient extensions
-            throw new NotImplementedException();
-            // var payload = new { Username = username, Password = password };
-            // var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/login", payload);
-            // return await response.EnsureSuccessAndReadWrapperAsync<LoginResponseDto>("Failed to verify login");
+            var payload = new { Username = username, Password = password };
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/login", payload);
+            return await response.EnsureSuccessAndReadWrapperAsync<LoginResponseDto>("Failed to verify login");
         }
 
         public async Task<ResponseWrapper<bool>> VerifyOtpAsync(OtpVerifyRequestDto dto)
         {
-            // TODO: Implement after creating HttpClient extensions
-            throw new NotImplementedException();
-            // var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/verify-otp", dto);
-            // return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to verify OTP");
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/verify-otp", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to verify OTP");
         }
 
         public async Task<ResponseWrapper<bool>> ResendOtpAsync(int userId)
         {
-            // TODO: Implement after creating HttpClient extensions
-            throw new NotImplementedException();
-            // var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp/{userId}", new { });
-            // return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to resend OTP");
+            // send an empty object body to trigger resend on server
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp/{userId}", new { });
+            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to resend OTP");
         }
 
         public Task<ResponseWrapper<UserDto>> GetUserDtoAsync(int userId)
         {
-            // TODO: Implement after creating HttpClient extensions
-            throw new NotImplementedException();
-            // return _httpClient.GetWrapperFromJsonAsync<UserDto>($"{BaseUrl}/users/{userId}", "Failed to retrieve user");
+            return _httpClient.GetWrapperFromJsonAsync<UserDto>($"{BaseUrl}/users/{userId}", "Failed to retrieve user");
         }
     }
 }
