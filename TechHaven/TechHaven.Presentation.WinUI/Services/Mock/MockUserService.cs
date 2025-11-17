@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using TechHaven.Shared.DTOs.Users;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
-using Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -85,7 +83,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 IsActive = dto.IsActive
             };
             _mockUsers.Add(newUser);
-            
+
             var response = new ResponseWrapper<UserDto>
             {
                 Success = true,
@@ -122,13 +120,13 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         {
             var existing = _mockUsers.FirstOrDefault(u => u.UserId == id);
             bool success = false;
-            
+
             if (existing != null)
             {
                 _mockUsers.Remove(existing);
                 success = true;
             }
-            
+
             var response = new ResponseWrapper<bool>
             {
                 Success = success,

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Customers;
-using Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -13,7 +12,8 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
     {
         private readonly List<CustomerDto> _mockCustomers;
 
-        public MockCustomerService(){
+        public MockCustomerService()
+        {
             _mockCustomers = new List<CustomerDto>{
                 new CustomerDto { CustomerId = 1, CustomerName = "Nguyễn Văn A", PhoneNumber = "0901234567", Email = "a.nguyen@example.com", Address = "Hà Nội", Type = CustomerType.Regular, TotalPurchased = 12_000_000, Note = "Khách hàng thường xuyên" },
                 new CustomerDto { CustomerId = 2, CustomerName = "Trần Thị B", PhoneNumber = "0912345678", Email = "b.tran@example.com", Address = "TP.HCM", Type = CustomerType.Student, TotalPurchased = 3_500_000, Note = "Sinh viên, được giảm 10%" },
@@ -78,7 +78,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 Note = dto.Note
             };
             _mockCustomers.Add(newCustomer);
-            
+
             var response = new ResponseWrapper<CustomerDto>
             {
                 Success = true,
@@ -116,13 +116,13 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         {
             var existing = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
             bool success = false;
-            
+
             if (existing != null)
             {
                 _mockCustomers.Remove(existing);
                 success = true;
             }
-            
+
             var response = new ResponseWrapper<bool>
             {
                 Success = success,

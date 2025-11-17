@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Orders;
-using Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WinUI.Services.Interfaces
 {

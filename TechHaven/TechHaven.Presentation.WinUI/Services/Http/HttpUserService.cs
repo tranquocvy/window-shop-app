@@ -1,12 +1,12 @@
-﻿using Shared.DTOs.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Shared.DTOs.Users;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
 {
