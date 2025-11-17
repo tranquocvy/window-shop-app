@@ -12,12 +12,12 @@ namespace TechHaven.Presentation.WinUI.Views
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        private readonly LoginViewModel _viewModel;
+        private readonly MainWindowViewModel _viewModel;
 
         public MainWindow()
         {
             this.InitializeComponent();
-            _viewModel = new LoginViewModel();
+            _viewModel = new MainWindowViewModel();
         }
 
         // Phương thức xử lý sự kiện Click

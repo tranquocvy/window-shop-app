@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -80,8 +81,16 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 if (!RequiresOtp)
                 {
-                    // If no OTP required, proceed to get user info and complete login
-                    await CompleteLoginAsync();
+                    // If no OTP required, set current user from login response
+                    Helpers.AppState.CurrentUser = new UserDto
+                    {
+                        UserId = result.Data.UserId,
+                        UserName = result.Data.UserName,
+                        UserFullName = result.Data.UserFullName,
+                        RoleId = result.Data.RoleId,
+                        RoleName = result.Data.RoleName,
+                        IsActive = true
+                    };
                 }
             }
             catch (Exception ex)
@@ -111,11 +120,25 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 var result = await _authService.VerifyOtpAsync(dto);
 
-                if (!result.Success || !result.Data)
+                if (!result.Success || result.Data == null)
                 {
                     ErrorMessage = result.Message ?? "Invalid OTP code.";
                     return false;
                 }
+
+                // Map OtpVerifyResponseDto to UserDto and set AppState
+                var otpData = result.Data;
+                Helpers.AppState.CurrentUser = new UserDto
+                {
+                    UserId = otpData.UserId,
+                    UserName = otpData.UserName,
+                    UserFullName = otpData.UserFullName,
+                    RoleId = 0, // role id not provided in OtpVerifyResponseDto
+                    RoleName = otpData.RoleName,
+                    IsActive = true
+                };
+
+                // Optionally store access token somewhere if needed (not implemented)
 
                 return true;
             }
@@ -149,33 +172,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        private async Task CompleteLoginAsync()
+        public Task<bool> CompleteLoginAndGetUserAsync()
         {
-            var userResult = await _authService.GetUserDtoAsync(UserId);
+            // Return true if AppState.CurrentUser is set and matches the logged in user
+            if (Helpers.AppState.CurrentUser != null && Helpers.AppState.CurrentUser.UserId == UserId)
+                return Task.FromResult(true);
 
-            if (!userResult.Success || userResult.Data == null)
-            {
-                ErrorMessage = userResult.Message ?? "User information not found.";
-                return;
-            }
-
-            // Set user to AppState (will be done in MainWindow after this)
-            // This method is for internal use, the MainWindow will handle navigation
-        }
-
-        public async Task<bool> CompleteLoginAndGetUserAsync()
-        {
-            var userResult = await _authService.GetUserDtoAsync(UserId);
-
-            if (!userResult.Success || userResult.Data == null)
-            {
-                ErrorMessage = userResult.Message ?? "User information not found.";
-                return false;
-            }
-
-            // Set user to AppState
-            Helpers.AppState.CurrentUser = userResult.Data;
-            return true;
+            // No user available
+            ErrorMessage = "User information not available.";
+            return Task.FromResult(false);
         }
     }
 }

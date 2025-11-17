@@ -39,18 +39,30 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return new ResponseWrapper<LoginResponseDto> { Success = true, Message = "Login accepted, OTP required", Data = loginResponse };
         }
 
-        public Task<ResponseWrapper<bool>> VerifyOtpAsync(OtpVerifyRequestDto dto)
+        public Task<ResponseWrapper<OtpVerifyResponseDto>> VerifyOtpAsync(OtpVerifyRequestDto dto)
         {
             if (!_otpStore.TryGetValue(dto.UserId, out var entry))
-                return Task.FromResult(new ResponseWrapper<bool> { Success = false, Message = "OTP not found" });
+                return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "OTP not found" });
 
             if (entry == dto.OtpCode)
             {
                 _otpStore.Remove(dto.UserId);
-                return Task.FromResult(new ResponseWrapper<bool> { Success = true, Message = "OTP verified", Data = true });
+
+                // Return token + user info as OtpVerifyResponseDto
+                var user = _userService.GetUserByIdAsync(dto.UserId).Result.Data!;
+                var otpResp = new OtpVerifyResponseDto
+                {
+                    AccessToken = "mock-token",
+                    UserId = user.UserId,
+                    UserName = user.UserName ?? string.Empty,
+                    UserFullName = user.UserFullName ?? string.Empty,
+                    RoleName = user.RoleName ?? string.Empty
+                };
+
+                return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = true, Message = "OTP verified", Data = otpResp });
             }
 
-            return Task.FromResult(new ResponseWrapper<bool> { Success = false, Message = "Invalid OTP" });
+            return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "Invalid OTP" });
         }
 
         public async Task<ResponseWrapper<bool>> ResendOtpAsync(int userId)
