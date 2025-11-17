@@ -1,15 +1,17 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
-    public partial class LoginViewModel : ObservableObject
+    public partial class MainWindowViewModel : ObservableObject
     {
         private readonly IAuthService _authService;
 
@@ -33,13 +35,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private int _userId = 0;
 
-        public LoginViewModel()
+        public MainWindowViewModel()    
         {
-            // Use MockAuthService for now
-            _authService = new MockAuthService();
+            // Use HttpAuthService (calls backend)
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000/") };
+            _authService = new HttpAuthService(httpClient);
         }
 
-        public LoginViewModel(IAuthService authService)
+        public MainWindowViewModel(IAuthService authService)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
