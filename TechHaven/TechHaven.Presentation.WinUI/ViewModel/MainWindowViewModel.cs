@@ -2,10 +2,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
 
@@ -13,6 +13,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        private static readonly Lazy<HttpClient> SharedHttpClient = new(CreateHttpClient);
         private readonly IAuthService _authService;
 
         // Properties for binding
@@ -35,16 +36,27 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private int _userId = 0;
 
-        public MainWindowViewModel()    
+        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient.Value))
         {
-            // Use HttpAuthService (calls backend)
-            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000/") };
-            _authService = new HttpAuthService(httpClient);
         }
 
         public MainWindowViewModel(IAuthService authService)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        }
+
+        private static HttpClient CreateHttpClient()
+        {
+            var client = new HttpClient
+            {
+                BaseAddress = Helpers.AppState.ApiBaseUri,
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            return client;
         }
 
         [RelayCommand]
