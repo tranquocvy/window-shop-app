@@ -105,6 +105,9 @@
     <None Update="Views\CustomersPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
+    <Page Update="Views\ProductPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\ShellWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -115,9 +118,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Views\OrderPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Views\ProductPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Views\DashboardPage.xaml">

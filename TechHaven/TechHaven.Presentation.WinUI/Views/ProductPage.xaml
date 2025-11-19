@@ -6,9 +6,127 @@
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="White"
+    Foreground="#0A2E8C">
 
-    <Grid>
+    <Grid Padding="16" RequestedTheme="Light">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <TextBlock Grid.Row="0"
+                   Text="Products"
+                   Style="{ThemeResource TitleTextBlockStyle}"
+                   Margin="0,0,0,12"
+                   Foreground="#0A2E8C"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="0,0,0,12"
+                    Spacing="8">
+
+            <TextBox
+                PlaceholderText="Tìm kiếm theo tên, danh mục..."
+                Width="300"/>
+
+            <Button
+                x:Name="AddProductButton"
+                Content="Thêm Sản Phẩm"
+                Margin="12,0,0,0"
+                Background="#0D47A1"
+                Foreground="White"
+                FontWeight="Bold"
+                CornerRadius="5"
+                Height="40"
+                Width="200"
+                />
+        </StackPanel>
+
+        <ListView
+            x:Name="ProductsList"
+            Grid.Row="2"
+            SelectionMode="None"
+            IsItemClickEnabled="True"
+            Padding="0">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.Header>
+                <Grid Padding="0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.5*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" Text="Tên Sản Phẩm" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="2" Text="Giá" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="3" Text="SL" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="4" Text="Danh Mục" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="5" Text="Trạng Thái" FontWeight="SemiBold"/>
+                </Grid>
+            </ListView.Header>
+
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="101"/>
+                        <TextBlock Grid.Column="1" Text="Laptop Dell XPS 13"/>
+                        <TextBlock Grid.Column="2" Text="29,990,000đ"/>
+                        <TextBlock Grid.Column="3" Text="12"/>
+                        <TextBlock Grid.Column="4" Text="Laptop"/>
+                        <TextBlock Grid.Column="5" Text="Còn hàng" Foreground="Green"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+
+            <x:String>Demo Item 1</x:String>
+            <x:String>Demo Item 2</x:String>
+            <x:String>Demo Item 3</x:String>
+
+        </ListView>
+
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0"
+                    Spacing="8">
+
+            <Button Content="Previous"/>
+            <TextBlock VerticalAlignment="Center" Text="Page 1 / 10"/>
+            <Button Content="Next"/>
+
+            <TextBlock VerticalAlignment="Center"
+                       Margin="12,0,0,0"
+                       Text="Items per page:"/>
+
+            <ComboBox Width="80">
+                <ComboBoxItem Content="5" IsSelected="True"/>
+                <ComboBoxItem Content="10" />
+                <ComboBoxItem Content="20" />
+                <ComboBoxItem Content="50" />
+            </ComboBox>
+        </StackPanel>
     </Grid>
 </Page>
