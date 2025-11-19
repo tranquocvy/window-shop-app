@@ -10,7 +10,7 @@ public interface IOtpService
     /// </summary>
     /// <param name="userId">The user ID for whom the OTP is generated.</param>
     /// <returns>The generated OTP code.</returns>
-    string GenerateOtp(int userId);
+    (string OtpSessionId, string OtpCode) GenerateOtp(int userId);
 
     /// <summary>
     /// Validates an OTP code using session ID.

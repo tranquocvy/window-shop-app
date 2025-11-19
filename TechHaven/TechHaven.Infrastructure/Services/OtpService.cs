@@ -10,22 +10,22 @@ public class OtpService : IOtpService
     private readonly ConcurrentDictionary<string, (int UserId, string OtpCode, DateTime ExpiryTime)> _otpStore = new();
     private const int OtpExpirationMinutes = 5;
 
-    public string GenerateOtp(int userId)
+    public (string OtpSessionId, string OtpCode) GenerateOtp(int userId)
     {
         // Generate 6-digit OTP
         var otpCode = new Random().Next(100000, 999999).ToString();
-
+        
         // Generate session ID (GUID)
         var sessionId = Guid.NewGuid().ToString();
-
+        
         // Store OTP with expiry time
         var expiryTime = DateTime.UtcNow.AddMinutes(OtpExpirationMinutes);
         _otpStore[sessionId] = (userId, otpCode, expiryTime);
-
+        
         // Clean up expired OTPs
         CleanupExpiredOtps();
-
-        return sessionId;
+        
+        return (sessionId, otpCode);
     }
 
     public int? ValidateOtp(string otpSessionId, string otpCode)
