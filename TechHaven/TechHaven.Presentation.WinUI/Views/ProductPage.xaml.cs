@@ -1,26 +1,32 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using System.Collections.ObjectModel;
 using System.Linq;
+using TechHaven.Presentation.WinUI.ViewModel;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
     // LƯU Ý QUAN TRỌNG: Tên lớp phải là 'partial' và khớp chính xác với x:Class trong XAML
     public sealed partial class ProductPage : Page
     {
-        // Khai báo một danh sách sản phẩm mẫu để gán vào ListView nếu cần
-        // public ObservableCollection<Product> Products { get; set; } 
-
+        
+        public ProductViewModel ViewModel { get; }
         public ProductPage()
         {
             // Hàm tạo này là cần thiết và phải được định nghĩa DUY NHẤT 1 lần.
             this.InitializeComponent();
 
-            // Nếu bạn sử dụng MVVM, bạn sẽ gán ViewModel ở đây
-            // this.DataContext = new ProductViewModel(); 
+            ViewModel = new ProductViewModel();
 
-            // Ví dụ về việc tải dữ liệu tĩnh nếu không dùng Data Binding
-            // LoadStaticData(); 
+            this.DataContext = ViewModel;
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            ViewModel.LoadProductsCommand.Execute(null);
         }
 
         // -------------------------------------------------------------------

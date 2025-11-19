@@ -4,11 +4,16 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
+    xmlns:vm="using:TechHaven.Presentation.WinUI.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="White"
     Foreground="#0A2E8C">
+
+    <Page.DataContext>
+        <vm:ProductViewModel/>
+    </Page.DataContext>
 
     <Grid Padding="16" RequestedTheme="Light">
         <Grid.RowDefinitions>
@@ -18,12 +23,14 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- HEADER -->
         <TextBlock Grid.Row="0"
                    Text="Products"
                    Style="{ThemeResource TitleTextBlockStyle}"
                    Margin="0,0,0,12"
                    Foreground="#0A2E8C"/>
 
+        <!-- SEARCH + ADD + DELETE -->
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     Margin="0,0,0,12"
@@ -31,37 +38,38 @@
 
             <TextBox
                 PlaceholderText="Tìm kiếm theo tên, danh mục..."
-                Width="300"/>
+                Width="300"
+                Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Button
-                x:Name="AddProductButton"
-                Content="Thêm Sản Phẩm"
-                Margin="12,0,0,0"
-                Background="#0D47A1"
-                Foreground="White"
-                FontWeight="Bold"
-                CornerRadius="5"
-                Height="40"
-                Width="200"
-                />
+            <Button Content="Thêm Sản Phẩm"
+                    Margin="12,0,0,0"
+                    Background="#0D47A1"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    CornerRadius="5"
+                    Height="40"
+                    Width="200"/>
+
+            <!--  NÚT XÓA  -->
+            <Button Content="Xóa sản phẩm đã chọn"
+                    Background="Red"
+                    Foreground="White"
+                    CornerRadius="5"
+                    Command="{Binding DeleteSelectedCommand}"
+                    Height="40"
+                    Width="220"/>
         </StackPanel>
 
-        <ListView
-            x:Name="ProductsList"
-            Grid.Row="2"
-            SelectionMode="None"
-            IsItemClickEnabled="True"
-            Padding="0">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
+        <!-- LIST -->
+        <ListView Grid.Row="2"
+                  SelectionMode="None"
+                  ItemsSource="{Binding Products}">
 
             <ListView.Header>
                 <Grid Padding="0,6">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52"/>
+                        <!-- checkbox -->
                         <ColumnDefinition Width="0.5*"/>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1.2*"/>
@@ -70,19 +78,27 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="1" Text="Tên Sản Phẩm" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" Text="Giá" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="3" Text="SL" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="4" Text="Danh Mục" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="5" Text="Trạng Thái" FontWeight="SemiBold"/>
+                    <!-- CHECK ALL -->
+                    <CheckBox Grid.Column="0"
+                              IsChecked="{Binding IsAllSelected, Mode=TwoWay}"
+                              Margin="16 0 0 0"
+                              />
+
+
+                    <TextBlock Grid.Column="1" Text="ID" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="3" Text="Giá" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="4" Text="SL" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="5" Text="Danh Mục" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="6" Text="Trạng Thái" FontWeight="SemiBold"/>
                 </Grid>
             </ListView.Header>
 
             <ListView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="vm:ProductItemViewModel">
                     <Grid Padding="0,6">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
                             <ColumnDefinition Width="0.5*"/>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="1.2*"/>
@@ -91,22 +107,24 @@
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="101"/>
-                        <TextBlock Grid.Column="1" Text="Laptop Dell XPS 13"/>
-                        <TextBlock Grid.Column="2" Text="29,990,000đ"/>
-                        <TextBlock Grid.Column="3" Text="12"/>
-                        <TextBlock Grid.Column="4" Text="Laptop"/>
-                        <TextBlock Grid.Column="5" Text="Còn hàng" Foreground="Green"/>
+                        <!-- CHECKBOX ITEM -->
+                        <CheckBox Grid.Column="0"
+                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                   
+                        />
+
+                        <TextBlock Grid.Column="1" Text="{Binding Product.ProductId}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Product.SellPrice}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Product.StockQuantity}"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Product.BrandName}"/>
+                        <TextBlock Grid.Column="6" Text="Còn hàng" Foreground="Green"/>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
-
-            <x:String>Demo Item 1</x:String>
-            <x:String>Demo Item 2</x:String>
-            <x:String>Demo Item 3</x:String>
-
         </ListView>
 
+        <!-- PAGINATION -->
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
@@ -123,10 +141,11 @@
 
             <ComboBox Width="80">
                 <ComboBoxItem Content="5" IsSelected="True"/>
-                <ComboBoxItem Content="10" />
-                <ComboBoxItem Content="20" />
-                <ComboBoxItem Content="50" />
+                <ComboBoxItem Content="10"/>
+                <ComboBoxItem Content="20"/>
+                <ComboBoxItem Content="50"/>
             </ComboBox>
         </StackPanel>
+
     </Grid>
 </Page>
