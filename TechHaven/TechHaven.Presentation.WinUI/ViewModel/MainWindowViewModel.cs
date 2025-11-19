@@ -2,19 +2,28 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
+using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class MainWindowViewModel : ObservableObject
     {
-        private static readonly Lazy<HttpClient> SharedHttpClient = new(CreateHttpClient);
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAuthService _authService;
+
+        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient))
+        {
+        }
+
+        public MainWindowViewModel(IAuthService authService)
+        {
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        }
 
         // Properties for binding
         [ObservableProperty]
@@ -35,29 +44,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         [ObservableProperty]
         private int _userId = 0;
-
-        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient.Value))
-        {
-        }
-
-        public MainWindowViewModel(IAuthService authService)
-        {
-            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        }
-
-        private static HttpClient CreateHttpClient()
-        {
-            var client = new HttpClient
-            {
-                BaseAddress = Helpers.AppState.ApiBaseUri,
-                Timeout = TimeSpan.FromSeconds(30)
-            };
-
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            return client;
-        }
 
         [RelayCommand]
         private async Task LoginAsync()
