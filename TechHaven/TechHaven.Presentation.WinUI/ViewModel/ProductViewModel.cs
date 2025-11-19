@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
@@ -39,6 +40,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private bool _isAllSelected;
 
         private bool _isUpdatingAll = false;
+
+
+        partial void OnSearchTermChanged(string value)
+        {
+            PageNumber = 1;
+            _ = LoadProductsAsync(); 
+        }
+
 
         partial void OnIsAllSelectedChanged(bool value)
         {

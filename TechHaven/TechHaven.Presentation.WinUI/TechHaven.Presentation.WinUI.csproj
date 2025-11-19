@@ -167,4 +167,7 @@
       <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Views\Product\" />
+  </ItemGroup>
 </Project>
