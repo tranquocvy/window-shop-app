@@ -1,54 +1,72 @@
 using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Concurrent;
 using TechHaven.Application.Interfaces;
 
 namespace TechHaven.Infrastructure.Services;
 
 public class OtpService : IOtpService
 {
-    private readonly IMemoryCache _cache;
-    private const int OTP_EXPIRY_MINUTES = 5;
-    private const int OTP_LENGTH = 6;
-
-    public OtpService(IMemoryCache cache)
-    {
-        _cache = cache;
-    }
+    // Store: SessionId -> (UserId, OtpCode, ExpiryTime)
+    private readonly ConcurrentDictionary<string, (int UserId, string OtpCode, DateTime ExpiryTime)> _otpStore = new();
+    private const int OtpExpirationMinutes = 5;
 
     public string GenerateOtp(int userId)
     {
-        // Generate 6-digit random OTP
-        var random = new Random();
-        var otpCode = random.Next(100000, 999999).ToString();
+        // Generate 6-digit OTP
+        var otpCode = new Random().Next(100000, 999999).ToString();
 
-        // Store in cache with 5 minutes expiry
-        var cacheKey = GetCacheKey(userId);
-        var cacheOptions = new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(OTP_EXPIRY_MINUTES)
-        };
+        // Generate session ID (GUID)
+        var sessionId = Guid.NewGuid().ToString();
 
-        _cache.Set(cacheKey, otpCode, cacheOptions);
+        // Store OTP with expiry time
+        var expiryTime = DateTime.UtcNow.AddMinutes(OtpExpirationMinutes);
+        _otpStore[sessionId] = (userId, otpCode, expiryTime);
 
-        return otpCode;
+        // Clean up expired OTPs
+        CleanupExpiredOtps();
+
+        return sessionId;
     }
 
-    public bool ValidateOtp(int userId, string otpCode)
+    public int? ValidateOtp(string otpSessionId, string otpCode)
     {
-        var cacheKey = GetCacheKey(userId);
-
-        if (_cache.TryGetValue(cacheKey, out string? storedOtp))
+        if (!_otpStore.TryGetValue(otpSessionId, out var storedOtp))
         {
-            return storedOtp == otpCode;
+            return null; // Session not found
         }
 
-        return false;
+        // Check if OTP is expired
+        if (DateTime.UtcNow > storedOtp.ExpiryTime)
+        {
+            _otpStore.TryRemove(otpSessionId, out _);
+            return null;
+        }
+
+        // Check if OTP code matches
+        if (storedOtp.OtpCode != otpCode)
+        {
+            return null;
+        }
+
+        return storedOtp.UserId;
     }
 
-    public void InvalidateOtp(int userId)
+    public void InvalidateOtp(string otpSessionId)
     {
-        var cacheKey = GetCacheKey(userId);
-        _cache.Remove(cacheKey);
+        _otpStore.TryRemove(otpSessionId, out _);
     }
 
-    private static string GetCacheKey(int userId) => $"OTP_{userId}";
+    private void CleanupExpiredOtps()
+    {
+        var now = DateTime.UtcNow;
+        var expiredKeys = _otpStore
+            .Where(kvp => kvp.Value.ExpiryTime < now)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in expiredKeys)
+        {
+            _otpStore.TryRemove(key, out _);
+        }
+    }
 }

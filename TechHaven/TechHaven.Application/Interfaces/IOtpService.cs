@@ -13,16 +13,16 @@ public interface IOtpService
     string GenerateOtp(int userId);
 
     /// <summary>
-    /// Validates an OTP code for a user.
+    /// Validates an OTP code using session ID.
     /// </summary>
-    /// <param name="userId">The user ID to validate the OTP for.</param>
+    /// <param name="otpSessionId">The OTP session ID to validate.</param>
     /// <param name="otpCode">The OTP code to validate.</param>
-    /// <returns>True if the OTP is valid and not expired, false otherwise.</returns>
-    bool ValidateOtp(int userId, string otpCode);
+    /// <returns>The user ID if valid, null if invalid or expired.</returns>
+    int? ValidateOtp(string otpSessionId, string otpCode);
 
     /// <summary>
-    /// Invalidates (removes) the OTP for a user after successful validation.
+    /// Invalidates (removes) the OTP using session ID after successful validation.
     /// </summary>
-    /// <param name="userId">The user ID whose OTP should be invalidated.</param>
-    void InvalidateOtp(int userId);
+    /// <param name="otpSessionId">The OTP session ID to invalidate.</param>
+    void InvalidateOtp(string otpSessionId);
 }

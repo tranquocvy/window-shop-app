@@ -4,6 +4,7 @@ using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Application.Features.Auth.Login;
 using TechHaven.Application.Features.Auth.VerifyOtp;
+using TechHaven.Application.Features.Auth.RefreshToken;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -60,7 +61,7 @@ public class AuthController : ControllerBase
   {
     try
     {
-      var command = new VerifyOtpCommand(request.UserId, request.OtpCode);
+      var command = new VerifyOtpCommand(request.OtpSessionId, request.OtpCode);
       var result = await _mediator.Send(command);
 
       return Ok(new ResponseWrapper<OtpVerifyResponseDto>
@@ -76,6 +77,38 @@ public class AuthController : ControllerBase
       {
         Success = false,
         Message = "OTP verification failed",
+        Errors = new List<string> { ex.Message }
+      });
+    }
+  }
+
+  /// <summary>
+  /// Step 3: Refresh access token using refresh token.
+  /// </summary>
+  [HttpPost("refresh-token")]
+  [ProducesResponseType(typeof(ResponseWrapper<RefreshTokenResponseDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<ResponseWrapper<RefreshTokenResponseDto>>> RefreshToken(
+      [FromBody] RefreshTokenRequestDto request)
+  {
+    try
+    {
+      var command = new RefreshTokenCommand(request.RefreshToken);
+      var result = await _mediator.Send(command);
+
+      return Ok(new ResponseWrapper<RefreshTokenResponseDto>
+      {
+        Success = true,
+        Message = "Token refreshed successfully",
+        Data = result
+      });
+    }
+    catch (Exception ex)
+    {
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Token refresh failed",
         Errors = new List<string> { ex.Message }
       });
     }
