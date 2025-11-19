@@ -1,29 +1,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
-using System.Net.Http;
 using System.Threading.Tasks;
-using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
-using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class MainWindowViewModel : ObservableObject
     {
-        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAuthService _authService;
-
-        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient))
-        {
-        }
-
-        public MainWindowViewModel(IAuthService authService)
-        {
-            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        }
 
         // Properties for binding
         [ObservableProperty]
@@ -43,7 +32,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private bool _requiresOtp = false;
 
         [ObservableProperty]
-        private int _userId = 0;
+        private string _otpSessionId = string.Empty;
+
+        public MainWindowViewModel()
+        {
+            // Use MockAuthService for testing while DB/backend not ready
+            _authService = new MockAuthService();
+
+            // If you want to test against the real API, use ApiClientFactory.GetHttpClient() and HttpAuthService:
+            // var httpClient = ApiClientFactory.GetHttpClient();
+            // _authService = new HttpAuthService(httpClient);
+        }
+
+        public MainWindowViewModel(IAuthService authService)
+        {
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        }
 
         [RelayCommand]
         private async Task LoginAsync()
@@ -76,8 +80,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     return;
                 }
 
-                // Store user ID and check if OTP is required
-                UserId = result.Data.UserId;
+                // Store otp session and check if OTP is required
+                _otpSessionId = result.Data.OtpSessionId ?? string.Empty;
                 RequiresOtp = result.Data.RequiresOtp;
 
                 if (!RequiresOtp)
@@ -85,11 +89,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     // If no OTP required, set current user from login response
                     Helpers.AppState.CurrentUser = new UserDto
                     {
-                        UserId = result.Data.UserId,
-                        UserName = result.Data.UserName,
+                        UserId = 0,
+                        UserName = string.Empty,
                         UserFullName = result.Data.UserFullName,
-                        RoleId = result.Data.RoleId,
-                        RoleName = result.Data.RoleName,
+                        RoleId = 0,
+                        RoleName = string.Empty,
                         IsActive = true
                     };
                 }
@@ -106,7 +110,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public async Task<bool> VerifyOtpAsync(string otpCode)
         {
-            if (UserId == 0)
+            if (string.IsNullOrWhiteSpace(_otpSessionId))
                 return false;
 
             ErrorMessage = string.Empty;
@@ -115,7 +119,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             {
                 var dto = new OtpVerifyRequestDto
                 {
-                    UserId = UserId,
+                    OtpSessionId = _otpSessionId,
                     OtpCode = otpCode?.Trim() ?? string.Empty
                 };
 
@@ -129,17 +133,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 // Map OtpVerifyResponseDto to UserDto and set AppState
                 var otpData = result.Data;
+
+                // store tokens in TokenStore for subsequent requests
+                TokenStore.AccessToken = otpData.AccessToken;
+                TokenStore.RefreshToken = otpData.RefreshToken;
+
                 Helpers.AppState.CurrentUser = new UserDto
                 {
-                    UserId = otpData.UserId,
+                    UserId = 0,
                     UserName = otpData.UserName,
                     UserFullName = otpData.UserFullName,
-                    RoleId = 0, // role id not provided in OtpVerifyResponseDto
+                    RoleId = otpData.RoleId,
                     RoleName = otpData.RoleName,
                     IsActive = true
                 };
-
-                // Optionally store access token somewhere if needed (not implemented)
 
                 return true;
             }
@@ -153,14 +160,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         private async Task ResendOtpAsync()
         {
-            if (UserId == 0)
+            if (string.IsNullOrWhiteSpace(_otpSessionId))
                 return;
 
             ErrorMessage = string.Empty;
 
             try
             {
-                var result = await _authService.ResendOtpAsync(UserId);
+                var dto = new OtpResendRequestDto { OtpSessionId = _otpSessionId };
+                var result = await _authService.ResendOtpAsync(dto);
 
                 if (!result.Success)
                 {
@@ -175,8 +183,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public Task<bool> CompleteLoginAndGetUserAsync()
         {
-            // Return true if AppState.CurrentUser is set and matches the logged in user
-            if (Helpers.AppState.CurrentUser != null && Helpers.AppState.CurrentUser.UserId == UserId)
+            // Return true if AppState.CurrentUser is set
+            if (Helpers.AppState.CurrentUser != null)
                 return Task.FromResult(true);
 
             // No user available

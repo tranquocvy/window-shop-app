@@ -4,6 +4,13 @@ using System.Net.Http.Headers;
 
 namespace TechHaven.Presentation.WinUI.Helpers
 {
+    public static class TokenStore
+    {
+        // In-memory token store for runtime (use secure storage in production)
+        public static string? AccessToken { get; set; }
+        public static string? RefreshToken { get; set; }
+    }
+
     public static class ApiClientFactory
     {
         // Shared lazy HttpClient for the application
@@ -11,7 +18,9 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
         private static HttpClient Create()
         {
-            var client = new HttpClient
+            // TokenRefreshHandler will attempt refresh when 401 is returned
+            var handler = new TokenRefreshHandler(AppState.ApiBaseUri.ToString());
+            var client = new HttpClient(handler)
             {
                 BaseAddress = AppState.ApiBaseUri,
                 Timeout = TimeSpan.FromSeconds(30)
@@ -19,6 +28,11 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            if (!string.IsNullOrWhiteSpace(TokenStore.AccessToken))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenStore.AccessToken);
+            }
 
             return client;
         }
