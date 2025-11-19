@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Shared.DTOs.Customers;
 using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
@@ -144,6 +145,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 };
                 _ = dialog.ShowAsync();
             }
+        }
+
+
+        public async Task UpdateProductAsync(int id, ProductCreateUpdateDto dto)
+        {
+            _ = await _productService.UpdateProductsAsync(id, dto);
+            await LoadProductsAsync();
         }
 
 
