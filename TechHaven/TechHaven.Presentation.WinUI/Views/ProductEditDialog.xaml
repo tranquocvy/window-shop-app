@@ -1,0 +1,32 @@
+<ContentDialog
+    x:Class="TechHaven.Presentation.WinUI.Views.ProductEditDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TechHaven.Presentation.WinUI.Views"
+    Title="Sửa sản phẩm"
+    PrimaryButtonText="Lưu"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    CloseButtonText="Hủy"
+    DefaultButton="Primary">
+
+    <ScrollViewer MaxHeight="520">
+        <StackPanel Spacing="8" Padding="8">
+            <TextBlock Text="Tên sản phẩm" />
+            <TextBox x:Name="NameBox" PlaceholderText="Tên sản phẩm" />
+
+            <TextBlock Text="Giá bán" />
+            <TextBox x:Name="PriceBox" InputScope="Number" PlaceholderText="0" />
+
+            <TextBlock Text="Số lượng tồn" />
+            <TextBox x:Name="StockBox" InputScope="Number" PlaceholderText="0" />
+
+            <TextBlock Text="Thương hiệu / Danh mục" />
+            <TextBox x:Name="BrandBox" PlaceholderText="Brand" />
+
+            <TextBlock Text="Mô tả" />
+            <TextBox x:Name="DescBox" AcceptsReturn="True" TextWrapping="Wrap" Height="120"/>
+
+            <!-- Tùy chọn: thêm các field khác nếu cần -->
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

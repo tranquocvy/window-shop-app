@@ -64,6 +64,8 @@
         <ListView Grid.Row="2"
           SelectionMode="None"
           ItemsSource="{Binding Products}"
+          IsItemClickEnabled="True"
+          ItemClick="ProductsList_ItemClick"
           x:Name="ProductsListView">
 
             <ListView.Header>
