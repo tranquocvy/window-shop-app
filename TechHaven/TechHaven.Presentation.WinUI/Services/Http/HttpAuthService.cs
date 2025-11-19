@@ -21,7 +21,12 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginAsync(string username, string password)
         {
-            var payload = new { Username = username, Password = password };
+            var payload = new LoginRequestDto
+            {
+                UserName = username,
+                Password = password
+            };
+
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/login", payload);
             return await response.EnsureSuccessAndReadWrapperAsync<LoginResponseDto>("Failed to verify login");
         }

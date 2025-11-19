@@ -28,14 +28,41 @@ namespace TechHaven.Presentation.WinUI.Helpers
             }
         }
 
-        // Pattern for POST/PUT/DELETE: ensure success then read ResponseWrapper<T>
+        // Pattern for POST/PUT/DELETE: read ResponseWrapper<T> even when API returns non-success status
         public static async Task<ResponseWrapper<T>> EnsureSuccessAndReadWrapperAsync<T>(this HttpResponseMessage response, string failureMessage = "Operation failed")
         {
             try
             {
-                response.EnsureSuccessStatusCode();
                 var result = await response.Content.ReadFromJsonAsync<ResponseWrapper<T>>();
-                return result ?? new ResponseWrapper<T> { Success = false };
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return result ?? new ResponseWrapper<T>
+                    {
+                        Success = false,
+                        Message = failureMessage
+                    };
+                }
+
+                if (result != null)
+                {
+                    result.Success = false;
+                    if (string.IsNullOrWhiteSpace(result.Message))
+                    {
+                        result.Message = failureMessage;
+                    }
+
+                    result.Errors ??= new List<string>();
+                    result.Errors.Add($"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}");
+                    return result;
+                }
+
+                return new ResponseWrapper<T>
+                {
+                    Success = false,
+                    Message = failureMessage,
+                    Errors = new List<string> { $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}" }
+                };
             }
             catch (Exception ex)
             {

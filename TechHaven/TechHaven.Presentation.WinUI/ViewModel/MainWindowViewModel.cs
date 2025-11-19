@@ -3,17 +3,27 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
+using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAuthService _authService;
+
+        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient))
+        {
+        }
+
+        public MainWindowViewModel(IAuthService authService)
+        {
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        }
 
         // Properties for binding
         [ObservableProperty]
@@ -34,18 +44,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         [ObservableProperty]
         private int _userId = 0;
-
-        public MainWindowViewModel()    
-        {
-            // Use HttpAuthService (calls backend)
-            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000/") };
-            _authService = new HttpAuthService(httpClient);
-        }
-
-        public MainWindowViewModel(IAuthService authService)
-        {
-            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        }
 
         [RelayCommand]
         private async Task LoginAsync()

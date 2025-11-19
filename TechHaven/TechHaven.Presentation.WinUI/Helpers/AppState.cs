@@ -9,7 +9,12 @@ namespace TechHaven.Presentation.WinUI.Helpers
 {
     public static class AppState
     {
+        private const string DefaultApiBaseUrl = "http://localhost:5000/";
+
         public static UserDto? CurrentUser { get; set; }
         public static bool IsLoggedIn => CurrentUser != null;
+        public static Uri ApiBaseUri { get; } = new(
+            Environment.GetEnvironmentVariable("TECHHAVEN_API_BASEURL") ??
+            DefaultApiBaseUrl);
     }
 }
