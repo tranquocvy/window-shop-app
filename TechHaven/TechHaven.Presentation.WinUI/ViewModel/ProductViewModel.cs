@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -122,6 +123,30 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 }
             }
         }
+
+        [RelayCommand]
+        private async Task DeleteProductContext(ProductItemViewModel item)
+        {
+            if (item == null) return;
+
+            var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+            if (response.Success)
+            {
+                Products.Remove(item);
+            }
+            else
+            {
+                var dialog = new Microsoft.UI.Xaml.Controls.ContentDialog
+                {
+                    Title = "Lỗi",
+                    Content = "Xóa sản phẩm thất bại",
+                    CloseButtonText = "Đóng"
+                };
+                _ = dialog.ShowAsync();
+            }
+        }
+
+
     }
 
 

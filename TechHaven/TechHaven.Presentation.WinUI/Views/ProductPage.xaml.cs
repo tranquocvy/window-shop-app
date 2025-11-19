@@ -62,6 +62,12 @@ namespace TechHaven.Presentation.WinUI.Views
             // }
         }
 
+        private void ViewDetails_Click(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+
         // -------------------------------------------------------------------
         // CÁC PHƯƠNG THỨC HỖ TRỢ KHÁC (Tùy chọn)
         // -------------------------------------------------------------------

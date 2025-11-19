@@ -62,14 +62,14 @@
 
         <!-- LIST -->
         <ListView Grid.Row="2"
-                  SelectionMode="None"
-                  ItemsSource="{Binding Products}">
+          SelectionMode="None"
+          ItemsSource="{Binding Products}"
+          x:Name="ProductsListView">
 
             <ListView.Header>
                 <Grid Padding="0,6">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="52"/>
-                        <!-- checkbox -->
+                        <ColumnDefinition Width="50"/>
                         <ColumnDefinition Width="0.5*"/>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1.2*"/>
@@ -80,10 +80,8 @@
 
                     <!-- CHECK ALL -->
                     <CheckBox Grid.Column="0"
-                              IsChecked="{Binding IsAllSelected, Mode=TwoWay}"
-                              Margin="16 0 0 0"
-                              />
-
+                      IsChecked="{Binding IsAllSelected, Mode=TwoWay}"
+                      Margin="16 0 0 0"/>
 
                     <TextBlock Grid.Column="1" Text="ID" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="SemiBold"/>
@@ -109,9 +107,7 @@
 
                         <!-- CHECKBOX ITEM -->
                         <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                   
-                        />
+                          IsChecked="{Binding IsSelected, Mode=TwoWay}" />
 
                         <TextBlock Grid.Column="1" Text="{Binding Product.ProductId}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}"/>
@@ -119,10 +115,24 @@
                         <TextBlock Grid.Column="4" Text="{Binding Product.StockQuantity}"/>
                         <TextBlock Grid.Column="5" Text="{Binding Product.BrandName}"/>
                         <TextBlock Grid.Column="6" Text="Còn hàng" Foreground="Green"/>
+
+                        <!-- Context Menu -->
+                        <Grid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Xem chi tiết" Click="ViewDetails_Click"/>
+                                <MenuFlyoutItem
+                            Text="Xóa sản phẩm"
+                            Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
+                            CommandParameter="{Binding}" />
+                            </MenuFlyout>
+                        </Grid.ContextFlyout>
+
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
+
         </ListView>
+
 
         <!-- PAGINATION -->
         <StackPanel Grid.Row="3"
