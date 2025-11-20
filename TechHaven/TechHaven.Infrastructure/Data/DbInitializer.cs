@@ -45,7 +45,7 @@ public static class DbInitializer
             {
                 UserId = 1,
                 UserFullName = "Admin User",
-                Email = "admin@techhaven.com",
+                Email = "nphuchoang.itus@gmail.com",
                 UserName = "admin",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                 RoleId = 1,
