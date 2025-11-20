@@ -5,6 +5,7 @@ using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Application.Features.Auth.Login;
 using TechHaven.Application.Features.Auth.VerifyOtp;
 using TechHaven.Application.Features.Auth.RefreshToken;
+using TechHaven.Application.Features.Auth.ResendOtp;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -109,6 +110,38 @@ public class AuthController : ControllerBase
       {
         Success = false,
         Message = "Token refresh failed",
+        Errors = new List<string> { ex.Message }
+      });
+    }
+  }
+
+  /// <summary>
+  /// Resend OTP code to user's email.
+  /// </summary>
+  [HttpPost("resend-otp")]
+  [ProducesResponseType(typeof(ResponseWrapper<OtpResendResponseDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<ResponseWrapper<OtpResendResponseDto>>> ResendOtp(
+      [FromBody] OtpResendRequestDto request)
+  {
+    try
+    {
+      var command = new ResendOtpCommand(request.OtpSessionId);
+      var result = await _mediator.Send(command);
+
+      return Ok(new ResponseWrapper<OtpResendResponseDto>
+      {
+        Success = true,
+        Message = "OTP resent successfully",
+        Data = result
+      });
+    }
+    catch (Exception ex)
+    {
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Failed to resend OTP",
         Errors = new List<string> { ex.Message }
       });
     }

@@ -14,17 +14,17 @@ public class OtpService : IOtpService
     {
         // Generate 6-digit OTP
         var otpCode = new Random().Next(100000, 999999).ToString();
-        
+
         // Generate session ID (GUID)
         var sessionId = Guid.NewGuid().ToString();
-        
+
         // Store OTP with expiry time
         var expiryTime = DateTime.UtcNow.AddMinutes(OtpExpirationMinutes);
         _otpStore[sessionId] = (userId, otpCode, expiryTime);
-        
+
         // Clean up expired OTPs
         CleanupExpiredOtps();
-        
+
         return (sessionId, otpCode);
     }
 
@@ -54,6 +54,23 @@ public class OtpService : IOtpService
     public void InvalidateOtp(string otpSessionId)
     {
         _otpStore.TryRemove(otpSessionId, out _);
+    }
+
+    public int? GetUserIdFromSession(string otpSessionId)
+    {
+        if (!_otpStore.TryGetValue(otpSessionId, out var storedOtp))
+        {
+            return null; // Session not found
+        }
+
+        // Check if OTP is expired
+        if (DateTime.UtcNow > storedOtp.ExpiryTime)
+        {
+            _otpStore.TryRemove(otpSessionId, out _);
+            return null;
+        }
+
+        return storedOtp.UserId;
     }
 
     private void CleanupExpiredOtps()
