@@ -72,6 +72,26 @@ public class User
     public bool HasSeenGuide { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a value indicating whether MFA is enabled for this user.
+    /// </summary>
+    [Display(Name = "MFA Enabled")]
+    public bool MfaEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the current refresh token for the user.
+    /// </summary>
+    [MaxLength(512)]
+    [Display(Name = "Refresh Token")]
+    public string? RefreshToken { get; set; }
+
+    /// <summary>
+    /// Gets or sets the expiration time for the refresh token.
+    /// </summary>
+    [Display(Name = "Refresh Token Expiry")]
+    [DataType(DataType.DateTime)]
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+
+    /// <summary>
     /// Gets or sets the date and time when the user was created.
     /// </summary>
     [Display(Name = "Created At")]
@@ -84,6 +104,13 @@ public class User
     [Display(Name = "Activated At")]
     [DataType(DataType.DateTime)]
     public DateTime ActivatedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the date and time of the last login.
+    /// </summary>
+    [Display(Name = "Last Login")]
+    [DataType(DataType.DateTime)]
+    public DateTime? LastLoginAt { get; set; }
 
     /// <summary>
     /// Gets or sets the role navigation property.

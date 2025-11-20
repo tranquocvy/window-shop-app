@@ -24,7 +24,9 @@ public class VerifyOtpCommandHandler : ICommandHandler<VerifyOtpCommand, OtpVeri
   public async Task<OtpVerifyResponseDto> Handle(VerifyOtpCommand request, CancellationToken cancellationToken)
   {
     // 1. Verify OTP
-    if (!_otpService.ValidateOtp(request.UserId, request.OtpCode))
+    var userId = _otpService.ValidateOtp(request.OtpSessionId, request.OtpCode);
+
+    if (!userId.HasValue)
     {
       throw new ValidationException(new[]
       {
@@ -33,31 +35,42 @@ public class VerifyOtpCommandHandler : ICommandHandler<VerifyOtpCommand, OtpVeri
     }
 
     // 2. Get user with role
-    var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken)
-        ?? throw new NotFoundException("User", request.UserId);
+    var user = await _unitOfWork.Users.GetByIdAsync(userId.Value, cancellationToken)
+        ?? throw new NotFoundException("User", userId.Value);
 
     // Ensure Role is loaded
     if (user.Role == null)
     {
       var userWithRole = (await _unitOfWork.Users.GetWithRoleAsync(cancellationToken))
-          .FirstOrDefault(u => u.UserId == request.UserId)
-          ?? throw new NotFoundException("User", request.UserId);
+          .FirstOrDefault(u => u.UserId == userId.Value)
+          ?? throw new NotFoundException("User", userId.Value);
       user = userWithRole;
     }
 
     // 3. Invalidate OTP after successful verification
-    _otpService.InvalidateOtp(request.UserId);
+    _otpService.InvalidateOtp(request.OtpSessionId);
+    
+    // 4. Generate Access Token and Refresh Token
+    var accessToken = _jwtTokenService.GenerateAccessToken(user);
+    var refreshToken = _jwtTokenService.GenerateRefreshToken();
 
-    // 4. Generate JWT token
-    var token = _jwtTokenService.GenerateAccessToken(user);
+    // 5. Save refresh token to database
+    user.RefreshToken = refreshToken;
+    user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+    user.LastLoginAt = DateTime.UtcNow;
 
-    // 5. Return response
+    await _unitOfWork.Users.UpdateAsync(user, cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+    // 6. Return response with both tokens
     return new OtpVerifyResponseDto
     {
-      AccessToken = token,
-      UserId = user.UserId,
+      AccessToken = accessToken,
+      RefreshToken = refreshToken,
       UserName = user.UserName,
       UserFullName = user.UserFullName,
+      Email = user?.Email ?? string.Empty,
+      RoleId = user!.RoleId,
       RoleName = user.Role?.RoleName ?? string.Empty
     };
   }
