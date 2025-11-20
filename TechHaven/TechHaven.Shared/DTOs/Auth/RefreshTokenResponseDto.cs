@@ -1,4 +1,4 @@
-﻿namespace TechHaven.Shared.DTOs.Auth;
+namespace TechHaven.Shared.DTOs.Auth;
 
 public class RefreshTokenResponseDto
 {

@@ -41,7 +41,7 @@ namespace TechHaven.Presentation.WinUI.Views
         // 4. Khi trang được tải, gọi Command để load dữ liệu
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedTo(e);
+            base.OnNavigatedTo(e); 
 
             ViewModel.LoadCustomersCommand.Execute(null);
         }
