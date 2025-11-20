@@ -163,8 +163,37 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             await LoadProductsAsync();
         }
 
+        public async Task CreateProductAsync(ProductCreateUpdateDto dto)
+        {
+            if (dto == null) return;
+
+            // Giả sử _productService đã có hàm CreateProductAsync
+            var response = await _productService.CreateProductsAsync(dto);
+
+            if (response.Success)
+            {
+                await LoadProductsAsync(); // Reload lại danh sách sau khi thêm
+            }
+            else
+            {
+                // Xử lý lỗi nếu cần (ví dụ bắn message lên UI)
+                System.Diagnostics.Debug.WriteLine($"Error creating product: {response.Message}");
+            }
+        }
+
 
     }
 
+    public partial class ProductItemViewModel : ObservableObject
+    {
+        public ProductDto Product { get; }
 
+        public ProductItemViewModel(ProductDto product)
+        {
+            Product = product;
+        }
+
+        [ObservableProperty]
+        private bool _isSelected;
+    }
 }
