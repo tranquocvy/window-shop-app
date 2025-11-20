@@ -48,7 +48,9 @@
                     FontWeight="Bold"
                     CornerRadius="5"
                     Height="40"
-                    Width="200"/>
+                    Width="200"
+                    Click="AddProduct_Click" 
+                    />
 
             <!--  NÚT XÓA  -->
             <Button Content="Xóa sản phẩm đã chọn"
@@ -151,12 +153,15 @@
                        Margin="12,0,0,0"
                        Text="Items per page:"/>
 
-            <ComboBox Width="80">
-                <ComboBoxItem Content="5" IsSelected="True"/>
-                <ComboBoxItem Content="10"/>
-                <ComboBoxItem Content="20"/>
-                <ComboBoxItem Content="50"/>
+            <ComboBox Width="80"
+                  SelectedValuePath="Tag"
+                  SelectedValue="{Binding PageSize, Mode=TwoWay}">
+                <ComboBoxItem Content="5" Tag="5"/>
+                <ComboBoxItem Content="10" Tag="10"/>
+                <ComboBoxItem Content="20" Tag="20"/>
+                <ComboBoxItem Content="50" Tag="50"/>
             </ComboBox>
+
         </StackPanel>
 
     </Grid>

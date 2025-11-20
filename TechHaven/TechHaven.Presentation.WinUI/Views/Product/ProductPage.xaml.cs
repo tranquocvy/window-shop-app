@@ -5,7 +5,7 @@ using System;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Shared.DTOs.Products;
-using TechHaven.Presentation.WinUI.Views.Controls; // Bắt buộc để dùng UserControl
+using TechHaven.Presentation.WinUI.Views.Controls; 
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -94,14 +94,6 @@ namespace TechHaven.Presentation.WinUI.Views
         // PHƯƠNG THỨC XỬ LÝ SỰ KIỆN TỪ XAML (HANDLERS)
         // -------------------------------------------------------------------
 
-        /// <summary>
-        /// Xử lý sự kiện khi nhấn nút "Thêm Sản Phẩm"
-        /// </summary>
-        private async void AddProduct_Click(object sender, RoutedEventArgs e)
-        {
-            // Gọi hàm chung với tham số null (Chế độ Thêm)
-            await ShowProductDialogAsync(null);
-        }
 
         /// <summary>
         /// Xử lý sự kiện khi nhấp vào một mục (Item) trong ProductsList
@@ -126,5 +118,11 @@ namespace TechHaven.Presentation.WinUI.Views
                 await ShowProductDialogAsync(selected);
             }
         }
+
+        private async void AddProduct_Click(object sender, RoutedEventArgs e)
+        {
+            await ShowProductDialogAsync();
+        }
+
     }
 }

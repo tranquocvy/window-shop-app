@@ -163,6 +163,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             await LoadProductsAsync();
         }
 
+
         public async Task CreateProductAsync(ProductCreateUpdateDto dto)
         {
             if (dto == null) return;
@@ -172,13 +173,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             if (response.Success)
             {
-                await LoadProductsAsync(); // Reload lại danh sách sau khi thêm
+                await LoadProductsAsync(); 
             }
             else
             {
                 // Xử lý lỗi nếu cần (ví dụ bắn message lên UI)
                 System.Diagnostics.Debug.WriteLine($"Error creating product: {response.Message}");
             }
+        }
+
+        // Called when page size changes
+        partial void OnPageSizeChanged(int value)
+        {
+            PageNumber = 1;
+            _ = LoadProductsAsync();
         }
 
 
