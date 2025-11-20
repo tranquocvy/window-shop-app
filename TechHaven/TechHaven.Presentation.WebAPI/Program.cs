@@ -2,8 +2,15 @@ using TechHaven.Application;
 using TechHaven.Infrastructure;
 using TechHaven.Infrastructure.Data;
 using TechHaven.Infrastructure.Persistence;
+using DotNetEnv;
+
+// Load environment variables FIRST, before creating builder
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add environment variables to configuration BEFORE registering services
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container
 builder.Services.AddControllers();

@@ -117,7 +117,7 @@ public class EmailService : IEmailService
         
         <p style='font-size: 12px; color: #888; text-align: center;'>
             Email này được gửi tự động, vui lòng không trả lời.<br>
-            © 2024 TechHaven. All rights reserved.
+            © 2025 TechHaven. All rights reserved.
         </p>
     </div>
 </body>
