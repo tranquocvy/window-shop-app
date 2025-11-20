@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Common;
-using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -27,16 +26,16 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 return new ResponseWrapper<LoginResponseDto> { Success = false, Message = "Invalid username or password" };
 
             // create a mock OtpSessionId
-            var sessionId = System.Guid.NewGuid().ToString();
+            var sessionId = "sessionid";
             var otpCode = "000000";
             _otpSessions[sessionId] = (user.UserId, otpCode);
 
             var loginResponse = new LoginResponseDto
             {
                 UserFullName = user.UserFullName ?? string.Empty,
-                MaskedEmail = MaskEmail(user.Email),
+                MaskedEmail = "qu***@***.com",
                 RequiresOtp = true,
-                OtpExpiresIn = 300,
+                OtpExpiresIn = 10,
                 OtpSessionId = sessionId
             };
 
@@ -88,15 +87,6 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             // reset OTP code (still mock)
             _otpSessions[dto.OtpSessionId] = (entry.UserId, "000000");
             return new ResponseWrapper<bool> { Success = true, Message = "OTP resent", Data = true };
-        }
-
-        // optional helper to mask email for LoginResponseDto
-        private static string MaskEmail(string? email)
-        {
-            if (string.IsNullOrWhiteSpace(email)) return string.Empty;
-            var atIndex = email.IndexOf('@');
-            if (atIndex <= 1) return email;
-            return email[0] + "***" + email.Substring(atIndex - 1);
         }
     }
 }

@@ -22,7 +22,7 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
+
         <!-- BÊN TRÁI: Logo + Gradient -->
         <Grid>
             <Grid.Background>
@@ -61,7 +61,7 @@
                            Margin="0,5,0,20"/>
 
                 <TextBlock Text="Username" FontWeight="SemiBold" Margin="0,10,0,5" Foreground="#3A5FC0" />
-                <TextBox x:Name ="usernameBox" PlaceholderText="Enter your email"
+                <TextBox x:Name ="usernameBox" Text="{Binding Username, Mode=TwoWay}" PlaceholderText="Enter your user"
                          BorderBrush="#3A5FC0"
                          BorderThickness="1"
                          CornerRadius="4"
@@ -70,7 +70,7 @@
                          Background="White"/>
 
                 <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,15,0,5" Foreground="#3A5FC0"/>
-                <PasswordBox x:Name="passwordBox" PlaceholderText="Enter your password"
+                <PasswordBox x:Name="passwordBox" Password="{Binding Password, Mode=TwoWay}" PlaceholderText="Enter your password"
                              BorderBrush="#3A5FC0"
                              BorderThickness="1"
                              CornerRadius="4"
@@ -99,7 +99,9 @@
                         Margin="0,10"
                         Click="loginButton_Click"
                         />
-                <TextBlock x:Name="errorTextBlock" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+
+                <TextBlock x:Name="errorTextBlock" Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+
             </StackPanel>
         </Grid>
     </Grid>

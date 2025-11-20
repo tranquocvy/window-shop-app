@@ -1,193 +1,228 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Dispatching;
 using System;
 using System.Threading.Tasks;
+using System.Timers;
+using System.Windows.Input;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
-using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
+using Windows.ApplicationModel;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class MainWindowViewModel : ObservableObject
     {
         private readonly IAuthService _authService;
+        private DispatcherQueue? _dispatcher;
+        private Timer? _timer;
 
-        // Properties for binding
-        [ObservableProperty]
-        private string _username = string.Empty;
+        private string _otpSessionIdInternal = string.Empty;
+        private int _otpExpiresInInternal = 0;
 
-        [ObservableProperty]
-        private string _password = string.Empty;
-
-        [ObservableProperty]
-        private string _errorMessage = string.Empty;
-
-        [ObservableProperty]
-        private bool _isLoading = false;
-
-        // Properties for OTP flow
-        [ObservableProperty]
-        private bool _requiresOtp = false;
-
-        [ObservableProperty]
-        private string _otpSessionId = string.Empty;
-
-        public MainWindowViewModel()
-        {
-            // Use MockAuthService for testing while DB/backend not ready
-            _authService = new MockAuthService();
-
-            // If you want to test against the real API, use ApiClientFactory.GetHttpClient() and HttpAuthService:
-            // var httpClient = ApiClientFactory.GetHttpClient();
-            // _authService = new HttpAuthService(httpClient);
-        }
+        public MainWindowViewModel() : this(new MockAuthService()) { }
 
         public MainWindowViewModel(IAuthService authService)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+
+            LoginCommand = new AsyncRelayCommand(LoginAsync);
+            VerifyOtpCommand = new AsyncRelayCommand(VerifyOtpExecute, () => IsVerifyEnabled);
+            ResendOtpCommand = new AsyncRelayCommand(ResendOtpAsync);
+            CloseOtpCommand = new RelayCommand(CloseOtpExecute);
         }
 
-        [RelayCommand]
+        // Commands
+        public IAsyncRelayCommand LoginCommand { get; }
+        public IAsyncRelayCommand VerifyOtpCommand { get; }
+        public IAsyncRelayCommand ResendOtpCommand { get; }
+        public ICommand CloseOtpCommand { get; }
+
+        // Observable properties (source-generator reduces boilerplate)
+        [ObservableProperty]
+        private string username = string.Empty;
+
+        [ObservableProperty]
+        private string password = string.Empty;
+
+        [ObservableProperty]
+        private string errorMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool requiresOtp = false;
+
+        // Single display string for OTP info (greeting + sent text)
+        [ObservableProperty]
+        private string otpInfo = string.Empty;
+
+        [ObservableProperty]
+        private int otpRemaining = 0;
+
+        [ObservableProperty]
+        private string otpInput = string.Empty;
+
+        [ObservableProperty]
+        private bool isVerifyEnabled = true;
+
+        // Called by source-generator when IsVerifyEnabled changes
+        partial void OnIsVerifyEnabledChanged(bool value)
+        {
+            (VerifyOtpCommand as AsyncRelayCommand)?.NotifyCanExecuteChanged();
+        }
+
         private async Task LoginAsync()
         {
-            // Clear previous error
             ErrorMessage = string.Empty;
 
-            // Validation
-            if (string.IsNullOrWhiteSpace(Username))
-            {
-                ErrorMessage = "Please enter username.";
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(Password))
-            {
-                ErrorMessage = "Please enter password.";
-                return;
-            }
-
-            IsLoading = true;
+            if (string.IsNullOrWhiteSpace(Username)) { ErrorMessage = "Please enter username."; return; }
+            if (string.IsNullOrWhiteSpace(Password)) { ErrorMessage = "Please enter password."; return; }
 
             try
             {
+                IsVerifyEnabled = true; // reset state
                 var result = await _authService.VerifyLoginAsync(Username, Password);
+                if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Login failed."; return; }
 
-                if (!result.Success || result.Data == null)
-                {
-                    ErrorMessage = result.Message ?? "Login failed.";
-                    return;
-                }
-
-                // Store otp session and check if OTP is required
-                _otpSessionId = result.Data.OtpSessionId ?? string.Empty;
+                _otpSessionIdInternal = result.Data.OtpSessionId ?? string.Empty;
                 RequiresOtp = result.Data.RequiresOtp;
 
-                if (!RequiresOtp)
+                // Build single OTP info string (simple)
+                var name = result.Data.UserFullName ?? string.Empty;
+                var email = result.Data.MaskedEmail ?? string.Empty;
+                OtpInfo = string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(email) ? string.Empty : $"Xin chào {name}. Đã gửi OTP tới {email}".Trim();
+
+                // Set remaining seconds directly and store expiry for resend
+                _otpExpiresInInternal = result.Data.OtpExpiresIn;
+                OtpRemaining = _otpExpiresInInternal;
+
+                if (RequiresOtp)
                 {
-                    // If no OTP required, set current user from login response
-                    Helpers.AppState.CurrentUser = new UserDto
-                    {
-                        UserId = 0,
-                        UserName = string.Empty,
-                        UserFullName = result.Data.UserFullName,
-                        RoleId = 0,
-                        RoleName = string.Empty,
-                        IsActive = true
-                    };
+                    StartCountdown();
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Error: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        public async Task<bool> VerifyOtpAsync(string otpCode)
-        {
-            if (string.IsNullOrWhiteSpace(_otpSessionId))
-                return false;
-
-            ErrorMessage = string.Empty;
-
-            try
-            {
-                var dto = new OtpVerifyRequestDto
-                {
-                    OtpSessionId = _otpSessionId,
-                    OtpCode = otpCode?.Trim() ?? string.Empty
-                };
-
-                var result = await _authService.VerifyOtpAsync(dto);
-
-                if (!result.Success || result.Data == null)
-                {
-                    ErrorMessage = result.Message ?? "Invalid OTP code.";
-                    return false;
-                }
-
-                // Map OtpVerifyResponseDto to UserDto and set AppState
-                var otpData = result.Data;
-
-                // store tokens in TokenStore for subsequent requests
-                TokenStore.AccessToken = otpData.AccessToken;
-                TokenStore.RefreshToken = otpData.RefreshToken;
 
                 Helpers.AppState.CurrentUser = new UserDto
                 {
                     UserId = 0,
-                    UserName = otpData.UserName,
-                    UserFullName = otpData.UserFullName,
-                    RoleId = otpData.RoleId,
-                    RoleName = otpData.RoleName,
+                    UserName = Username,
+                    UserFullName = name,
+                    RoleId = 0,
+                    RoleName = string.Empty,
                     IsActive = true
                 };
-
-                return true;
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Error: {ex.Message}";
-                return false;
             }
         }
 
-        [RelayCommand]
+        private void StartCountdown()
+        {
+            _dispatcher = DispatcherQueue.GetForCurrentThread();
+            _timer?.Stop(); _timer?.Dispose();
+
+            // OtpRemaining already set by LoginAsync or ResendOtpAsync
+            IsVerifyEnabled = OtpRemaining > 0;
+
+            _timer = new Timer(1000);
+            _timer.Elapsed += (s, e) =>
+            {
+                if (_dispatcher != null) _dispatcher.TryEnqueue(Tick);
+                else Tick();
+            };
+            _timer.Start();
+        }
+
+        private void Tick()
+        {
+            OtpRemaining = Math.Max(0, OtpRemaining - 1);
+            if (OtpRemaining <= 0)
+            {
+                IsVerifyEnabled = false;
+                _timer?.Stop();
+            }
+        }
+
+        private void StopCountdown()
+        {
+            _timer?.Stop(); _timer?.Dispose(); _timer = null;
+        }
+
+        private async Task VerifyOtpExecute()
+        {
+            IsVerifyEnabled = false;
+            var ok = await VerifyOtpInternal(OtpInput?.Trim() ?? string.Empty);
+            if (ok)
+            {
+                StopCountdown();
+                RequiresOtp = false;
+                OtpInput = string.Empty;
+                OtpInfo = string.Empty;
+            }
+            else
+            {
+                IsVerifyEnabled = OtpRemaining > 0;
+            }
+        }
+
+        private void CloseOtpExecute()
+        {
+            StopCountdown();
+            RequiresOtp = false;
+        }
+
         private async Task ResendOtpAsync()
         {
-            if (string.IsNullOrWhiteSpace(_otpSessionId))
-                return;
-
+            if (string.IsNullOrWhiteSpace(_otpSessionIdInternal)) return;
             ErrorMessage = string.Empty;
 
-            try
-            {
-                var dto = new OtpResendRequestDto { OtpSessionId = _otpSessionId };
-                var result = await _authService.ResendOtpAsync(dto);
+            var dto = new OtpResendRequestDto { OtpSessionId = _otpSessionIdInternal };
+            var result = await _authService.ResendOtpAsync(dto);
+            if (!result.Success) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
 
-                if (!result.Success)
-                {
-                    ErrorMessage = result.Message ?? "Unable to resend OTP.";
-                }
-            }
-            catch (Exception ex)
+            // Reset remaining to original expiry and restart countdown
+            if (_otpExpiresInInternal > 0)
             {
-                ErrorMessage = $"Error: {ex.Message}";
+                OtpRemaining = _otpExpiresInInternal;
+                StartCountdown();
             }
+
+            IsVerifyEnabled = OtpRemaining > 0;
+        }
+
+        private async Task<bool> VerifyOtpInternal(string otpCode)
+        {
+            if (string.IsNullOrWhiteSpace(_otpSessionIdInternal)) return false;
+            ErrorMessage = string.Empty;
+
+            var dto = new OtpVerifyRequestDto { OtpSessionId = _otpSessionIdInternal, OtpCode = otpCode };
+            var result = await _authService.VerifyOtpAsync(dto);
+            if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Invalid OTP code."; return false; }
+
+            var otpData = result.Data;
+            TokenStore.AccessToken = otpData.AccessToken;
+            TokenStore.RefreshToken = otpData.RefreshToken;
+
+            Helpers.AppState.CurrentUser = new UserDto
+            {
+                UserId = 0,
+                UserName = otpData.UserName,
+                UserFullName = otpData.UserFullName,
+                RoleId = otpData.RoleId,
+                RoleName = otpData.RoleName,
+                IsActive = true
+            };
+
+            return true;
         }
 
         public Task<bool> CompleteLoginAndGetUserAsync()
         {
-            // Return true if AppState.CurrentUser is set
-            if (Helpers.AppState.CurrentUser != null)
-                return Task.FromResult(true);
-
-            // No user available
+            if (Helpers.AppState.CurrentUser != null) return Task.FromResult(true);
             ErrorMessage = "User information not available.";
             return Task.FromResult(false);
         }
