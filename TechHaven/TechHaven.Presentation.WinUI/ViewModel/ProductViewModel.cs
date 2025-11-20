@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
@@ -39,6 +40,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private bool _isAllSelected;
 
         private bool _isUpdatingAll = false;
+
+
+        partial void OnSearchTermChanged(string value)
+        {
+            PageNumber = 1;
+            _ = LoadProductsAsync(); 
+        }
+
 
         partial void OnIsAllSelectedChanged(bool value)
         {
@@ -155,7 +164,44 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
 
+        public async Task CreateProductAsync(ProductCreateUpdateDto dto)
+        {
+            if (dto == null) return;
+
+            // Giả sử _productService đã có hàm CreateProductAsync
+            var response = await _productService.CreateProductsAsync(dto);
+
+            if (response.Success)
+            {
+                await LoadProductsAsync(); 
+            }
+            else
+            {
+                // Xử lý lỗi nếu cần (ví dụ bắn message lên UI)
+                System.Diagnostics.Debug.WriteLine($"Error creating product: {response.Message}");
+            }
+        }
+
+        // Called when page size changes
+        partial void OnPageSizeChanged(int value)
+        {
+            PageNumber = 1;
+            _ = LoadProductsAsync();
+        }
+
+
     }
 
+    public partial class ProductItemViewModel : ObservableObject
+    {
+        public ProductDto Product { get; }
 
+        public ProductItemViewModel(ProductDto product)
+        {
+            Product = product;
+        }
+
+        [ObservableProperty]
+        private bool _isSelected;
+    }
 }

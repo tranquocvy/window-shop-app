@@ -1,0 +1,36 @@
+<UserControl
+    x:Class="TechHaven.Presentation.WinUI.Views.Controls.ProductFormUserControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer MaxHeight="520">
+        <StackPanel Spacing="8" Padding="8">
+            <!-- Tên sản phẩm -->
+            <TextBlock Text="Tên sản phẩm" FontWeight="SemiBold"/>
+            <TextBox x:Name="NameBox" PlaceholderText="Nhập tên sản phẩm..." />
+
+            <!-- Giá bán -->
+            <TextBlock Text="Giá bán" FontWeight="SemiBold"/>
+            <TextBox x:Name="PriceBox" InputScope="Number" PlaceholderText="0" />
+
+            <!-- Số lượng tồn -->
+            <TextBlock Text="Số lượng tồn" FontWeight="SemiBold"/>
+            <TextBox x:Name="StockBox" InputScope="Number" PlaceholderText="0" />
+
+            <!-- Thương hiệu -->
+            <TextBlock Text="Thương hiệu / Danh mục" FontWeight="SemiBold"/>
+            <TextBox x:Name="BrandBox" PlaceholderText="Thương hiệu" />
+
+            <!-- Mô tả -->
+            <TextBlock Text="Mô tả" FontWeight="SemiBold"/>
+            <TextBox x:Name="DescBox" 
+                     AcceptsReturn="True" 
+                     TextWrapping="Wrap" 
+                     Height="120"
+                     PlaceholderText="Mô tả chi tiết sản phẩm..."/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
