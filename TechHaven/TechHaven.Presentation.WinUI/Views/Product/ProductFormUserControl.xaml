@@ -9,11 +9,24 @@
     <ScrollViewer MaxHeight="520">
         <StackPanel Spacing="12" Padding="12">
 
-            <TextBlock Text="Tên sản phẩm" FontWeight="SemiBold"/>
-            <TextBox x:Name="ProductNameBox" PlaceholderText="Nhập tên sản phẩm..." />
+            <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold"/>
+            <TextBox x:Name="ProductNameBox" 
+                     PlaceholderText="Nhập tên sản phẩm..." 
+                     TextChanged="OnInputChanged"/>
+
+            <TextBlock x:Name="ProductNameErrorText"
+                       Text="Vui lòng nhập tên sản phẩm."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
+
 
             <TextBlock Text="Thương hiệu" FontWeight="SemiBold"/>
             <TextBox x:Name="BrandNameBox" PlaceholderText="Nhập thương hiệu..." />
+            
+            <TextBlock x:Name="BrandNameErrorText"
+                       Text="Phải nhập tên thương hiệu."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>   
 
             <TextBlock Text="Mô tả" FontWeight="SemiBold"/>
             <TextBox x:Name="DescriptionBox"
@@ -22,11 +35,27 @@
                      Height="120"
                      PlaceholderText="Mô tả chi tiết sản phẩm..." />
 
-            <TextBlock Text="Giá bán" FontWeight="SemiBold"/>
-            <NumberBox x:Name="SellPriceBox" PlaceholderText="0" />
+            <TextBlock Text="Giá bán *" FontWeight="SemiBold"/>
+            <NumberBox x:Name="SellPriceBox" 
+                       PlaceholderText="0" 
+                       ValueChanged="OnNumberChanged"/>
 
-            <TextBlock Text="Số lượng tồn" FontWeight="SemiBold"/>
-            <NumberBox x:Name="StockQuantityBox" PlaceholderText="0" />
+            <TextBlock x:Name="SellPriceErrorText"
+                       Text="Giá bán phải lớn hơn 0."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
+
+
+            <TextBlock Text="Số lượng tồn *" FontWeight="SemiBold"/>
+            <NumberBox x:Name="StockQuantityBox" 
+                       PlaceholderText="0" 
+                       ValueChanged="OnNumberChanged"/>
+
+            <TextBlock x:Name="StockQuantityErrorText"
+                       Text="Số lượng tồn không được âm."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
+
 
             <TextBlock Text="Màu sắc" FontWeight="SemiBold"/>
             <TextBox x:Name="ColorBox" PlaceholderText="VD: Đen, Trắng..." />

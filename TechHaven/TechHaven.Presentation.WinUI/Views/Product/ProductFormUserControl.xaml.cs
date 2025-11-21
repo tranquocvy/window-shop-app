@@ -19,11 +19,13 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         {
             if (product == null) return;
 
+            // Reset lỗi cũ nếu có
+            ClearErrors();
+
             ProductNameBox.Text = product.ProductName ?? string.Empty;
             BrandNameBox.Text = product.BrandName ?? string.Empty;
             DescriptionBox.Text = product.Description ?? string.Empty;
 
-            // Chỉ load Giá bán và Số lượng
             SellPriceBox.Value = (double)product.SellPrice;
             StockQuantityBox.Value = product.StockQuantity;
 
@@ -39,40 +41,64 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         }
 
         /// <summary>
-        /// Lấy dữ liệu từ form + validate.
+        /// Lấy dữ liệu từ form + validate hiển thị lỗi UI
         /// </summary>
         public ProductCreateUpdateDto GetFormData()
         {
-            // Lấy giá trị an toàn
+            // 1. Reset trạng thái lỗi (Ẩn hết thông báo đỏ)
+            ClearErrors();
+
+            bool isValid = true;
+
+            // 2. Lấy dữ liệu thô an toàn
+            string rawName = ProductNameBox.Text?.Trim();
+            string brandName = BrandNameBox.Text?.Trim();
             double sellPrice = GetDoubleSafe(SellPriceBox.Value);
             double stockQty = GetDoubleSafe(StockQuantityBox.Value);
 
-            // ===========================
-            // 1. Validate bắt buộc
-            // ===========================
+            // 3. Validate từng trường
 
+            // -- Check Tên --
+            if (string.IsNullOrEmpty(rawName))
+            {
+                ProductNameErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // -- Check Tên Thương hiệu --
+            if (string.IsNullOrEmpty(brandName))
+            {
+                BrandNameErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // -- Check Giá --
             if (sellPrice <= 0)
             {
-                _ = ShowErrorAsync("Lỗi nhập liệu", "Giá bán phải lớn hơn 0.");
-                return null;
+                SellPriceErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
             }
 
+            // -- Check Số lượng --
             if (stockQty < 0)
             {
-                _ = ShowErrorAsync("Lỗi nhập liệu", "Số lượng tồn không được âm.");
+                StockQuantityErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // Nếu có bất kỳ lỗi nào -> Dừng lại, không hiện Dialog nữa (vì đã có text đỏ)
+            if (!isValid)
+            {
                 return null;
             }
 
-            // ===========================
-            // 2. Build DTO trả về
-            // ===========================
+            // 4. Nếu hợp lệ -> Build DTO
             return new ProductCreateUpdateDto
             {
-                ProductName = ProductNameBox.Text.Trim(),
+                ProductName = rawName,
                 BrandName = GetStringOrNull(BrandNameBox.Text),
 
                 SellPrice = (decimal)sellPrice,
-                // Không set CostPrice vì UI không có nhập liệu
                 StockQuantity = (int)stockQty,
 
                 Description = GetStringOrNull(DescriptionBox.Text),
@@ -81,18 +107,48 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 ImageUrl = GetStringOrNull(ImageUrlBox.Text),
                 ImageGalleryJson = GetStringOrNull(ImageGalleryJsonBox.Text),
 
-                StorageCapacity = !double.IsNaN(StorageCapacityBox.Value) && StorageCapacityBox.Value > 0
-                    ? (int)StorageCapacityBox.Value : null,
-
-                BatteryCapacity = !double.IsNaN(BatteryCapacityBox.Value) && BatteryCapacityBox.Value > 0
-                    ? (int)BatteryCapacityBox.Value : null,
-
-                ScreenSize = !double.IsNaN(ScreenSizeBox.Value) && ScreenSizeBox.Value > 0
-                    ? (decimal)ScreenSizeBox.Value : null,
+                StorageCapacity = IsValidNumber(StorageCapacityBox.Value) ? (int)StorageCapacityBox.Value : null,
+                BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
+                ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
 
                 IsDraft = false
             };
         }
+
+        // ==================================================
+        // XỬ LÝ SỰ KIỆN UI (Ẩn lỗi khi người dùng sửa)
+        // ==================================================
+
+        /// <summary>
+        /// Ẩn tất cả thông báo lỗi
+        /// </summary>
+        private void ClearErrors()
+        {
+            ProductNameErrorText.Visibility = Visibility.Collapsed;
+            SellPriceErrorText.Visibility = Visibility.Collapsed;
+            StockQuantityErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnInputChanged(object sender, TextChangedEventArgs e)
+        {
+            // Khi gõ vào tên sản phẩm, ẩn lỗi ngay lập tức
+            if (sender == ProductNameBox)
+                ProductNameErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnNumberChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+        {
+            // Khi sửa số, ẩn lỗi tương ứng
+            if (sender == SellPriceBox)
+                SellPriceErrorText.Visibility = Visibility.Collapsed;
+
+            if (sender == StockQuantityBox)
+                StockQuantityErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        // ==================================================
+        // HELPERS
+        // ==================================================
 
         private string? GetStringOrNull(string value)
         {
@@ -104,6 +160,12 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             return double.IsNaN(value) ? 0 : value;
         }
 
+        private bool IsValidNumber(double value)
+        {
+            return !double.IsNaN(value) && value > 0;
+        }
+
+        // hàm này phòng trường hợp cần báo lỗi hệ thống khác (DB error, network...)
         private async System.Threading.Tasks.Task ShowErrorAsync(string title, string content)
         {
             if (this.XamlRoot == null) return;
