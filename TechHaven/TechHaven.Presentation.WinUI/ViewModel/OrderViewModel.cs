@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
@@ -22,10 +22,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string? _searchKeyword;
 
         [ObservableProperty]
-        private DateTime? _fromDate;
+        private DateTimeOffset? _fromDate = null;  // No default filter - show all orders
 
         [ObservableProperty]
-        private DateTime? _toDate;
+        private DateTimeOffset? _toDate = null;    // No default filter - show all orders
 
         [ObservableProperty]
         private OrderStatusItem? _selectedStatusItem;
@@ -69,13 +69,26 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             // Set default selected status to "All"
             SelectedStatusItem = StatusList[0];
-            
             // Load initial data
             _ = LoadOrdersAsync();
         }
 
         // Auto-reload when search keyword changes
         partial void OnSearchKeywordChanged(string? value)
+        {
+            PageNumber = 1;
+            _ = LoadOrdersAsync();
+        }
+
+        // Auto-reload when from date changes
+        partial void OnFromDateChanged(DateTimeOffset? value)
+        {
+            PageNumber = 1;
+            _ = LoadOrdersAsync();
+        }
+
+        // Auto-reload when to date changes
+        partial void OnToDateChanged(DateTimeOffset? value)
         {
             PageNumber = 1;
             _ = LoadOrdersAsync();
@@ -105,8 +118,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     OrderDate = (FromDate.HasValue || ToDate.HasValue)
                         ? new DateRangeFilter
                         {
-                            StartDate = FromDate,
-                            EndDate = ToDate
+                            StartDate = FromDate?.DateTime,
+                            EndDate = ToDate?.DateTime
                         }
                         : null,
                     Sorting = new SortingOption { SortBy = "date", Desc = true }
@@ -277,7 +290,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public string OrderDateDisplay => Order.OrderDate.ToString("dd/MM/yyyy HH:mm");
 
-        public string TotalAmountDisplay => Order.TotalAmount.ToString("N0") + " ?";
+        public string TotalAmountDisplay => Order.TotalAmount.ToString("N0") + " ₫";
 
         public string ProductsCountDisplay
         {

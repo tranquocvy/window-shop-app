@@ -170,7 +170,8 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private async void FromDate_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if (ViewModel != null && args.NewDate.HasValue)
+            // Trigger reload regardless of whether date is set or cleared
+            if (ViewModel != null)
             {
                 await ViewModel.SearchCommand.ExecuteAsync(null);
             }
@@ -178,7 +179,8 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private async void ToDate_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if (ViewModel != null && args.NewDate.HasValue)
+            // Trigger reload regardless of whether date is set or cleared
+            if (ViewModel != null)
             {
                 await ViewModel.SearchCommand.ExecuteAsync(null);
             }
