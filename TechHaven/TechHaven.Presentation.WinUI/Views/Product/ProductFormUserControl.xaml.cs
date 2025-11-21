@@ -61,28 +61,28 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             // -- Check Tên --
             if (string.IsNullOrEmpty(rawName))
             {
-                ProductNameErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                ProductNameErrorText.Visibility = Visibility.Visible; 
                 isValid = false;
             }
 
             // -- Check Tên Thương hiệu --
             if (string.IsNullOrEmpty(brandName))
             {
-                BrandNameErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                BrandNameErrorText.Visibility = Visibility.Visible; 
                 isValid = false;
             }
 
             // -- Check Giá --
             if (sellPrice <= 0)
             {
-                SellPriceErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                SellPriceErrorText.Visibility = Visibility.Visible; 
                 isValid = false;
             }
 
             // -- Check Số lượng --
             if (stockQty < 0)
             {
-                StockQuantityErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                StockQuantityErrorText.Visibility = Visibility.Visible; 
                 isValid = false;
             }
 
@@ -115,9 +115,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             };
         }
 
-        // ==================================================
-        // XỬ LÝ SỰ KIỆN UI (Ẩn lỗi khi người dùng sửa)
-        // ==================================================
 
         /// <summary>
         /// Ẩn tất cả thông báo lỗi
