@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -203,5 +205,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         [ObservableProperty]
         private bool _isSelected;
+
+        public string StatusText => Product.StockQuantity > 0 ? "Còn hàng" : "Hết hàng";
+
+        public SolidColorBrush StatusColor => Product.StockQuantity > 0
+            ? new SolidColorBrush(Colors.Green)
+            : new SolidColorBrush(Colors.Red);
     }
 }

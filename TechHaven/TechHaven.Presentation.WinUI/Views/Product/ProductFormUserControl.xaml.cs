@@ -13,72 +13,110 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         }
 
         /// <summary>
-        /// Đổ dữ liệu từ Product có sẵn vào Form (dùng cho Edit)
+        /// Đổ dữ liệu từ ProductDto vào form (Edit mode)
         /// </summary>
         public void LoadData(ProductDto product)
         {
             if (product == null) return;
 
-            // Populate fields dựa trên code bạn cung cấp
-            NameBox.Text = product.ProductName ?? string.Empty;
-            PriceBox.Text = product.SellPrice.ToString();
-            StockBox.Text = product.StockQuantity.ToString();
-            BrandBox.Text = product.BrandName ?? string.Empty;
-            DescBox.Text = product.Description ?? string.Empty;
+            ProductNameBox.Text = product.ProductName ?? string.Empty;
+            BrandNameBox.Text = product.BrandName ?? string.Empty;
+            DescriptionBox.Text = product.Description ?? string.Empty;
+
+            // Chỉ load Giá bán và Số lượng
+            SellPriceBox.Value = (double)product.SellPrice;
+            StockQuantityBox.Value = product.StockQuantity;
+
+            ColorBox.Text = product.Color ?? string.Empty;
+
+            StorageCapacityBox.Value = product.StorageCapacity ?? double.NaN;
+            ProcessorBox.Text = product.Processor ?? string.Empty;
+            ScreenSizeBox.Value = (double?)product.ScreenSize ?? double.NaN;
+            BatteryCapacityBox.Value = product.BatteryCapacity ?? double.NaN;
+
+            ImageUrlBox.Text = product.ImageUrl ?? string.Empty;
+            ImageGalleryJsonBox.Text = product.ImageGalleryJson ?? string.Empty;
         }
 
         /// <summary>
-        /// Validate và lấy dữ liệu.
-        /// Trả về DTO nếu hợp lệ, trả về null nếu lỗi (và tự hiện dialog báo lỗi).
+        /// Lấy dữ liệu từ form + validate.
         /// </summary>
         public ProductCreateUpdateDto GetFormData()
         {
-            // 1. Validation: Tên sản phẩm
-            if (string.IsNullOrWhiteSpace(NameBox.Text))
+            // Lấy giá trị an toàn
+            double sellPrice = GetDoubleSafe(SellPriceBox.Value);
+            double stockQty = GetDoubleSafe(StockQuantityBox.Value);
+
+            // ===========================
+            // 1. Validate bắt buộc
+            // ===========================
+
+            if (sellPrice <= 0)
             {
-                ShowError("Thiếu thông tin", "Tên sản phẩm không được để trống.");
+                _ = ShowErrorAsync("Lỗi nhập liệu", "Giá bán phải lớn hơn 0.");
                 return null;
             }
 
-            // 2. Validation: Giá
-            if (!decimal.TryParse(PriceBox.Text, out var price))
+            if (stockQty < 0)
             {
-                ShowError("Giá không hợp lệ", "Vui lòng nhập giá hợp lệ.");
+                _ = ShowErrorAsync("Lỗi nhập liệu", "Số lượng tồn không được âm.");
                 return null;
             }
 
-            // 3. Validation: Số lượng tồn
-            if (!int.TryParse(StockBox.Text, out var stock))
-            {
-                ShowError("Số lượng không hợp lệ", "Vui lòng nhập số nguyên cho số lượng.");
-                return null;
-            }
-
-            // 4. Tạo DTO trả về (nếu tất cả OK)
+            // ===========================
+            // 2. Build DTO trả về
+            // ===========================
             return new ProductCreateUpdateDto
             {
-                ProductName = NameBox.Text.Trim(),
-                SellPrice = price,
-                StockQuantity = stock,
-                BrandName = string.IsNullOrWhiteSpace(BrandBox.Text) ? null : BrandBox.Text.Trim(),
-                Description = string.IsNullOrWhiteSpace(DescBox.Text) ? null : DescBox.Text.Trim()
+                ProductName = ProductNameBox.Text.Trim(),
+                BrandName = GetStringOrNull(BrandNameBox.Text),
+
+                SellPrice = (decimal)sellPrice,
+                // Không set CostPrice vì UI không có nhập liệu
+                StockQuantity = (int)stockQty,
+
+                Description = GetStringOrNull(DescriptionBox.Text),
+                Color = GetStringOrNull(ColorBox.Text),
+                Processor = GetStringOrNull(ProcessorBox.Text),
+                ImageUrl = GetStringOrNull(ImageUrlBox.Text),
+                ImageGalleryJson = GetStringOrNull(ImageGalleryJsonBox.Text),
+
+                StorageCapacity = !double.IsNaN(StorageCapacityBox.Value) && StorageCapacityBox.Value > 0
+                    ? (int)StorageCapacityBox.Value : null,
+
+                BatteryCapacity = !double.IsNaN(BatteryCapacityBox.Value) && BatteryCapacityBox.Value > 0
+                    ? (int)BatteryCapacityBox.Value : null,
+
+                ScreenSize = !double.IsNaN(ScreenSizeBox.Value) && ScreenSizeBox.Value > 0
+                    ? (decimal)ScreenSizeBox.Value : null,
+
+                IsDraft = false
             };
         }
 
-        /// <summary>
-        /// Hàm helper để hiển thị lỗi ngay trên giao diện hiện tại
-        /// </summary>
-        private void ShowError(string title, string content)
+        private string? GetStringOrNull(string value)
         {
-            var err = new ContentDialog
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private double GetDoubleSafe(double value)
+        {
+            return double.IsNaN(value) ? 0 : value;
+        }
+
+        private async System.Threading.Tasks.Task ShowErrorAsync(string title, string content)
+        {
+            if (this.XamlRoot == null) return;
+
+            var dialog = new ContentDialog
             {
                 Title = title,
                 Content = content,
                 CloseButtonText = "Đóng",
-                // Quan trọng: Phải gán XamlRoot của UserControl để Dialog hiện được
                 XamlRoot = this.XamlRoot
             };
-            _ = err.ShowAsync();
+
+            await dialog.ShowAsync();
         }
     }
 }
