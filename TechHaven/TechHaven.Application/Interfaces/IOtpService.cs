@@ -25,4 +25,12 @@ public interface IOtpService
     /// </summary>
     /// <param name="otpSessionId">The OTP session ID to invalidate.</param>
     void InvalidateOtp(string otpSessionId);
+
+    /// <summary>
+    /// Gets the user ID associated with an OTP session without validating the code.
+    /// Used for resending OTP.
+    /// </summary>
+    /// <param name="otpSessionId">The OTP session ID.</param>
+    /// <returns>The user ID if session exists and not expired, null otherwise.</returns>
+    int? GetUserIdFromSession(string otpSessionId);
 }
