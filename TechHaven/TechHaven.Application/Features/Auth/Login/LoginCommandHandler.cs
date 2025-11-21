@@ -50,11 +50,23 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponseDt
     var (otpSessionId, otpCode) = _otpService.GenerateOtp(user.UserId);
 
     // 5. Send OTP via email
-    await _emailService.SendOtpEmailAsync(
-        user.Email ?? string.Empty,
-        user.UserFullName,
-        otpCode,
-        cancellationToken);
+    try
+    {
+        await _emailService.SendOtpEmailAsync(
+            user.Email ?? string.Empty,
+            user.UserFullName,
+            otpCode,
+            cancellationToken);
+    }
+    catch (Exception ex)
+    {
+        // Log error but don't fail the login process
+        // Consider invalidating OTP if email fails
+        _otpService.InvalidateOtp(otpSessionId);
+        
+        throw new InvalidOperationException(
+            "Failed to send OTP email. Please try again later.", ex);
+    }
 
     // 6. Create response with all required fields
     var response = new LoginResponseDto
