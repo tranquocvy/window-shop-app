@@ -197,13 +197,23 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         [RelayCommand]
-        private async Task UpdateOrderStatusAsync(OrderItemViewModel item)
+        private async Task UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
         {
-            if (item == null) return;
+            if (dto == null) return;
 
-            // TODO: Show dialog to change status
-            // For now, just reload
-            await LoadOrdersAsync();
+            try
+            {
+                var response = await _orderService.UpdateOrderStatusAsync(dto);
+                if (response.Success)
+                {
+                    // Status updated successfully
+                    // Reload will be called from the UI
+                }
+            }
+            catch (Exception)
+            {
+                // Handle error silently for now
+            }
         }
 
         [RelayCommand]
