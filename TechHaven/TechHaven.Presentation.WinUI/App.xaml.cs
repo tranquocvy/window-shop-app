@@ -45,7 +45,8 @@ namespace TechHaven.Presentation.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
+            _window = new ShellWindow();
+            //_window = new MainWindow();
             _window.Activate();
         }
     }
