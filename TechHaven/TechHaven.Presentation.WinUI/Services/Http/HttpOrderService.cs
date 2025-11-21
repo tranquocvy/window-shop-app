@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Common;
@@ -20,9 +21,11 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public Task<ResponseWrapper<List<OrderDto>>> GetAllOrdersAsync()
+        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderQueryDto query)
         {
-            return _httpClient.GetWrapperFromJsonAsync<List<OrderDto>>(BaseUrl, "Failed to retrieve orders");
+            var queryString = BuildQueryString(query);
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+            return _httpClient.GetWrapperFromJsonAsync<PagingResponse<OrderDto>>(url, "Failed to retrieve orders");
         }
 
         public Task<ResponseWrapper<OrderDto>> GetOrderByIdAsync(int id)
@@ -44,14 +47,46 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
         {
-            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/status", dto);
+            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{dto.OrderId}/status", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OrderDto>("Failed to update order status");
         }
 
-        public async Task<ResponseWrapper<List<OrderDto>>> QueryOrdersAsync(OrderQueryDto query)
+        private static string BuildQueryString(OrderQueryDto query)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
-            return await response.EnsureSuccessAndReadWrapperAsync<List<OrderDto>>("Failed to query orders");
+            var sb = new StringBuilder();
+
+            if (query.PageNumber > 0)
+                sb.Append($"PageNumber={query.PageNumber}&");
+            
+            if (query.PageSize > 0)
+                sb.Append($"PageSize={query.PageSize}&");
+
+            if (query.Status.HasValue)
+                sb.Append($"Status={query.Status.Value}&");
+
+            if (query.OrderDate?.StartDate.HasValue == true)
+                sb.Append($"OrderDate.StartDate={query.OrderDate.StartDate.Value:yyyy-MM-ddTHH:mm:ss}&");
+
+            if (query.OrderDate?.EndDate.HasValue == true)
+                sb.Append($"OrderDate.EndDate={query.OrderDate.EndDate.Value:yyyy-MM-ddTHH:mm:ss}&");
+
+            if (!string.IsNullOrWhiteSpace(query.CustomerKeyword))
+                sb.Append($"CustomerKeyword={HttpUtility.UrlEncode(query.CustomerKeyword)}&");
+
+            if (query.Sorting != null)
+            {
+                if (!string.IsNullOrWhiteSpace(query.Sorting.SortBy))
+                    sb.Append($"Sorting.SortBy={query.Sorting.SortBy}&");
+                
+                if (query.Sorting.Desc)
+                    sb.Append($"Sorting.Desc={query.Sorting.Desc}&");
+            }
+
+            // Remove trailing &
+            if (sb.Length > 0 && sb[sb.Length - 1] == '&')
+                sb.Length--;
+
+            return sb.ToString();
         }
     }
 }

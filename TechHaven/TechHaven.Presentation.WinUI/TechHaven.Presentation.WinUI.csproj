@@ -168,6 +168,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Views\Order\" />
     <Folder Include="Views\Product\" />
   </ItemGroup>
 </Project>
