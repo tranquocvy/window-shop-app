@@ -30,36 +30,21 @@ public class OrderProfile : Profile
 				}
 			});
 
-		CreateMap<OrderCreateItemDto, OrderDetail>()
+		CreateMap<OrderUpsertItemDto, OrderDetail>()
 			.ForMember(dest => dest.OrderDetailId, opt => opt.Ignore())
 			.ForMember(dest => dest.OrderId, opt => opt.Ignore())
 			.ForMember(dest => dest.Order, opt => opt.Ignore())
 			.ForMember(dest => dest.Product, opt => opt.Ignore());
 
-		CreateMap<OrderUpsertRequest, Order>()
-			.ForMember(dest => dest.OrderId, opt => opt.Ignore())
+		CreateMap<OrderUpsertRequestDto, Order>()
 			.ForMember(dest => dest.UserId, opt => opt.Ignore())
 			.ForMember(dest => dest.OrderDate, opt => opt.Ignore())
-			.ForMember(dest => dest.Status, opt => opt.Ignore())
+			.ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
 			.ForMember(dest => dest.SubtotalAmount, opt => opt.Ignore())
 			.ForMember(dest => dest.TotalAmount, opt => opt.Ignore())
 			.ForMember(dest => dest.User, opt => opt.Ignore())
 			.ForMember(dest => dest.Customer, opt => opt.Ignore())
 			.ForMember(dest => dest.Payments, opt => opt.Ignore())
 			.ForMember(dest => dest.OrderDetails, opt => opt.MapFrom(src => src.Items));
-
-		CreateMap<OrderUpdateStatusDto, Order>()
-			.ForMember(dest => dest.OrderId, opt => opt.Ignore())
-			.ForMember(dest => dest.CustomerId, opt => opt.Ignore())
-			.ForMember(dest => dest.UserId, opt => opt.Ignore())
-			.ForMember(dest => dest.OrderDate, opt => opt.Ignore())
-			.ForMember(dest => dest.SubtotalAmount, opt => opt.Ignore())
-			.ForMember(dest => dest.Discount, opt => opt.Ignore())
-			.ForMember(dest => dest.TotalAmount, opt => opt.Ignore())
-			.ForMember(dest => dest.Notes, opt => opt.Ignore())
-			.ForMember(dest => dest.Customer, opt => opt.Ignore())
-			.ForMember(dest => dest.User, opt => opt.Ignore())
-			.ForMember(dest => dest.OrderDetails, opt => opt.Ignore())
-			.ForMember(dest => dest.Payments, opt => opt.Ignore());
 	}
 }
