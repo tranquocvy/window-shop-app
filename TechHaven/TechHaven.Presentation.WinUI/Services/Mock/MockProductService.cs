@@ -52,17 +52,6 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                     new ProductDto { ProductId = 30, ProductName = "Xiaomi Civi 4 Pro", BrandName = "Xiaomi", Color = "Pink", StorageCapacity = 256, Processor = "Snapdragon 8s Gen 3", ScreenSize = 6.55m, BatteryCapacity = 4700, ImageUrl = "./Assets/phone.jpg", ImageGalleryJson = "[\"civi4pro.jpg\"]", SellPrice = 13990000, StockQuantity = 16, Description = "Mỏng nhẹ, thời trang", IsDraft = false }
                 };
         }
-        // Lấy tất cả sản phẩm
-        public Task<ResponseWrapper<List<ProductDto>>> GetAllProductsAsync()
-        {
-            var response = new ResponseWrapper<List<ProductDto>>
-            {
-                Success = true,
-                Message = "Products retrieved successfully",
-                Data = _mockProducts
-            };
-            return Task.FromResult(response);
-        }
 
         // Lấy theo ID
         public Task<ResponseWrapper<ProductDto>> GetProductsByIdAsync(int id)

@@ -20,11 +20,6 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public Task<ResponseWrapper<List<ProductDto>>> GetAllProductsAsync()
-        {
-            return _httpClient.GetWrapperFromJsonAsync<List<ProductDto>>(BaseUrl, "Failed to retrieve products");
-        }
-
         public Task<ResponseWrapper<ProductDto>> GetProductsByIdAsync(int id)
         {
             return _httpClient.GetWrapperFromJsonAsync<ProductDto>($"{BaseUrl}/{id}", "Failed to retrieve product");
