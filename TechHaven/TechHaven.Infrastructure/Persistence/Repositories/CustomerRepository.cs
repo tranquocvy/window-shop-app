@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Enums;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
+using TechHaven.Domain.Specifications;
 
 namespace TechHaven.Infrastructure.Persistence.Repositories;
 
@@ -44,19 +46,29 @@ public class CustomerRepository : GenericRepository<Customer>, ICustomerReposito
 
     public async Task<(IReadOnlyList<Customer> Items, int totalCount)> SearchWithPaginationAsync(CustomerSearchCriteria criteria, CancellationToken cancellationToken)
     {
-        var query = _context.Customers.AsQueryable();
+        // var query = _context.Customers.AsQueryable();
 
-        query = ApplyFilters(query, criteria.SearchTerm);
+        // query = ApplyFilters(query, criteria.SearchTerm);
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        // var totalCount = await query.CountAsync(cancellationToken);
 
-        query = ApplySorting(query, criteria.SortBy, criteria.SortDescending);
+        // query = ApplySorting(query, criteria.SortBy, criteria.SortDescending);
 
-        var items = await query
-            .Skip((criteria.PageNumber - 1) * criteria.PageSize)
-            .Take(criteria.PageSize)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        // var items = await query
+        //     .Skip((criteria.PageNumber - 1) * criteria.PageSize)
+        //     .Take(criteria.PageSize)
+        //     .AsNoTracking()
+        //     .ToListAsync(cancellationToken);
+
+        // return (items, totalCount);
+
+        // Get customer items with paging
+        var spec = new CustomerSearchSpecification(criteria);
+        var items = await GetAsync(spec, cancellationToken);
+
+        // Get totalCount customers without paging (getAll Customers)
+        var countSpec = new CustomerSearchSpecification(criteria.SearchTerm);
+        var totalCount = await CountAsync(countSpec, cancellationToken);
 
         return (items, totalCount);
     }
@@ -84,49 +96,49 @@ public class CustomerRepository : GenericRepository<Customer>, ICustomerReposito
             .ToListAsync(cancellationToken);
     }
 
-    private IQueryable<Customer> ApplySorting(IQueryable<Customer> query, string? sortBy, bool sortDescending)
-    {
-        if (string.IsNullOrWhiteSpace(sortBy))
-        {
-            return sortDescending
-                ? query.OrderByDescending(p => p.CustomerName)
-                : query.OrderBy(p => p.CustomerName);
-        }
+    // private IQueryable<Customer> ApplySorting(IQueryable<Customer> query, string? sortBy, bool sortDescending)
+    // {
+    //     if (string.IsNullOrWhiteSpace(sortBy))
+    //     {
+    //         return sortDescending
+    //             ? query.OrderByDescending(p => p.CustomerName)
+    //             : query.OrderBy(p => p.CustomerName);
+    //     }
 
-        return sortBy.ToLower() switch
-        {
-            "name" or "customername" => sortDescending
-                ? query.OrderByDescending(p => p.CustomerName)
-                : query.OrderBy(p => p.CustomerName),
+    //     return sortBy.ToLower() switch
+    //     {
+    //         "name" or "customername" => sortDescending
+    //             ? query.OrderByDescending(p => p.CustomerName)
+    //             : query.OrderBy(p => p.CustomerName),
 
-            "address" => sortDescending
-                ? query.OrderByDescending(p => p.Address)
-                : query.OrderBy(p => p.Address),
+    //         "address" => sortDescending
+    //             ? query.OrderByDescending(p => p.Address)
+    //             : query.OrderBy(p => p.Address),
 
-            "type" or "customertype" => sortDescending
-                ? query.OrderByDescending(p => p.Type)
-                : query.OrderBy(p => p.Type),
+    //         "type" or "customertype" => sortDescending
+    //             ? query.OrderByDescending(p => p.Type)
+    //             : query.OrderBy(p => p.Type),
             
-            "totalpurchased" => sortDescending
-                ? query.OrderByDescending(p => p.TotalPurchased)
-                : query.OrderBy(p => p.TotalPurchased),
+    //         "totalpurchased" => sortDescending
+    //             ? query.OrderByDescending(p => p.TotalPurchased)
+    //             : query.OrderBy(p => p.TotalPurchased),
             
-            _ => sortDescending
-                ? query.OrderByDescending(p => p.CustomerName)
-                : query.OrderBy(p => p.CustomerName)
-        };
-    }
+    //         _ => sortDescending
+    //             ? query.OrderByDescending(p => p.CustomerName)
+    //             : query.OrderBy(p => p.CustomerName)
+    //     };
+    // }
 
-    private IQueryable<Customer> ApplyFilters(IQueryable<Customer> query, string? searchTerm)
-    {
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            var term = searchTerm.ToLower();
-            query = query.Where(p =>
-                p.CustomerName.ToLower().Contains(term)
-            );
-        }
+    // private IQueryable<Customer> ApplyFilters(IQueryable<Customer> query, string? searchTerm)
+    // {
+    //     if (!string.IsNullOrWhiteSpace(searchTerm))
+    //     {
+    //         var term = searchTerm.ToLower();
+    //         query = query.Where(p =>
+    //             p.CustomerName.ToLower().Contains(term)
+    //         );
+    //     }
 
-        return query;
-    }
+    //     return query;
+    // }
 }
