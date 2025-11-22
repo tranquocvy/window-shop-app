@@ -8,10 +8,10 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
     public interface IProductService
     {
         Task<ResponseWrapper<ProductDto>> GetProductsByIdAsync(int id);
-        Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto);
-        Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto);
+        Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto);
+        Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto);
         Task<ResponseWrapper<bool>> DeleteProductsAsync(int id);
-        public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductQueryDto query);
+        public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query);
 
     }
 }

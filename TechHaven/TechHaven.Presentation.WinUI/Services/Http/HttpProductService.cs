@@ -25,13 +25,13 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return _httpClient.GetWrapperFromJsonAsync<ProductDto>($"{BaseUrl}/{id}", "Failed to retrieve product");
         }
 
-        public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto)
+        public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto)
         {
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to create product");
         }
 
-        public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto)
+        public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto)
         {
             var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{id}", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to update product");
@@ -43,7 +43,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete product");
         }
 
-        public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
+        public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
 

@@ -25,7 +25,7 @@ public class ProductController : ControllerBase
   [HttpGet]
   [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<ProductDto>>), StatusCodes.Status200OK)]
   public async Task<ActionResult<ResponseWrapper<PagingResponse<ProductDto>>>> GetProducts(
-    [FromQuery] ProductQueryDto queryDto,
+    [FromQuery] ProductListQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
     var query = new GetProductsQuery
@@ -85,7 +85,7 @@ public class ProductController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   public async Task<ActionResult<ResponseWrapper<ProductDto>>> CreateProduct(
-      [FromBody] ProductCreateUpdateDto request,
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
     try
@@ -139,7 +139,7 @@ public class ProductController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<ActionResult<ResponseWrapper<ProductDto>>> UpdateProduct(
       int id,
-      [FromBody] ProductCreateUpdateDto request,
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
     try
