@@ -10,10 +10,10 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         
         Task<ResponseWrapper<OrderDto>> GetOrderByIdAsync(int id);
         
-        Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequest dto);
+        Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequestDto dto);
         
         Task<ResponseWrapper<bool>> DeleteOrderAsync(int id);
         
-        Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto);
+        Task<ResponseWrapper<OrderDto>> UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto);
     }
 }

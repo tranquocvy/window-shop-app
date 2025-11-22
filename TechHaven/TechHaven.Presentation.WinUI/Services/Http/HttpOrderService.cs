@@ -33,7 +33,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return _httpClient.GetWrapperFromJsonAsync<OrderDto>($"{BaseUrl}/{id}", "Failed to retrieve order");
         }
 
-        public async Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequest dto)
+        public async Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequestDto dto)
         {
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OrderDto>("Failed to create order");
@@ -45,10 +45,10 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete order");
         }
 
-        public async Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
+        public async Task<ResponseWrapper<OrderDto>> UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
         {
-            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{dto.OrderId}/status", dto);
-            return await response.EnsureSuccessAndReadWrapperAsync<OrderDto>("Failed to update order status");
+            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{orderId}", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<OrderDto>("Failed to update order");
         }
 
         private static string BuildQueryString(OrderListQueryDto query)
