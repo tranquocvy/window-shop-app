@@ -13,72 +13,172 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         }
 
         /// <summary>
-        /// Đổ dữ liệu từ Product có sẵn vào Form (dùng cho Edit)
+        /// Đổ dữ liệu từ ProductDto vào form (Edit mode)
         /// </summary>
         public void LoadData(ProductDto product)
         {
             if (product == null) return;
 
-            // Populate fields dựa trên code bạn cung cấp
-            NameBox.Text = product.ProductName ?? string.Empty;
-            PriceBox.Text = product.SellPrice.ToString();
-            StockBox.Text = product.StockQuantity.ToString();
-            BrandBox.Text = product.BrandName ?? string.Empty;
-            DescBox.Text = product.Description ?? string.Empty;
+            // Reset lỗi cũ nếu có
+            ClearErrors();
+
+            ProductNameBox.Text = product.ProductName ?? string.Empty;
+            BrandNameBox.Text = product.BrandName ?? string.Empty;
+            DescriptionBox.Text = product.Description ?? string.Empty;
+
+            SellPriceBox.Value = (double)product.SellPrice;
+            StockQuantityBox.Value = product.StockQuantity;
+
+            ColorBox.Text = product.Color ?? string.Empty;
+
+            StorageCapacityBox.Value = product.StorageCapacity ?? double.NaN;
+            ProcessorBox.Text = product.Processor ?? string.Empty;
+            ScreenSizeBox.Value = (double?)product.ScreenSize ?? double.NaN;
+            BatteryCapacityBox.Value = product.BatteryCapacity ?? double.NaN;
+
+            ImageUrlBox.Text = product.ImageUrl ?? string.Empty;
+            ImageGalleryJsonBox.Text = product.ImageGalleryJson ?? string.Empty;
         }
 
         /// <summary>
-        /// Validate và lấy dữ liệu.
-        /// Trả về DTO nếu hợp lệ, trả về null nếu lỗi (và tự hiện dialog báo lỗi).
+        /// Lấy dữ liệu từ form + validate hiển thị lỗi UI
         /// </summary>
         public ProductCreateUpdateDto GetFormData()
         {
-            // 1. Validation: Tên sản phẩm
-            if (string.IsNullOrWhiteSpace(NameBox.Text))
+            // 1. Reset trạng thái lỗi (Ẩn hết thông báo đỏ)
+            ClearErrors();
+
+            bool isValid = true;
+
+            // 2. Lấy dữ liệu thô an toàn
+            string rawName = ProductNameBox.Text?.Trim();
+            string brandName = BrandNameBox.Text?.Trim();
+            double sellPrice = GetDoubleSafe(SellPriceBox.Value);
+            double stockQty = GetDoubleSafe(StockQuantityBox.Value);
+
+            // 3. Validate từng trường
+
+            // -- Check Tên --
+            if (string.IsNullOrEmpty(rawName))
             {
-                ShowError("Thiếu thông tin", "Tên sản phẩm không được để trống.");
+                ProductNameErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // -- Check Tên Thương hiệu --
+            if (string.IsNullOrEmpty(brandName))
+            {
+                BrandNameErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // -- Check Giá --
+            if (sellPrice <= 0)
+            {
+                SellPriceErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // -- Check Số lượng --
+            if (stockQty < 0)
+            {
+                StockQuantityErrorText.Visibility = Visibility.Visible; // Hiện dòng đỏ
+                isValid = false;
+            }
+
+            // Nếu có bất kỳ lỗi nào -> Dừng lại, không hiện Dialog nữa (vì đã có text đỏ)
+            if (!isValid)
+            {
                 return null;
             }
 
-            // 2. Validation: Giá
-            if (!decimal.TryParse(PriceBox.Text, out var price))
-            {
-                ShowError("Giá không hợp lệ", "Vui lòng nhập giá hợp lệ.");
-                return null;
-            }
-
-            // 3. Validation: Số lượng tồn
-            if (!int.TryParse(StockBox.Text, out var stock))
-            {
-                ShowError("Số lượng không hợp lệ", "Vui lòng nhập số nguyên cho số lượng.");
-                return null;
-            }
-
-            // 4. Tạo DTO trả về (nếu tất cả OK)
+            // 4. Nếu hợp lệ -> Build DTO
             return new ProductCreateUpdateDto
             {
-                ProductName = NameBox.Text.Trim(),
-                SellPrice = price,
-                StockQuantity = stock,
-                BrandName = string.IsNullOrWhiteSpace(BrandBox.Text) ? null : BrandBox.Text.Trim(),
-                Description = string.IsNullOrWhiteSpace(DescBox.Text) ? null : DescBox.Text.Trim()
+                ProductName = rawName,
+                BrandName = GetStringOrNull(BrandNameBox.Text),
+
+                SellPrice = (decimal)sellPrice,
+                StockQuantity = (int)stockQty,
+
+                Description = GetStringOrNull(DescriptionBox.Text),
+                Color = GetStringOrNull(ColorBox.Text),
+                Processor = GetStringOrNull(ProcessorBox.Text),
+                ImageUrl = GetStringOrNull(ImageUrlBox.Text),
+                ImageGalleryJson = GetStringOrNull(ImageGalleryJsonBox.Text),
+
+                StorageCapacity = IsValidNumber(StorageCapacityBox.Value) ? (int)StorageCapacityBox.Value : null,
+                BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
+                ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
+
+                IsDraft = false
             };
         }
 
+        // ==================================================
+        // XỬ LÝ SỰ KIỆN UI (Ẩn lỗi khi người dùng sửa)
+        // ==================================================
+
         /// <summary>
-        /// Hàm helper để hiển thị lỗi ngay trên giao diện hiện tại
+        /// Ẩn tất cả thông báo lỗi
         /// </summary>
-        private void ShowError(string title, string content)
+        private void ClearErrors()
         {
-            var err = new ContentDialog
+            ProductNameErrorText.Visibility = Visibility.Collapsed;
+            SellPriceErrorText.Visibility = Visibility.Collapsed;
+            StockQuantityErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnInputChanged(object sender, TextChangedEventArgs e)
+        {
+            // Khi gõ vào tên sản phẩm, ẩn lỗi ngay lập tức
+            if (sender == ProductNameBox)
+                ProductNameErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnNumberChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+        {
+            // Khi sửa số, ẩn lỗi tương ứng
+            if (sender == SellPriceBox)
+                SellPriceErrorText.Visibility = Visibility.Collapsed;
+
+            if (sender == StockQuantityBox)
+                StockQuantityErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        // ==================================================
+        // HELPERS
+        // ==================================================
+
+        private string? GetStringOrNull(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private double GetDoubleSafe(double value)
+        {
+            return double.IsNaN(value) ? 0 : value;
+        }
+
+        private bool IsValidNumber(double value)
+        {
+            return !double.IsNaN(value) && value > 0;
+        }
+
+        // hàm này phòng trường hợp cần báo lỗi hệ thống khác (DB error, network...)
+        private async System.Threading.Tasks.Task ShowErrorAsync(string title, string content)
+        {
+            if (this.XamlRoot == null) return;
+
+            var dialog = new ContentDialog
             {
                 Title = title,
                 Content = content,
                 CloseButtonText = "Đóng",
-                // Quan trọng: Phải gán XamlRoot của UserControl để Dialog hiện được
                 XamlRoot = this.XamlRoot
             };
-            _ = err.ShowAsync();
+
+            await dialog.ShowAsync();
         }
     }
 }
