@@ -123,13 +123,13 @@ namespace TechHaven.Presentation.WinUI.Views
                 if (result == ContentDialogResult.Primary && statusComboBox.SelectedItem is ComboBoxItem selectedItem)
                 {
                     var newStatus = (OrderStatus)selectedItem.Tag;
-                    var updateDto = new OrderUpdateStatusDto
+
+                    var dto = new OrderUpsertRequestDto
                     {
-                        OrderId = item.Order.OrderId,
                         Status = newStatus
                     };
 
-                    await ViewModel.UpdateOrderStatusCommand.ExecuteAsync(updateDto);
+                    await ViewModel.UpdateOrderAsync(item.Order.OrderId, dto);
                     await ViewModel.LoadOrdersCommand.ExecuteAsync(null);
                 }
             }
@@ -264,14 +264,14 @@ namespace TechHaven.Presentation.WinUI.Views
                         customerId = custId;
                 }
 
-                var createDto = new OrderUpsertRequest
+                var createDto = new OrderUpsertRequestDto
                 {
                     CustomerId = customerId,
                     Discount = discount,
                     Notes = string.IsNullOrWhiteSpace(notesBox.Text) ? null : notesBox.Text.Trim(),
-                    Items = new List<OrderCreateItemDto>
+                    Items = new List<OrderUpsertItemDto>
                     {
-                        new OrderCreateItemDto
+                        new OrderUpsertItemDto
                         {
                             ProductId = productId,
                             Quantity = quantity,
