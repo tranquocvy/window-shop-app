@@ -18,7 +18,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         private readonly IProductService _productService = new MockProductService();
 
-        public ObservableCollection<ProductItemViewModel> Products { get; } = new();
+        public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
 
         // Search
         [ObservableProperty]
@@ -289,7 +289,25 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        
+        //Kiểm tra phân quyền hiển thị giá nhập
+        private string _currentUserRole = "Staff";
+
+        public string CurrentUserRole
+        {
+            get => _currentUserRole;
+            set
+            {
+                if (SetProperty(ref _currentUserRole, value))
+                {
+                    OnPropertyChanged(nameof(IsAdmin));
+                }
+            }
+        }
+
+        public bool IsAdmin => CurrentUserRole == "Admin";
+
+
+
 
     }
 
@@ -311,6 +329,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool _isSelected;
 
+        // Thêm thuộc tính ImageUrl
+        public string ImageUrl => Product.ImageUrl;
+
         public string StatusText =>
             Product.StockQuantity > 0 ? "Còn hàng" : "Hết hàng";
 
@@ -319,4 +340,5 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 ? new SolidColorBrush(Colors.Green)
                 : new SolidColorBrush(Colors.Red);
     }
+
 }

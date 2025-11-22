@@ -19,14 +19,13 @@
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
 
-
             <TextBlock Text="Thương hiệu" FontWeight="SemiBold"/>
             <TextBox x:Name="BrandNameBox" PlaceholderText="Nhập thương hiệu..." />
-            
+
             <TextBlock x:Name="BrandNameErrorText"
                        Text="Phải nhập tên thương hiệu."
                        Foreground="Red" FontSize="12"
-                       Visibility="Collapsed" Margin="0,-8,0,0"/>   
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
 
             <TextBlock Text="Mô tả" FontWeight="SemiBold"/>
             <TextBox x:Name="DescriptionBox"
@@ -34,6 +33,13 @@
                      TextWrapping="Wrap"
                      Height="120"
                      PlaceholderText="Mô tả chi tiết sản phẩm..." />
+
+
+            <TextBlock Text="Giá nhập" FontWeight="SemiBold"/>
+            <NumberBox x:Name="CostPriceBox" 
+                       PlaceholderText="0" 
+                       ValueChanged="OnNumberChanged"/>
+
 
             <TextBlock Text="Giá bán *" FontWeight="SemiBold"/>
             <NumberBox x:Name="SellPriceBox" 
@@ -45,7 +51,6 @@
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
 
-
             <TextBlock Text="Số lượng tồn *" FontWeight="SemiBold"/>
             <NumberBox x:Name="StockQuantityBox" 
                        PlaceholderText="0" 
@@ -55,7 +60,6 @@
                        Text="Số lượng tồn không được âm."
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
-
 
             <TextBlock Text="Màu sắc" FontWeight="SemiBold"/>
             <TextBox x:Name="ColorBox" PlaceholderText="VD: Đen, Trắng..." />
