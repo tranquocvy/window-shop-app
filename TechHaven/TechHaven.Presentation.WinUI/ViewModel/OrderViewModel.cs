@@ -109,7 +109,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             try
             {
-                var query = new OrderQueryDto
+                var query = new OrderListQueryDto
                 {
                     PageNumber = PageNumber,
                     PageSize = PageSize,
@@ -237,7 +237,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         [RelayCommand]
-        private async Task CreateOrderAsync(OrderCreateDto dto)
+        private async Task CreateOrderAsync(OrderUpsertRequest dto)
         {
             if (dto == null) return;
 

@@ -264,7 +264,7 @@ namespace TechHaven.Presentation.WinUI.Views
                         customerId = custId;
                 }
 
-                var createDto = new OrderCreateDto
+                var createDto = new OrderUpsertRequest
                 {
                     CustomerId = customerId,
                     Discount = discount,

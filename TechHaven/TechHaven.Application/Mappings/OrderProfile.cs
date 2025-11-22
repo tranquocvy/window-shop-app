@@ -36,7 +36,7 @@ public class OrderProfile : Profile
 			.ForMember(dest => dest.Order, opt => opt.Ignore())
 			.ForMember(dest => dest.Product, opt => opt.Ignore());
 
-		CreateMap<OrderCreateDto, Order>()
+		CreateMap<OrderUpsertRequest, Order>()
 			.ForMember(dest => dest.OrderId, opt => opt.Ignore())
 			.ForMember(dest => dest.UserId, opt => opt.Ignore())
 			.ForMember(dest => dest.OrderDate, opt => opt.Ignore())

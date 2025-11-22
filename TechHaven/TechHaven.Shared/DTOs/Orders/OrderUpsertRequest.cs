@@ -1,21 +1,23 @@
 namespace TechHaven.Shared.DTOs.Orders;
 
-public class OrderCreateDto
+public class OrderUpsertRequest
 {
     public int? CustomerId { get; set; }
+
+    public OrderStatus status { get; set; }
 
     public decimal Discount { get; set; }
 
     public string? Notes { get; set; }
 
-    public IReadOnlyList<OrderCreateItemDto> Items { get; set; } = Array.Empty<OrderCreateItemDto>();
+    public IReadOnlyList<OrderUpsertItemDto> Items { get; set; } = Array.Empty<OrderUpsertItemDto>();
 }
 
-public class OrderCreateItemDto
+public class OrderUpsertItemDto
 {
     public int ProductId { get; set; }
 
-    public int Quantity { get; set; }
-
     public decimal UnitPrice { get; set; }
+
+    public int Quantity { get; set; }
 }

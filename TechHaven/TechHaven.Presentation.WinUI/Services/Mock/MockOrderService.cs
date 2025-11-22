@@ -307,7 +307,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             };
         }
 
-        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderQueryDto query)
+        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderListQueryDto query)
         {
             IEnumerable<OrderDto> result = _mockOrders;
 
@@ -413,7 +413,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        public Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderCreateDto dto)
+        public Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequest dto)
         {
             var details = (dto.Items ?? Array.Empty<OrderCreateItemDto>())
                 .Select(i => new OrderDetailDto

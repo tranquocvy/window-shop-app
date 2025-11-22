@@ -2,8 +2,10 @@ using TechHaven.Shared.DTOs.Common;
 
 namespace TechHaven.Shared.DTOs.Orders;
 
-public class OrderQueryDto : PagingRequest
+public class OrderListQueryDto : PagingRequest
 {
+    public PagingRequest pageRequest { get; set; } = new PagingRequest();
+
     public OrderStatus? Status { get; set; }
 
     public DateRangeFilter? OrderDate { get; set; }

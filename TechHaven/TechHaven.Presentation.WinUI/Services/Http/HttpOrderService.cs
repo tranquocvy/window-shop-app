@@ -21,7 +21,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderQueryDto query)
+        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderListQueryDto query)
         {
             var queryString = BuildQueryString(query);
             var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
@@ -33,7 +33,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return _httpClient.GetWrapperFromJsonAsync<OrderDto>($"{BaseUrl}/{id}", "Failed to retrieve order");
         }
 
-        public async Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderCreateDto dto)
+        public async Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequest dto)
         {
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OrderDto>("Failed to create order");
@@ -51,7 +51,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<OrderDto>("Failed to update order status");
         }
 
-        private static string BuildQueryString(OrderQueryDto query)
+        private static string BuildQueryString(OrderListQueryDto query)
         {
             var sb = new StringBuilder();
 
