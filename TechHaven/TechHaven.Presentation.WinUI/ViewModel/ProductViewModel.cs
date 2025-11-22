@@ -5,11 +5,9 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
-using TechHaven.Shared.DTOs.Customers;
 using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
@@ -20,14 +18,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new();
 
+        // Search
         [ObservableProperty]
         private string _searchTerm;
 
+        // Pagination
         [ObservableProperty]
         private int _pageNumber = 1;
 
         [ObservableProperty]
         private int _pageSize = 10;
+
+        [ObservableProperty]
+        private int _totalPages;
+
+        [ObservableProperty]
+        private int _totalCount;
 
         [ObservableProperty]
         private bool _canGoNext;
@@ -38,22 +44,30 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private string _pageInfo;
 
+        // Selection
         [ObservableProperty]
         private bool _isAllSelected;
 
         private bool _isUpdatingAll = false;
 
 
+
+        // ========================
+        // Search triggers reload
+        // ========================
         partial void OnSearchTermChanged(string value)
         {
             PageNumber = 1;
-            _ = LoadProductsAsync(); 
+            _ = LoadProductsAsync();
         }
 
 
+        // ========================
+        // Toggle all selection
+        // ========================
         partial void OnIsAllSelectedChanged(bool value)
         {
-            if (_isUpdatingAll) return; 
+            if (_isUpdatingAll) return;
 
             _isUpdatingAll = true;
             foreach (var item in Products)
@@ -62,80 +76,112 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
 
+
+
+        // ========================
+        // Main load function
+        // ========================
         [RelayCommand]
         private async Task LoadProductsAsync()
         {
             Products.Clear();
+
             var query = new ProductQueryDto
             {
-                SearchTerm = this.SearchTerm,
-                PageNumber = this.PageNumber,
-                PageSize = this.PageSize
+                SearchTerm = SearchTerm,
+                PageNumber = PageNumber,
+                PageSize = PageSize
             };
+
             var response = await _productService.QueryProductsAsync(query);
-            if (response.Success && response.Data != null)
+            if (!response.Success || response.Data == null)
+                return;
+
+            var paging = response.Data; // PagingResponse<ProductDto>
+
+            // Add items
+            foreach (var product in paging.Items)
             {
-                foreach (var product in response.Data)
+                var itemVM = new ProductItemViewModel(product);
+
+                itemVM.PropertyChanged += (s, e) =>
                 {
-                    var itemVM = new ProductItemViewModel(product);
-
-                    // Subscribe PropertyChanged đúng
-                    itemVM.PropertyChanged += (s, e) =>
+                    if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
                     {
-                        if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
-                        {
-                            if (_isUpdatingAll) return; // tránh loop
+                        if (_isUpdatingAll) return;
 
-                            _isUpdatingAll = true;
-                            // Chỉ cập nhật IsAllSelected mà không ảnh hưởng item khác
-                            IsAllSelected = Products.All(p => p.IsSelected);
-                            _isUpdatingAll = false;
-                        }
-                    };
+                        _isUpdatingAll = true;
+                        IsAllSelected = Products.All(p => p.IsSelected);
+                        _isUpdatingAll = false;
+                    }
+                };
 
-                    Products.Add(itemVM);
-                }
-
-                // Kiểm tra xem tất cả item vừa load có được chọn không
-                _isUpdatingAll = true;
-                IsAllSelected = Products.All(p => p.IsSelected);
-                _isUpdatingAll = false;
-
-                CanGoPrevious = PageNumber > 1;
-                CanGoNext = response.Data.Count >= PageSize;
-                PageInfo = $"Trang {PageNumber}";
+                Products.Add(itemVM);
             }
+
+            // Update selection
+            _isUpdatingAll = true;
+            IsAllSelected = Products.All(p => p.IsSelected);
+            _isUpdatingAll = false;
+
+            // --- Update pagination using TotalCount (short way) ---
+            UpdatePaginationState(paging.TotalCount);
         }
 
 
-        private void ItemVM_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+
+
+
+        // ========================
+        // Pagination state update
+        // ========================
+        private void UpdatePaginationState(int totalCount)
         {
-            if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
-            {
-                if (_isUpdatingAll) return;
+            TotalCount = totalCount;
 
-                _isUpdatingAll = true;
-                // Cập nhật IsAllSelected dựa trên tất cả item
-                IsAllSelected = Products.All(p => p.IsSelected);
-                _isUpdatingAll = false;
-            }
+            // tránh chia cho 0
+            TotalPages = PageSize > 0
+                ? (int)System.Math.Ceiling((double)totalCount / PageSize)
+                : 1;
+
+            if (TotalPages == 0) TotalPages = 1;
+
+            // đảm bảo PageNumber hợp lệ (tránh trường hợp xóa item khiến PageNumber > TotalPages)
+            if (PageNumber > TotalPages) PageNumber = TotalPages;
+            if (PageNumber < 1) PageNumber = 1;
+
+            CanGoPrevious = PageNumber > 1;
+            CanGoNext = PageNumber < TotalPages;
+
+            PageInfo = $"Trang {PageNumber}/{TotalPages} (Tổng {TotalCount})";
         }
 
 
+
+
+        // ========================
+        // Delete selected
+        // ========================
         [RelayCommand]
         private async Task DeleteSelectedAsync()
         {
             var selectedItems = Products.Where(p => p.IsSelected).ToList();
+
             foreach (var item in selectedItems)
             {
                 var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
                 if (response.Success)
-                {
                     Products.Remove(item);
-                }
             }
+
+            await LoadProductsAsync();
         }
 
+
+
+        // ========================
+        // Context menu delete
+        // ========================
         [RelayCommand]
         private async Task DeleteProductContext(ProductItemViewModel item)
         {
@@ -145,46 +191,46 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (response.Success)
             {
                 Products.Remove(item);
+                await LoadProductsAsync();
             }
             else
             {
-                var dialog = new Microsoft.UI.Xaml.Controls.ContentDialog
+                var dialog = new ContentDialog
                 {
                     Title = "Lỗi",
                     Content = "Xóa sản phẩm thất bại",
                     CloseButtonText = "Đóng"
                 };
+
                 _ = dialog.ShowAsync();
             }
         }
 
 
+
+        // ========================
+        // CRUD operations
+        // ========================
         public async Task UpdateProductAsync(int id, ProductCreateUpdateDto dto)
         {
-            _ = await _productService.UpdateProductsAsync(id, dto);
+            await _productService.UpdateProductsAsync(id, dto);
             await LoadProductsAsync();
         }
-
 
         public async Task CreateProductAsync(ProductCreateUpdateDto dto)
         {
             if (dto == null) return;
 
-            // Giả sử _productService đã có hàm CreateProductAsync
             var response = await _productService.CreateProductsAsync(dto);
-
             if (response.Success)
-            {
-                await LoadProductsAsync(); 
-            }
-            else
-            {
-                // Xử lý lỗi nếu cần (ví dụ bắn message lên UI)
-                System.Diagnostics.Debug.WriteLine($"Error creating product: {response.Message}");
-            }
+                await LoadProductsAsync();
         }
 
-        // Called when page size changes
+
+
+        // ========================
+        // Page size change
+        // ========================
         partial void OnPageSizeChanged(int value)
         {
             PageNumber = 1;
@@ -192,8 +238,37 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
 
+
+        // ========================
+        // Pagination commands
+        // ========================
+        [RelayCommand]
+        private async Task PreviousPageAsync()
+        {
+            if (PageNumber > 1)
+            {
+                PageNumber--;
+                await LoadProductsAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task NextPageAsync()
+        {
+            if (PageNumber < TotalPages)
+            {
+                PageNumber++;
+                await LoadProductsAsync();
+            }
+        }
     }
 
+
+
+
+    // ===========================================================
+    // Item ViewModel
+    // ===========================================================
     public partial class ProductItemViewModel : ObservableObject
     {
         public ProductDto Product { get; }
@@ -206,10 +281,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool _isSelected;
 
-        public string StatusText => Product.StockQuantity > 0 ? "Còn hàng" : "Hết hàng";
+        public string StatusText =>
+            Product.StockQuantity > 0 ? "Còn hàng" : "Hết hàng";
 
-        public SolidColorBrush StatusColor => Product.StockQuantity > 0
-            ? new SolidColorBrush(Colors.Green)
-            : new SolidColorBrush(Colors.Red);
+        public SolidColorBrush StatusColor =>
+            Product.StockQuantity > 0
+                ? new SolidColorBrush(Colors.Green)
+                : new SolidColorBrush(Colors.Red);
     }
 }

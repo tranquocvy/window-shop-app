@@ -160,14 +160,14 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Truy vấn theo ProductQueryDto (lọc + sắp xếp + phân trang)
-        public Task<ResponseWrapper<List<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
+        public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
         {
-            IEnumerable<ProductDto> result = _mockProducts;
+            IEnumerable<ProductDto> filtered = _mockProducts;
 
             // Lọc theo từ khóa
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
             {
-                result = result.Where(p =>
+                filtered = filtered.Where(p =>
                     p.ProductName.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
                     (p.Description?.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
             }
@@ -175,41 +175,50 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             // Lọc theo trạng thái draft
             if (query.IsDraft.HasValue)
             {
-                result = result.Where(p => p.IsDraft == query.IsDraft.Value);
+                filtered = filtered.Where(p => p.IsDraft == query.IsDraft.Value);
             }
+
+            // Tổng số sau khi lọc (trước phân trang)
+            int totalCount = filtered.Count();
 
             // Sắp xếp
             if (query.Sorting != null)
             {
                 if (query.Sorting.SortBy?.Equals("price", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    result = query.Sorting.Desc
-                        ? result.OrderByDescending(p => p.SellPrice)
-                        : result.OrderBy(p => p.SellPrice);
+                    filtered = query.Sorting.Desc
+                        ? filtered.OrderByDescending(p => p.SellPrice)
+                        : filtered.OrderBy(p => p.SellPrice);
                 }
                 else if (query.Sorting.SortBy?.Equals("name", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    result = query.Sorting.Desc
-                        ? result.OrderByDescending(p => p.ProductName)
-                        : result.OrderBy(p => p.ProductName);
+                    filtered = query.Sorting.Desc
+                        ? filtered.OrderByDescending(p => p.ProductName)
+                        : filtered.OrderBy(p => p.ProductName);
                 }
             }
 
             // Phân trang
-            if (query.PageNumber > 0 && query.PageSize > 0)
-            {
-                result = result
-                    .Skip((query.PageNumber - 1) * query.PageSize)
-                    .Take(query.PageSize);
-            }
+            List<ProductDto> items = filtered
+                .Skip((query.PageNumber - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
 
-            var response = new ResponseWrapper<List<ProductDto>>
+            var paging = new PagingResponse<ProductDto>
+            {
+                Items = items,
+                PageNumber = query.PageNumber,
+                PageSize = query.PageSize,
+                TotalCount = totalCount
+            };
+
+            return Task.FromResult(new ResponseWrapper<PagingResponse<ProductDto>>
             {
                 Success = true,
                 Message = "Products queried successfully",
-                Data = result.ToList()
-            };
-            return Task.FromResult(response);
+                Data = paging
+            });
         }
+
     }
 }

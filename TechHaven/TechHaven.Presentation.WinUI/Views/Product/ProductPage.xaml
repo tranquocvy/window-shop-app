@@ -147,9 +147,9 @@
                     Margin="0,8,0,0"
                     Spacing="8">
 
-            <Button Content="Previous"/>
-            <TextBlock VerticalAlignment="Center" Text="Page 1 / 10"/>
-            <Button Content="Next"/>
+            <Button Content="Previous" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding CanGoPrevious}"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding PageInfo}"/>
+            <Button Content="Next" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoNext}"/>
 
             <TextBlock VerticalAlignment="Center"
                        Margin="12,0,0,0"

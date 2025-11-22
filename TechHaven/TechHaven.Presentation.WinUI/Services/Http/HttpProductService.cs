@@ -48,10 +48,14 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete product");
         }
 
-        public async Task<ResponseWrapper<List<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
+        public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
-            return await response.EnsureSuccessAndReadWrapperAsync<List<ProductDto>>("Failed to query products");
+
+            return await response.EnsureSuccessAndReadWrapperAsync<PagingResponse<ProductDto>>(
+                "Failed to query products"
+            );
         }
+
     }
 }

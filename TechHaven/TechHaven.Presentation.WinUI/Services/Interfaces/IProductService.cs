@@ -12,6 +12,7 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto);
         Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto);
         Task<ResponseWrapper<bool>> DeleteProductsAsync(int id);
-        Task<ResponseWrapper<List<ProductDto>>> QueryProductsAsync(ProductQueryDto query);
+        public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductQueryDto query);
+
     }
 }
