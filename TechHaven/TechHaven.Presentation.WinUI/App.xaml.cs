@@ -30,6 +30,10 @@ namespace TechHaven.Presentation.WinUI
     {
         private Window? _window;
 
+
+        // thuộc tính này để gọi cái MainWindow từ các chỗ khác
+        public Window MainWindow => _window!;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -45,7 +49,7 @@ namespace TechHaven.Presentation.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new ShellWindow(); 
+            _window = new MainWindow(); 
             _window.Activate();
         }
     }

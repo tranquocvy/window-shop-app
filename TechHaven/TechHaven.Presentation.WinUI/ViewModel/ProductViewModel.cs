@@ -3,9 +3,11 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Products;
@@ -166,7 +168,19 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private async Task DeleteSelectedAsync()
         {
             var selectedItems = Products.Where(p => p.IsSelected).ToList();
+            if (!selectedItems.Any())
+                return;
 
+            bool confirm = await DialogHelper.ShowConfirmAsync(
+                    (App.Current as App)!.MainWindow,
+                    "Xác nhận xóa",
+                    $"Bạn có chắc muốn xóa {selectedItems.Count} sản phẩm đã chọn không?"
+                );
+
+            if (!confirm) return;
+
+
+            // Xóa các sản phẩm đã chọn
             foreach (var item in selectedItems)
             {
                 var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
@@ -174,8 +188,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     Products.Remove(item);
             }
 
+            // Tải lại danh sách sau khi xóa
             await LoadProductsAsync();
         }
+
 
 
 
@@ -187,24 +203,35 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             if (item == null) return;
 
+            bool confirm = await DialogHelper.ShowConfirmAsync(
+                (App.Current as App)!.MainWindow,
+                "Xác nhận xóa",
+                $"Bạn có chắc muốn xóa sản phẩm {item.Product.ProductName} không?"
+            );
+
+            if (!confirm) return;
+
+
+            if (!confirm)
+                return;
+
             var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
             if (response.Success)
             {
                 Products.Remove(item);
-                await LoadProductsAsync();
             }
             else
             {
-                var dialog = new ContentDialog
+                var errorDialog = new ContentDialog
                 {
                     Title = "Lỗi",
                     Content = "Xóa sản phẩm thất bại",
                     CloseButtonText = "Đóng"
                 };
-
-                _ = dialog.ShowAsync();
+                _ = errorDialog.ShowAsync();
             }
         }
+
 
 
 
@@ -261,6 +288,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 await LoadProductsAsync();
             }
         }
+
+        
+
     }
 
 
