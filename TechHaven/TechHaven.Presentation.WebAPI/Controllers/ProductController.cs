@@ -8,6 +8,7 @@ using TechHaven.Application.Features.Product.Commands.CreateProduct;
 using TechHaven.Application.Features.Product.Commands.UpdateProduct;
 using TechHaven.Application.Features.Product.Commands.DeleteProduct;
 using TechHaven.Application.Common.Exceptions;
+using TechHaven.Domain.SearchCriteria;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -28,15 +29,18 @@ public class ProductController : ControllerBase
     [FromQuery] ProductQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
-    var query = new GetProductsQuery
+    // Map CustomerQueryDto -> CustomerSearchCriteria
+    var criteria = new ProductSearchCriteria
     {
-      SearchTerm = queryDto.SearchTerm,
       IsDraft = queryDto.IsDraft,
+      SearchTerm = queryDto.SearchTerm,
       PageNumber = queryDto.PageNumber,
       PageSize = queryDto.PageSize,
       SortBy = queryDto.Sorting?.SortBy,
-      SortDescending = queryDto.Sorting?.Desc ?? false
+      SortDescending = queryDto.Sorting?.Desc ?? false,
     };
+
+    var query = new GetProductsQuery(criteria);
 
     var result = await _mediator.Send(query, cancellationToken);
     return Ok(new ResponseWrapper<PagingResponse<ProductDto>>

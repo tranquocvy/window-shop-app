@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using TechHaven.Domain.Entities;
+using TechHaven.Domain.Enums;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
 

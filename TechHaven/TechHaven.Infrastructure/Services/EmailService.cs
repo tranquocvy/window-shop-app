@@ -106,7 +106,11 @@ public class EmailService : IEmailService
         <p>Mã OTP của bạn là:</p>
         
         <div style='background-color: #667eea; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 5px; letter-spacing: 8px; margin: 20px 0;'>
-            {otpCode}
+            <span id='otp-code'>{otpCode}</span>
+            <button onclick=""navigator.clipboard.writeText(document.getElementById('otp-code').innerText)"" 
+                style='margin-left: 20px; padding: 10px 18px; font-size: 16px; background: #fff; color: #667eea; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
+                Copy
+            </button>
         </div>
         
         <p style='color: #e74c3c; font-weight: bold;'>⚠️ Mã này sẽ hết hạn sau 5 phút.</p>

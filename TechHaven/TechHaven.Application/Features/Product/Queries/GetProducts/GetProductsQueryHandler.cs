@@ -3,6 +3,7 @@ using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Domain.Interfaces;
 using AutoMapper;
+using TechHaven.Domain.SearchCriteria;
 
 namespace TechHaven.Application.Features.Product.Queries.GetProducts;
 
@@ -22,12 +23,7 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, PagingRes
     CancellationToken cancellationToken)
   {
     var (products, totalCount) = await _unitOfWork.Products.SearchWithPaginationAsync(
-      request.SearchTerm,
-      request.IsDraft,
-      request.PageNumber,
-      request.PageSize,
-      request.SortBy,
-      request.SortDescending,
+      request.criteria,
       cancellationToken
     );
 
@@ -36,8 +32,8 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, PagingRes
     return new PagingResponse<ProductDto>
     {
       Items = productsDto,
-      PageNumber = request.PageNumber,
-      PageSize = request.PageSize,
+      PageNumber = request.criteria.PageNumber,
+      PageSize = request.criteria.PageSize,
       TotalCount = totalCount
     };
   }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Interfaces;
+using TechHaven.Domain.SearchCriteria;
 
 namespace TechHaven.Infrastructure.Persistence.Repositories;
 
@@ -15,12 +16,7 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     /// This method is optimized to avoid loading all data into memory
     /// </summary>
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> SearchWithPaginationAsync(
-        string? searchTerm = null,
-        bool? isDraft = null,
-        int pageNumber = 1,
-        int pageSize = 20,
-        string? sortBy = null,
-        bool sortDescending = false,
+        ProductSearchCriteria criteria,
         CancellationToken cancellationToken = default)
     {
         // Step 1: Build base query with Include for Category (eager loading)
@@ -28,18 +24,18 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
             .AsQueryable();
 
         // Step 2: Apply filters
-        query = ApplyFilters(query, searchTerm, isDraft);
+        query = ApplyFilters(query, criteria.SearchTerm, criteria.IsDraft);
 
         // Step 3: Get total count BEFORE pagination (this executes a COUNT query on DB)
         var totalCount = await query.CountAsync(cancellationToken);
 
         // Step 4: Apply sorting
-        query = ApplySorting(query, sortBy, sortDescending);
+        query = ApplySorting(query, criteria.SortBy, criteria.SortDescending);
 
         // Step 5: Apply pagination (Skip and Take are translated to OFFSET and LIMIT in SQL)
         var items = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((criteria.PageNumber - 1) * criteria.PageSize)
+            .Take(criteria.PageSize)
             .AsNoTracking() // Performance optimization: don't track entities
             .ToListAsync(cancellationToken);
 
