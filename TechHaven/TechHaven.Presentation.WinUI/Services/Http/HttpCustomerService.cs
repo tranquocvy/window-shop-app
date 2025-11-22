@@ -30,13 +30,13 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return _httpClient.GetWrapperFromJsonAsync<CustomerDto>($"{BaseUrl}/{id}", "Failed to retrieve customer");
         }
 
-        public async Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerCreateUpdateDto customerDto)
+        public async Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerUpsertRequestDto customerDto)
         {
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, customerDto);
             return await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to create customer");
         }
 
-        public async Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerCreateUpdateDto dto)
+        public async Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
         {
             var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{id}", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to update customer");
@@ -48,7 +48,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete customer");
         }
 
-        public async Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerQueryDto query)
+        public async Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
             return await response.EnsureSuccessAndReadWrapperAsync<List<CustomerDto>>("Failed to query customers");
