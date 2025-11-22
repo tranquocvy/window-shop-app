@@ -307,7 +307,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             };
         }
 
-        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderQueryDto query)
+        public Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderListQueryDto query)
         {
             IEnumerable<OrderDto> result = _mockOrders;
 
@@ -413,9 +413,9 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        public Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderCreateDto dto)
+        public Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequestDto dto)
         {
-            var details = (dto.Items ?? Array.Empty<OrderCreateItemDto>())
+            var details = (dto.Items ?? Array.Empty<OrderUpsertItemDto>())
                 .Select(i => new OrderDetailDto
                 {
                     ProductId = i.ProductId,
@@ -476,19 +476,44 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        public Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
+        public Task<ResponseWrapper<OrderDto>> UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
         {
-            var existing = _mockOrders.FirstOrDefault(o => o.OrderId == dto.OrderId);
-
-            if (existing != null)
+            var existing = _mockOrders.FirstOrDefault(o => o.OrderId == orderId);
+            if (existing == null)
             {
-                existing.Status = dto.Status;
+                return Task.FromResult(new ResponseWrapper<OrderDto>
+                {
+                    Success = false,
+                    Message = "Order not found",
+                    Data = null
+                });
+            }
+
+            // Update fields that are allowed
+            existing.Status = dto.Status;
+            existing.Discount = dto.Discount;
+            existing.Notes = dto.Notes;
+
+            // Replace details if items provided
+            if (dto.Items != null && dto.Items.Count > 0)
+            {
+                existing.Details = dto.Items.Select(i => new OrderDetailDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = $"Product {i.ProductId}",
+                    UnitPrice = i.UnitPrice,
+                    Quantity = i.Quantity,
+                    SubTotal = i.UnitPrice * i.Quantity
+                }).ToList();
+
+                existing.SubtotalAmount = existing.Details.Sum(d => d.SubTotal);
+                existing.TotalAmount = existing.SubtotalAmount - existing.Discount;
             }
 
             var response = new ResponseWrapper<OrderDto>
             {
-                Success = existing != null,
-                Message = existing != null ? "Order status updated successfully" : "Order not found",
+                Success = true,
+                Message = "Order updated successfully",
                 Data = existing
             };
             return Task.FromResult(response);
