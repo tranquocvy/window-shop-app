@@ -1,10 +1,12 @@
+﻿using TechHaven.Shared.DTOs.Common;
+
 namespace TechHaven.Shared.DTOs.Orders;
 
-public class OrderUpsertRequest
+public class OrderUpsertRequestDto : PagingRequest
 {
     public int? CustomerId { get; set; }
 
-    public OrderStatus status { get; set; }
+    public OrderStatus Status { get; set; }
 
     public decimal Discount { get; set; }
 
@@ -17,7 +19,7 @@ public class OrderUpsertItemDto
 {
     public int ProductId { get; set; }
 
-    public decimal UnitPrice { get; set; }
-
     public int Quantity { get; set; }
+
+    public decimal UnitPrice { get; set; }
 }
