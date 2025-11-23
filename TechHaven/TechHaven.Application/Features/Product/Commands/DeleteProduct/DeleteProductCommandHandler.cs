@@ -1,11 +1,10 @@
 using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Interfaces;
-using TechHaven.Application.Common.Exceptions;
-using MediatR;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Product.Commands.DeleteProduct;
 
-public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand>
+public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand, Result>
 {
   private readonly IUnitOfWork _unitOfWork;
 
@@ -15,20 +14,30 @@ public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand>
     _unitOfWork = unitOfWork;
   }
 
-  public async Task<Unit> Handle(
-    DeleteProductCommand request,
-    CancellationToken cancellationToken)
+  public async Task<Result> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
   {
-    var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
-
-    if (product == null)
+    try
     {
-      throw new NotFoundException(nameof(Domain.Entities.Product), request.ProductId);
+      var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
+
+      if (product == null)
+      {
+        return Result.Failure(
+          $"Product {request.ProductId} not found.",
+          ErrorType.NotFound
+        );
+      }
+
+      await _unitOfWork.Products.DeleteAsync(product);
+      await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+      return Result.Success();
     }
-
-    await _unitOfWork.Products.DeleteAsync(product, cancellationToken);
-    await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-    return Unit.Value;
+    catch (Exception ex)
+    {
+      return Result.Failure(
+        $"Failed to create product: {ex.Message}",
+        ErrorType.InternalError);
+    }
   }
 }
