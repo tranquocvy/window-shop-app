@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using TechHaven.Application.Common.Exceptions;
 using TechHaven.Application.Features.Product.Commands.CreateProduct;
 using TechHaven.Application.Features.Product.Commands.DeleteProduct;
 using TechHaven.Application.Features.Product.Commands.UpdateProduct;
@@ -15,10 +14,12 @@ namespace TechHaven.Presentation.WebAPI.Controllers;
 public class ProductController : BaseApiController
 {
   private readonly IMediator _mediator;
+  private readonly ILogger<ProductController> _logger;
 
-  public ProductController(IMediator mediator)
+  public ProductController(IMediator mediator, ILogger<ProductController> logger)
   {
     _mediator = mediator;
+    _logger = logger;
   }
 
   [HttpGet]
@@ -27,6 +28,10 @@ public class ProductController : BaseApiController
     [FromQuery] ProductQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
+    _logger.LogInformation(
+      "Getting products with SearchTerm: {SearchTerm}, IsDraft: {IsDraft}, Page: {PageNumber}/{PageSize}",
+      queryDto.SearchTerm, queryDto.IsDraft, queryDto.PageNumber, queryDto.PageSize);
+
     // Map CustomerQueryDto -> CustomerSearchCriteria
     var criteria = new ProductSearchCriteria
     {
@@ -41,6 +46,13 @@ public class ProductController : BaseApiController
     var query = new GetProductsQuery(criteria);
     var result = await _mediator.Send(query, cancellationToken);
 
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation(
+        "Retrieved {Count} products (Total: {TotalCount})",
+        result.Data?.Items.Count, result.Data?.TotalCount);
+    }
+
     return HandleResult(result);
   }
 
@@ -54,8 +66,19 @@ public class ProductController : BaseApiController
       int id,
       CancellationToken cancellationToken)
   {
+    _logger.LogInformation("Getting product with ID: {ProductId}", id);
+
     var query = new GetProductByIdQuery(id);
     var result = await _mediator.Send(query, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation("Product found: {ProductName}", result.Data?.ProductName);
+    }
+    else
+    {
+      _logger.LogWarning("Product not found: {ProductId}", id);
+    }
 
     return HandleResult(result);
   }
@@ -70,6 +93,10 @@ public class ProductController : BaseApiController
       [FromBody] ProductCreateUpdateDto request,
       CancellationToken cancellationToken)
   {
+    _logger.LogInformation(
+      "Creating product: {ProductName} - Brand: {BrandName}",
+      request.ProductName, request.BrandName
+    );
     // Map DTO to Command
     var command = new CreateProductCommand
     {
@@ -90,6 +117,20 @@ public class ProductController : BaseApiController
     };
 
     var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation(
+        "Product created successfully: ID {ProductId}, Name: {ProductName}",
+        result.Data?.ProductId, result.Data?.ProductName);
+    }
+    else
+    {
+      _logger.LogWarning(
+        "Failed to create product: {ProductName}. Error: {ErrorMessage}",
+        request.ProductName, result.ErrorMessage);
+    }
+
     return HandleResult(result);
   }
 
@@ -105,6 +146,10 @@ public class ProductController : BaseApiController
       [FromBody] ProductCreateUpdateDto request,
       CancellationToken cancellationToken)
   {
+    _logger.LogInformation(
+      "Updating product ID: {ProductId} - New name: {ProductName}",
+      id, request.ProductName);
+
     // Map DTO to Command with ID from route
     var command = new UpdateProductCommand
     {
@@ -126,6 +171,12 @@ public class ProductController : BaseApiController
     };
 
     var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation("Product updated successfully: ID {ProductId}", id);
+    }
+
     return HandleResult(result);
   }
 
@@ -139,8 +190,15 @@ public class ProductController : BaseApiController
       int id,
       CancellationToken cancellationToken)
   {
+    _logger.LogInformation("Deleting product ID: {ProductId}", id);
+
     var command = new DeleteProductCommand(id);
     var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation("Product deleted successfully: ID {ProductId}", id);
+    }
 
     return result.IsSuccess
       ? NoContent()
