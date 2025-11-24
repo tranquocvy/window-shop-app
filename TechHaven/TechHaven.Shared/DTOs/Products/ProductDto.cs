@@ -22,6 +22,7 @@ public class ProductDto
 
     public string? ImageGalleryJson { get; set; }
 
+    public decimal? CostPrice { get; set; }
     public decimal SellPrice { get; set; }
 
     public int StockQuantity { get; set; }

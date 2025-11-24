@@ -1,6 +1,6 @@
 namespace TechHaven.Shared.DTOs.Products;
 
-public class ProductCreateUpdateDto
+public class ProductUpsertRequest
 {
     public string ProductName { get; set; } = string.Empty;
 
@@ -16,11 +16,11 @@ public class ProductCreateUpdateDto
 
     public int? BatteryCapacity { get; set; }
 
-    public string? ImageUrl { get; set; }
+    public string ImageUrl { get; set; } = "ms-appx:///Assets/avatar.jpg";
 
     public string? ImageGalleryJson { get; set; }
 
-    public decimal CostPrice { get; set; }
+    public decimal? CostPrice { get; set; }
 
     public decimal SellPrice { get; set; }
 
