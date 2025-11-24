@@ -67,7 +67,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Tạo mới
-        public Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto)
+        public Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto)
         {
             var newProduct = new ProductDto
             {
@@ -99,7 +99,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Cập nhật
-        public Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto)
+        public Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto)
         {
             var existing = _mockProducts.FirstOrDefault(p => p.ProductId == id);
             if (existing != null)
@@ -151,7 +151,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Truy vấn theo ProductQueryDto (lọc + sắp xếp + phân trang)
-        public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
+        public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
             IEnumerable<ProductDto> filtered = _mockProducts;
 

@@ -47,7 +47,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// <summary>
         /// Lấy dữ liệu từ form + validate hiển thị lỗi UI
         /// </summary>
-        public ProductCreateUpdateDto GetFormData()
+        public ProductUpsertRequest GetFormData()
         {
             ClearErrors();
 
@@ -88,7 +88,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 return null;
 
             // ========== BUILD DTO ==========
-            return new ProductCreateUpdateDto
+            return new ProductUpsertRequest
             {
                 ProductName = rawName,
                 BrandName = GetStringOrNull(BrandNameBox.Text),

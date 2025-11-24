@@ -88,7 +88,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             Products.Clear();
 
-            var query = new ProductQueryDto
+            var query = new ProductListQueryDto
             {
                 SearchTerm = SearchTerm,
                 PageNumber = PageNumber,
@@ -238,13 +238,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // ========================
         // CRUD operations
         // ========================
-        public async Task UpdateProductAsync(int id, ProductCreateUpdateDto dto)
+        public async Task UpdateProductAsync(int id, ProductUpsertRequest dto)
         {
             await _productService.UpdateProductsAsync(id, dto);
             await LoadProductsAsync();
         }
 
-        public async Task CreateProductAsync(ProductCreateUpdateDto dto)
+        public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
 
