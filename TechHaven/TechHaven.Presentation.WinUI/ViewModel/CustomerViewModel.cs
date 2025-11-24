@@ -8,21 +8,20 @@ using System.Text;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Shared.DTOs.Customers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class CustomerViewModel : ObservableObject
     {
-        // 2. Dịch vụ (service) để lấy dữ liệu
-        private readonly ICustomerService _customerService = new MockCustomerService();
+        // Service to fetch data - can be injected or use default HttpCustomerService
+        private readonly ICustomerService _customerService;
 
-        // 3. Danh sách khách hàng để binding lên DataGrid
-        // Dùng ObservableCollection để UI tự động cập nhật
+        // Collection of customers for data binding
         public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
 
-        // 4. Property cho ô tìm kiếm
-        // [ObservableProperty] sẽ tự tạo ra property tên là "SearchTerm"
+        // Search term property
         [ObservableProperty]
         private string _searchTerm;
 
@@ -42,7 +41,23 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private string _pageInfo;
 
-        // 5. Tạo một Command để tải dữ liệu
+        public CustomerViewModel(ICustomerService customerService = null)
+        {
+            // Use injected service or create HttpCustomerService with default HttpClient
+            _customerService = customerService ?? CreateDefaultHttpCustomerService();
+        }
+
+        // Create default HttpCustomerService
+        private static ICustomerService CreateDefaultHttpCustomerService()
+        {
+            var httpClient = new System.Net.Http.HttpClient
+            {
+                BaseAddress = new Uri("https://localhost:7139/") // Replace with your API base URL
+            };
+            return new HttpCustomerService(httpClient);
+        }
+
+        // Command to load customers
         [RelayCommand]
         private async Task LoadCustomersAsync()
         {
@@ -59,24 +74,25 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             if (response.Success && response.Data != null)
             {
-                foreach (var customer in response.Data)
+                foreach (var customer in response.Data.Items)
                 {
                     Customers.Add(customer);
                 }
 
-                // Update paging state
+                // Update paging state with accurate information
+                var totalPages = response.Data.TotalPages;
                 CanGoPrevious = PageNumber > 1;
                 // If returned items count equals page size, there might be a next page
-                CanGoNext = response.Data.Count >= PageSize;
-                PageInfo = $"Trang {PageNumber}";
+                CanGoNext = PageNumber < totalPages;
+                PageInfo = $"Trang {PageNumber} / {totalPages} (Tổng: {response.Data.TotalCount} khách hàng)";
             }
         }
 
-        // 6. Tạo một Command cho nút "Thêm"
+        // Command for "Add Customer" button
         [RelayCommand]
         private void AddCustomer()
         {
-            // (Thêm logic mở dialog/trang mới ở đây)
+            // Logic to open dialog/page
             Console.WriteLine("Nút Add Customer đã được nhấn!");
         }
 
@@ -112,8 +128,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             await LoadCustomersAsync();
         }
 
-        // 7. Tự động tìm kiếm khi SearchTerm thay đổi
-        // Hàm này sẽ được gọi tự động mỗi khi property "SearchTerm" thay đổi
+        // Auto search when SearchTerm changes
         partial void OnSearchTermChanged(string value)
         {
             // Reset to first page and load

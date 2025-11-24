@@ -39,18 +39,81 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Lấy tất cả khách hàng
-        public Task<ResponseWrapper<List<CustomerDto>>> GetAllCustomersAsync()
+        /// <summary>
+        /// Query customers with pagination, filtering, and sorting
+        /// </summary>
+        public Task<ResponseWrapper<PagingResponse<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
         {
-            var response = new ResponseWrapper<List<CustomerDto>>
+            IEnumerable<CustomerDto> result = _mockCustomers;
+
+            // Lọc theo từ khóa (tên, sđt, email)
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+            {
+                result = result.Where(c =>
+                    c.CustomerName.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    c.PhoneNumber.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Email?.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            // Lọc theo loại khách hàng
+            if (query.Type.HasValue)
+                result = result.Where(c => c.Type == query.Type.Value);
+
+            // Lọc theo ngày tạo (nếu có trong DTO)
+            if (query.CreatedAt != null)
+            {
+                // Mock không có CreatedDate, bỏ qua filter này
+            }
+
+            // Sắp xếp
+            if (query.Sorting != null && !string.IsNullOrWhiteSpace(query.Sorting.SortBy))
+            {
+                result = query.Sorting.SortBy.ToLower() switch
+                {
+                    "name" => query.Sorting.Desc
+                        ? result.OrderByDescending(c => c.CustomerName)
+                        : result.OrderBy(c => c.CustomerName),
+                    "total" => query.Sorting.Desc
+                        ? result.OrderByDescending(c => c.TotalPurchased)
+                        : result.OrderBy(c => c.TotalPurchased),
+                    "type" => query.Sorting.Desc
+                        ? result.OrderByDescending(c => c.Type)
+                        : result.OrderBy(c => c.Type),
+                    _ => result
+                };
+            }
+
+            var totalCount = result.Count();
+
+            // Phân trang
+            var pageNumber = query.PageNumber < 1 ? 1 : query.PageNumber;
+            var pageSize = query.PageSize < 1 ? 10 : query.PageSize;
+
+            var pagedResult = result
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var pagingResponse = new PagingResponse<CustomerDto>
+            {
+                Items = pagedResult,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            var response = new ResponseWrapper<PagingResponse<CustomerDto>>
             {
                 Success = true,
-                Message = "Customers retrieved successfully",
-                Data = _mockCustomers
+                Message = "Customers queried successfully",
+                Data = pagingResponse
             };
             return Task.FromResult(response);
         }
 
-        // Lấy khách hàng theo ID
+        /// <summary>
+        /// Get customer by ID
+        /// </summary>
         public Task<ResponseWrapper<CustomerDto>> GetCustomerByIdAsync(int id)
         {
             var customer = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
@@ -63,7 +126,9 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        // Tạo khách hàng mới
+        /// <summary>
+        /// Create customer
+        /// </summary>
         public Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerUpsertRequestDto dto)
         {
             var newCustomer = new CustomerDto
@@ -88,7 +153,9 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        // Cập nhật thông tin khách hàng
+        /// <summary>
+        /// Update existing customer
+        /// </summary>
         public Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
         {
             var existing = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
@@ -111,7 +178,9 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        // Xoá khách hàng
+        /// <summary>
+        /// Delete customer
+        /// </summary>
         public Task<ResponseWrapper<bool>> DeleteCustomerAsync(int id)
         {
             var existing = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
@@ -128,58 +197,6 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 Success = success,
                 Message = success ? "Customer deleted successfully" : "Customer not found",
                 Data = success
-            };
-            return Task.FromResult(response);
-        }
-
-        // Lọc & sắp xếp (CustomerQueryDto)
-        public Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
-        {
-            IEnumerable<CustomerDto> result = _mockCustomers;
-
-            // Lọc theo từ khóa (tên, sđt, email)
-            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
-            {
-                result = result.Where(c =>
-                    c.CustomerName.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    c.PhoneNumber.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    (c.Email?.Contains(query.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-
-            // Lọc theo loại khách hàng
-            if (query.Type.HasValue)
-                result = result.Where(c => c.Type == query.Type.Value);
-
-            // Sắp xếp
-            if (query.Sorting != null)
-            {
-                if (query.Sorting.SortBy?.Equals("name", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    result = query.Sorting.Desc
-                        ? result.OrderByDescending(c => c.CustomerName)
-                        : result.OrderBy(c => c.CustomerName);
-                }
-                else if (query.Sorting.SortBy?.Equals("total", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    result = query.Sorting.Desc
-                        ? result.OrderByDescending(c => c.TotalPurchased)
-                        : result.OrderBy(c => c.TotalPurchased);
-                }
-            }
-
-            // Phân trang
-            if (query.PageNumber > 0 && query.PageSize > 0)
-            {
-                result = result
-                    .Skip((query.PageNumber - 1) * query.PageSize)
-                    .Take(query.PageSize);
-            }
-
-            var response = new ResponseWrapper<List<CustomerDto>>
-            {
-                Success = true,
-                Message = "Customers queried successfully",
-                Data = result.ToList()
             };
             return Task.FromResult(response);
         }

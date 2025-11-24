@@ -20,9 +20,41 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public Task<ResponseWrapper<List<CustomerDto>>> GetAllCustomersAsync()
+        public async Task<ResponseWrapper<PagingResponse<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
         {
-            return _httpClient.GetWrapperFromJsonAsync<List<CustomerDto>>(BaseUrl, "Failed to retrieve customers");
+            // Build query string from CustomerListQueryDto
+            var queryParams = new System.Collections.Generic.List<string>();
+
+            if (query.PageNumber > 0)
+                queryParams.Add($"pageRequest.PageNumber={query.PageNumber}");
+
+            if (query.PageSize > 0)
+                queryParams.Add($"pageRequest.PageSize={query.PageSize}");
+
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+                queryParams.Add($"searchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+
+            if (query.Type.HasValue)
+                queryParams.Add($"type={query.Type.Value}");
+
+            if (query.CreatedAt?.StartDate.HasValue == true)
+                queryParams.Add($"createdAt.StartDate={query.CreatedAt.StartDate.Value:O}");
+
+            if (query.CreatedAt?.EndDate.HasValue == true)
+                queryParams.Add($"createdAt.EndDate={query.CreatedAt.EndDate.Value:O}");
+
+            if (query.Sorting != null)
+            {
+                if (!string.IsNullOrWhiteSpace(query.Sorting.SortBy))
+                    queryParams.Add($"sorting.SortBy={Uri.EscapeDataString(query.Sorting.SortBy)}");
+
+                queryParams.Add($"sorting.Desc={query.Sorting.Desc}");
+            }
+
+            var queryString = string.Join("&", queryParams);
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+
+            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<CustomerDto>>(url, "Failed to query customers");
         }
 
         public Task<ResponseWrapper<CustomerDto>> GetCustomerByIdAsync(int id)
@@ -46,12 +78,6 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         {
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/{id}");
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete customer");
-        }
-
-        public async Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
-        {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
-            return await response.EnsureSuccessAndReadWrapperAsync<List<CustomerDto>>("Failed to query customers");
         }
     }
 }
