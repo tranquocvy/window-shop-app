@@ -7,7 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="White"
+    Background="#EEEEEE"
     Foreground="#0A2E8C">
 
     <Grid Padding="16" RequestedTheme="Light">
@@ -44,7 +44,7 @@
                       Height="40"
                       PlaceholderText="Tiêu chí">
             </ComboBox>
-            
+
             <ComboBox ItemsSource="{x:Bind ViewModel.SortDirections}"
                       Grid.Column="2"
                       SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
@@ -52,7 +52,7 @@
                       Height="40"
                       PlaceholderText="Thứ tự">
             </ComboBox>
-            
+
             <Button
                 x:Name="AddCustomerButton"
                 Grid.Column="3"
@@ -66,68 +66,80 @@
                 Click="AddCustomer_Click"/>
         </Grid>
 
-        <!-- Customers list -->
-        <ListView
-            x:Name="CustomersList"
-            Grid.Row="2"
-            ItemsSource="{Binding Customers}"
-            SelectionMode="None"
-            IsItemClickEnabled="True"
-            ItemClick="CustomersList_ItemClick"
-            Padding="0">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
+        <!-- Customers list wrapped in a card-like Border -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="12" BorderBrush="#D0D0D0" BorderThickness="1" Margin="0,0,0,8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <ListView.Header>
-                <Grid Padding="0,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.5*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="1" Text="Tên Khách Hàng" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="2" Text="Số Điện Thoại" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="3" Text="Email" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="4" Text="Địa chỉ" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="5" Text="Loại" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="6" Text="Tổng Mua" FontWeight="SemiBold" TextAlignment="Left"/>
-                </Grid>
-            </ListView.Header>
+                <!-- Optional header inside card -->
+                <TextBlock Grid.Row="0" Text="Danh sách khách hàng" FontWeight="SemiBold" Margin="4,0,0,8" Foreground="#0A2E8C"/>
 
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="0,6">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.5*"/>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
+                <ListView
+                    x:Name="CustomersList"
+                    Grid.Row="1"
+                    ItemsSource="{Binding Customers}"
+                    SelectionMode="None"
+                    IsItemClickEnabled="True"
+                    ItemClick="CustomersList_ItemClick"
+                    Padding="0">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
 
-                        <!-- Bindings to the CustomerDto properties -->
-                        <TextBlock Grid.Column="0" Text="{Binding CustomerId}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="1" Text="{Binding CustomerName}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="2" Text="{Binding PhoneNumber}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="3" Text="{Binding Email}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="4" Text="{Binding Address}" TextTrimming="CharacterEllipsis" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="5" Text="{Binding Type}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="6" Text="{Binding TotalPurchased}" TextAlignment="Left"/>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                    <ListView.Header>
+                        <Grid Padding="0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.5*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="1" Text="Tên Khách Hàng" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="2" Text="Số Điện Thoại" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="3" Text="Email" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="4" Text="Địa chỉ" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="5" Text="Loại" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="6" Text="Tổng Mua" FontWeight="SemiBold" TextAlignment="Left"/>
+                        </Grid>
+                    </ListView.Header>
+
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0.5*"/>
+                                    <ColumnDefinition Width="1.5*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1.5*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Bindings to the CustomerDto properties -->
+                                <TextBlock Grid.Column="0" Text="{Binding CustomerId}" TextAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CustomerName}" TextAlignment="Left"/>
+                                <TextBlock Grid.Column="2" Text="{Binding PhoneNumber}" TextAlignment="Left"/>
+                                <TextBlock Grid.Column="3" Text="{Binding Email}" TextAlignment="Left"/>
+                                <TextBlock Grid.Column="4" Text="{Binding Address}" TextTrimming="CharacterEllipsis" TextAlignment="Left"/>
+                                <TextBlock Grid.Column="5" Text="{Binding Type}" TextAlignment="Left"/>
+                                <TextBlock Grid.Column="6" Text="{Binding TotalPurchased}" TextAlignment="Left"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
 
         <!-- Paging controls -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="8">
