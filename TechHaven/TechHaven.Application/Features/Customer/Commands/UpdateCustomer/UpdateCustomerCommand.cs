@@ -1,9 +1,10 @@
 using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Customers;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Customer.Commands.UpdateCustomer;
 
-public record UpdateCustomerCommand() : ICommand<CustomerDto>
+public record UpdateCustomerCommand() : ICommand<Result<CustomerDto>>
 {
   public int CustomerId { get; set; }
   public string CustomerName { get; set; } = string.Empty;

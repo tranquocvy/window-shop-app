@@ -1,5 +1,6 @@
 using System.Linq;
 using TechHaven.Domain.Entities;
+using TechHaven.Domain.SearchCriteria;
 
 namespace TechHaven.Domain.Interfaces
 {
@@ -14,12 +15,7 @@ namespace TechHaven.Domain.Interfaces
         /// </summary>
         Task<(IReadOnlyList<Product> Items, int TotalCount)>
         SearchWithPaginationAsync(
-            string? searchTerm = null,
-            bool? isDraft = null,
-            int pageNumber = 1,
-            int pageSize = 20,
-            string? sortBy = null,
-            bool sortDescending = false,
+            ProductSearchCriteria criteria,
             CancellationToken cancellationToken = default
         );
 

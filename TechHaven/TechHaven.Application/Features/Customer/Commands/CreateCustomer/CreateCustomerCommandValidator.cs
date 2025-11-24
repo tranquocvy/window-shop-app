@@ -4,12 +4,8 @@ using TechHaven.Application.Features.Customer.Commands.CreateCustomer;
 
 public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCommand>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public CreateCustomerCommandValidator(IUnitOfWork unitOfWork)
+    public CreateCustomerCommandValidator()
     {
-        _unitOfWork = unitOfWork;
-
         RuleFor(x => x.CustomerName)
             .NotEmpty().WithMessage("Customer name is required.")
             .MaximumLength(150).WithMessage("Customer name cannot exceed 150 characters.");

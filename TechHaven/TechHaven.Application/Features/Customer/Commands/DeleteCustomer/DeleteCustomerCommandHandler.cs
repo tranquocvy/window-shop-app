@@ -2,10 +2,11 @@ using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Application.Common.Exceptions;
 using MediatR;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Customer.Commands.DeleteCustomer;
 
-public class DeleteCustomerCommandHandler : ICommandHandler<DeleteCustomerCommand>
+public class DeleteCustomerCommandHandler : ICommandHandler<DeleteCustomerCommand, Result>
 {
   private readonly IUnitOfWork _unitOfWork;
 
@@ -15,20 +16,32 @@ public class DeleteCustomerCommandHandler : ICommandHandler<DeleteCustomerComman
     _unitOfWork = unitOfWork;
   }
 
-  public async Task<Unit> Handle(
+  public async Task<Result> Handle(
     DeleteCustomerCommand request,
     CancellationToken cancellationToken)
   {
-    var customer = await _unitOfWork.Customers.GetByIdAsync(request.CustomerId, cancellationToken);
-
-    if (customer == null)
+    try
     {
-      throw new NotFoundException(nameof(Domain.Entities.Customer), request.CustomerId);
+      var customer = await _unitOfWork.Customers.GetByIdAsync(request.CustomerId, cancellationToken);
+
+      if (customer == null)
+      {
+        return Result.Failure(
+          $"Customer {request.CustomerId} not found.",
+          ErrorType.NotFound
+        );
+      }
+
+      await _unitOfWork.Customers.DeleteAsync(customer, cancellationToken);
+      await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+      return Result.Success();
     }
-
-    await _unitOfWork.Customers.DeleteAsync(customer, cancellationToken);
-    await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-    return Unit.Value;
+    catch (Exception ex)
+    {
+      return Result.Failure(
+        $"Failed to delete customer: {ex.Message}",
+        ErrorType.InternalError);
+    }
   }
 }

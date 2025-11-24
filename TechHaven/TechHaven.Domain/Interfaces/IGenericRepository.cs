@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using TechHaven.Domain.Specifications;
 
 namespace TechHaven.Domain.Interfaces
 {
@@ -20,10 +21,18 @@ namespace TechHaven.Domain.Interfaces
             CancellationToken cancellationToken = default
         );
 
+        // OLD
+        // Task<IReadOnlyList<TEntity>>
+        // GetAsync(
+        //     Expression<Func<TEntity, bool>>? predicate = null,
+        //     Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        //     CancellationToken cancellationToken = default
+        // );
+
+        // NEW: APLLY SPECIFICATION PATTERN
         Task<IReadOnlyList<TEntity>>
         GetAsync(
-            Expression<Func<TEntity, bool>>? predicate = null,
-            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+            ISpecification<TEntity> specification,
             CancellationToken cancellationToken = default
         );
 
@@ -39,9 +48,17 @@ namespace TechHaven.Domain.Interfaces
             CancellationToken cancellationToken = default
         );
 
+        // OLD
+        // Task<int>
+        // CountAsync(
+        //     Expression<Func<TEntity, bool>>? predicate = null,
+        //     CancellationToken cancellationToken = default
+        // );
+
+        // NEW: APLLY SPECIFICATION PATTERN
         Task<int>
         CountAsync(
-            Expression<Func<TEntity, bool>>? predicate = null,
+            ISpecification<TEntity> specification,
             CancellationToken cancellationToken = default
         );
 

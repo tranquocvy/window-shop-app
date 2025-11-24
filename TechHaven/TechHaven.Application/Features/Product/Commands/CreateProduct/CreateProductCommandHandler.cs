@@ -1,11 +1,13 @@
 using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Products;
-using AutoMapper;
 using TechHaven.Domain.Interfaces;
+using TechHaven.Domain.Common;
+using AutoMapper;
 
 namespace TechHaven.Application.Features.Product.Commands.CreateProduct;
 
-public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand, ProductDto>
+public class CreateProductCommandHandler 
+    : ICommandHandler<CreateProductCommand, Result<ProductDto>>
 {
   private readonly IUnitOfWork _unitOfWork;
   private readonly IMapper _mapper;
@@ -18,23 +20,41 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
     _mapper = mapper;
   }
 
-  public async Task<ProductDto> Handle(
+  public async Task<Result<ProductDto>> Handle(
     CreateProductCommand request,
     CancellationToken cancellationToken)
   {
-    // map command to entity
-    var product = _mapper.Map<Domain.Entities.Product>(request);
+    try
+    {
+      var existingProduct = await _unitOfWork.Products
+        .FirstOrDefaultAsync(
+          p => p.ProductName == request.ProductName,
+          cancellationToken);
 
-    // set timestamps
-    product.CreatedAt = DateTime.Now;
-    product.UpdatedAt = null;
+      if (existingProduct != null)
+      {
+        return Result<ProductDto>.Failure(
+          $"Product with name '{request.ProductName}' already exists",
+          ErrorType.Conflict
+        );
+      }
 
-    // add to repository
-    await _unitOfWork.Products.AddAsync(product, cancellationToken);
+      // Create product
+      var product = _mapper.Map<Domain.Entities.Product>(request);
+      product.CreatedAt = DateTime.Now;
+      product.UpdatedAt = null;
 
-    // save changes
-    await _unitOfWork.SaveChangesAsync(cancellationToken);
+      await _unitOfWork.Products.AddAsync(product, cancellationToken);
+      await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-    return _mapper.Map<ProductDto>(product);
+      var productDto = _mapper.Map<ProductDto>(product);
+      return Result<ProductDto>.Success(productDto);
+    }
+    catch (Exception ex)
+    {
+      return Result<ProductDto>.Failure(
+        $"Failed to create product: {ex.Message}",
+        ErrorType.InternalError);
+    }
   }
 }

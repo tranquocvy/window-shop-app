@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TechHaven.Domain.Entities;
+using TechHaven.Domain.Enums;
 using TechHaven.Infrastructure.Persistence;
 
 namespace TechHaven.Infrastructure.Data;

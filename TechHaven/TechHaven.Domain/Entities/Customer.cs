@@ -1,7 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TechHaven.Domain.Enums;
 
 namespace TechHaven.Domain.Entities;
 
@@ -91,25 +90,4 @@ public class Customer
     /// Gets or sets the collection of orders associated with this customer.
     /// </summary>
     public ICollection<Order>? Orders { get; set; }
-}
-
-/// <summary>
-/// Defines the types of customers in the system.
-/// </summary>
-public enum CustomerType
-{
-    /// <summary>
-    /// Regular customer type.
-    /// </summary>
-    Regular = 1,
-
-    /// <summary>
-    /// Student customer type with discounts.
-    /// </summary>
-    Student = 2,
-
-    /// <summary>
-    /// VIP customer type with special privileges.
-    /// </summary>
-    VIP = 3
 }
