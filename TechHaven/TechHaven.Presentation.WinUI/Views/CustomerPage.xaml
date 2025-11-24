@@ -18,26 +18,53 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Customers" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,12" Foreground="#0A2E8C"/>
+        <TextBlock Grid.Row="0" 
+                   Text="Customers" 
+                   Style="{ThemeResource TitleTextBlockStyle}" 
+                   Margin="0,0,0,12" 
+                   Foreground="#0A2E8C"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12" Spacing="8">
+        <Grid Grid.Row="1" Margin="0,0,0,12" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
             <TextBox
-                PlaceholderText="Tìm kiếm theo tên, SĐT, email..."
-                Width="300"
+                Grid.Column="0"
+                PlaceholderText="Tìm kiếm theo Tên, SĐT, Email..."
+                VerticalAlignment="Center"
+                HorizontalAlignment="Stretch"
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
+            <ComboBox ItemsSource="{x:Bind ViewModel.SortableProperties}"
+                      Grid.Column="1"
+                      SelectedItem="{Binding ViewModel.SelectedSortProperty, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      Height="40"
+                      PlaceholderText="Tiêu chí">
+            </ComboBox>
+            
+            <ComboBox ItemsSource="{x:Bind ViewModel.SortDirections}"
+                      Grid.Column="2"
+                      SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      Height="40"
+                      PlaceholderText="Thứ tự">
+            </ComboBox>
+            
             <Button
                 x:Name="AddCustomerButton"
+                Grid.Column="3"
                 Content="Thêm Khách Hàng"
-                Margin="12,0,0,0"
+                HorizontalAlignment="Stretch"
                 Background="#0D47A1"
                 Foreground="White"
                 FontWeight="Bold"
                 CornerRadius="5"
                 Height="40"
-                Width="200"
                 Click="AddCustomer_Click"/>
-        </StackPanel>
+        </Grid>
 
         <!-- Customers list -->
         <ListView
@@ -60,9 +87,9 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0.5*"/>
                         <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>

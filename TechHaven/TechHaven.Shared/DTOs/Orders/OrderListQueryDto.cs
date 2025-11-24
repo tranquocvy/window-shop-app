@@ -4,7 +4,6 @@ namespace TechHaven.Shared.DTOs.Orders;
 
 public class OrderListQueryDto : PagingRequest
 {
-    public PagingRequest pageRequest { get; set; } = new PagingRequest();
 
     public OrderStatus? Status { get; set; }
 

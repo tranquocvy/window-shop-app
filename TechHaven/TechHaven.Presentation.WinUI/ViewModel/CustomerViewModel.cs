@@ -18,8 +18,32 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Service to fetch data - can be injected or use default HttpCustomerService
         private readonly ICustomerService _customerService;
 
+        // Collection of sortable properties
+        public ObservableCollection<string> SortableProperties { get; } = new()
+        {
+            "Không",
+            "ID",
+            "Hạng",
+            "Tổng Mua"
+        };
+        // Collection of sort directions
+        public ObservableCollection<string> SortDirections { get; } = new()
+        {
+            "Không",
+            "Tăng dần",
+            "Giảm dần"
+        };
+
         // Collection of customers for data binding
         public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
+
+        // Sortable Properties
+        [ObservableProperty]
+        private string _selectedProperty;
+
+        // Sort Direction
+        [ObservableProperty]
+        private string _selectedDirection;
 
         // Search term property
         [ObservableProperty]
