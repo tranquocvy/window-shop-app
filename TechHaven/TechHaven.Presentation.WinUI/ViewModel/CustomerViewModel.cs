@@ -41,7 +41,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         };
 
         // Page size options
-        public ObservableCollection<int> PageSizeOptions { get; } = new() { 10, 20, 50 };
+        public ObservableCollection<int> PageSizeOptions { get; } = new() {5, 10, 15, 20 };
 
         // Collection of customers for data binding
         public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
@@ -110,14 +110,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             // Use injected service or create HttpCustomerService with default HttpClient
             _customerService = customerService ?? CreateDefaultHttpCustomerService();
 
-            // Initialize selected page size and subscribe initial load
+            // Initialize selected page size
+            SelectedPageSize = 10;
             PageSize = SelectedPageSize;
 
             // Subscribe to property changed to react to filter changes
             this.PropertyChanged += CustomerViewModel_PropertyChanged;
 
-            // Initial load
-            _ = LoadCustomersAsync();
+            // NOTE: do not auto-load here; Page.OnNavigatedTo will call LoadCustomersCommand
         }
 
         private void CustomerViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -185,7 +185,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     : null,
                 Sorting = GetSorting(),
                 PageNumber = PageNumber,
-                PageSize = PageSize
+                // Always send the selected page size (default 10)
+                PageSize = SelectedPageSize
             };
         }
 
@@ -275,6 +276,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             if (!CanGoPrevious) return;
             PageNumber = Math.Max(1, PageNumber - 1);
+            await LoadCustomersAsync();
+        }
+
+        // Ensure initial load uses default page size
+        public async Task EnsureInitialLoadAsync()
+        {
+            SelectedPageSize = 10;
+            PageNumber = 1;
+            PageSize = SelectedPageSize;
             await LoadCustomersAsync();
         }
 

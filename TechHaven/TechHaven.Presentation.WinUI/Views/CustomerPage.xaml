@@ -39,7 +39,7 @@
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <ComboBox ItemsSource="{x:Bind ViewModel.SortableProperties}"
                       Grid.Column="1"
-                      SelectedItem="{Binding ViewModel.SelectedSortProperty, Mode=TwoWay}"
+                      SelectedItem="{x:Bind ViewModel.SelectedProperty, Mode=TwoWay}"
                       HorizontalAlignment="Stretch"
                       Height="40"
                       PlaceholderText="Tiêu chí">
@@ -108,10 +108,10 @@
                     <Grid Padding="0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="0.5*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="1*"/>
                             <ColumnDefinition Width="1*"/>
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
@@ -131,16 +131,30 @@
 
         <!-- Paging controls -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="8">
-            <Button Content="Previous" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding CanGoPrevious}"/>
+            <Button Command="{Binding PreviousPageCommand}"
+                    IsEnabled="{Binding CanGoPrevious}"
+                    ToolTipService.ToolTip="Trang trước"
+                    Width="40" 
+                    Height="32">
+                <FontIcon Glyph="&#xE96F;"  FontSize="16" Foreground="Black"/>
+            </Button>
+
             <TextBlock VerticalAlignment="Center" Text="{Binding PageInfo}"/>
-            <Button Content="Next" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoNext}"/>
+
+            <Button Command="{Binding NextPageCommand}"
+                    IsEnabled="{Binding CanGoNext}"
+                    ToolTipService.ToolTip="Trang sau"
+                    Width="40" 
+                    Height="32"
+                    >
+                <FontIcon Glyph="&#xE970;"  FontSize="16" Foreground="Black"/>
+            </Button>
 
             <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Text="Items per page:"/>
-            <ComboBox Width="80" SelectedValue="{Binding PageSize, Mode=TwoWay}" SelectedValuePath="Content">
-                <ComboBoxItem Content="5" />
-                <ComboBoxItem Content="10" />
-                <ComboBoxItem Content="20" />
-                <ComboBoxItem Content="50" />
+            <ComboBox ItemsSource="{x:Bind ViewModel.PageSizeOptions}"
+                SelectedItem="{x:Bind ViewModel.SelectedPageSize, Mode=TwoWay}"
+                HorizontalAlignment="Stretch"
+                Height="32">
             </ComboBox>
         </StackPanel>
     </Grid>

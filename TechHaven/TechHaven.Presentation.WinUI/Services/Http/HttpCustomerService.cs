@@ -7,6 +7,7 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Customers;
+using System.Diagnostics;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
 {
@@ -23,7 +24,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         public async Task<ResponseWrapper<PagingResponse<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
         {
             // Build query string from CustomerListQueryDto
-            var queryParams = new System.Collections.Generic.List<string>();
+            var queryParams = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
                 queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
@@ -48,10 +49,15 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             if (query.PageNumber > 0)
                 queryParams.Add($"PageNumber={query.PageNumber}");
 
+            // Always include PageSize parameter when provided (>0)
             if (query.PageSize > 0)
                 queryParams.Add($"PageSize={query.PageSize}");
+
             var queryString = string.Join("&", queryParams);
             var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+
+            // Debug log the final URL so we can confirm PageSize
+            Debug.WriteLine($"HttpCustomerService.QueryCustomersAsync -> Request URL: {_httpClient.BaseAddress?.ToString().TrimEnd('/')}/{url}");
 
             return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<CustomerDto>>(url, "Failed to query customers");
         }
