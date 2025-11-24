@@ -2,20 +2,22 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Input;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Users;
-using Windows.ApplicationModel;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAuthService _authService;
         private DispatcherQueue? _dispatcher;
         private Timer? _timer;
@@ -23,7 +25,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _otpSessionIdInternal = string.Empty;
         private int _otpExpiresInInternal = 0;
 
-        public MainWindowViewModel() : this(new MockAuthService()) { }
+        // Use http-based auth service by default, if you want to use mock, uncomment the other constructor
+        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient)) { }
+        //public MainWindowViewModel() : this(new MockAuthService()) { }
 
         public MainWindowViewModel(IAuthService authService)
         {
@@ -66,6 +70,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         [ObservableProperty]
         private bool isVerifyEnabled = true;
+
+        // Remember me
+        [ObservableProperty]
+        private bool rememberMe = false;
 
         // Called by source-generator when IsVerifyEnabled changes
         partial void OnIsVerifyEnabledChanged(bool value)
@@ -182,11 +190,21 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             var dto = new OtpResendRequestDto { OtpSessionId = _otpSessionIdInternal };
             var result = await _authService.ResendOtpAsync(dto);
-            if (!result.Success) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
+            if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
 
-            // Reset remaining to original expiry and restart countdown
-            if (_otpExpiresInInternal > 0)
+            var resp = result.Data;
+            if (!resp.IsOtpResent) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
+
+            // Update internal session id and expiry from response
+            if (!string.IsNullOrWhiteSpace(resp.NewOtpSessionId))
             {
+                _otpSessionIdInternal = resp.NewOtpSessionId;
+            }
+
+            // Use returned expiry if available, otherwise keep previous
+            if (resp.OtpExpiresIn > 0)
+            {
+                _otpExpiresInInternal = resp.OtpExpiresIn;
                 OtpRemaining = _otpExpiresInInternal;
                 StartCountdown();
             }
@@ -206,6 +224,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             var otpData = result.Data;
             TokenStore.AccessToken = otpData.AccessToken;
             TokenStore.RefreshToken = otpData.RefreshToken;
+
+            // persist refresh token if requested
+            if (rememberMe && !string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
+            {
+                TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken);
+            }
 
             Helpers.AppState.CurrentUser = new UserDto
             {

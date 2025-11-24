@@ -147,7 +147,7 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<IActionResult> UpdateProduct(
       int id,
-      [FromBody] ProductCreateUpdateDto request,
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
     _logger.LogInformation(

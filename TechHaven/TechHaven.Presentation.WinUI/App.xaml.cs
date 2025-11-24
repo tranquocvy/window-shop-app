@@ -15,8 +15,10 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using System.Threading.Tasks;
 
 using TechHaven.Presentation.WinUI.Views;
+using TechHaven.Presentation.WinUI.Helpers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -29,6 +31,10 @@ namespace TechHaven.Presentation.WinUI
     public partial class App : Application
     {
         private Window? _window;
+
+
+        // thuộc tính này để gọi cái MainWindow từ các chỗ khác
+        public static Window MainWindow { get; private set; } = null!;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -43,9 +49,29 @@ namespace TechHaven.Presentation.WinUI
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Use mock restore for offline testing
+            TokenPersistence.UseMock = false;
+
+            try
+            {
+                var restored = await TokenPersistence.TryRestoreSessionAsync();
+                if (restored && AppState.IsLoggedIn)
+                {
+                    // open shell directly
+                    var shell = new ShellWindow();
+                    shell.Activate();
+                    return;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
             _window = new MainWindow();
+            MainWindow = _window;
             _window.Activate();
         }
     }
