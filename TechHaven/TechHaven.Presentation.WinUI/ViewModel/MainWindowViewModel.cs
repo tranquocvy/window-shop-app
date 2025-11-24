@@ -71,6 +71,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool isVerifyEnabled = true;
 
+        // Remember me
+        [ObservableProperty]
+        private bool rememberMe = false;
+
         // Called by source-generator when IsVerifyEnabled changes
         partial void OnIsVerifyEnabledChanged(bool value)
         {
@@ -220,6 +224,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             var otpData = result.Data;
             TokenStore.AccessToken = otpData.AccessToken;
             TokenStore.RefreshToken = otpData.RefreshToken;
+
+            // persist refresh token if requested
+            if (rememberMe && !string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
+            {
+                TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken);
+            }
 
             Helpers.AppState.CurrentUser = new UserDto
             {

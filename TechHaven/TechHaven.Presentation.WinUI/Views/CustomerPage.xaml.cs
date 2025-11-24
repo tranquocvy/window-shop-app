@@ -104,7 +104,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 return;
             }
 
-            var dto = new CustomerCreateUpdateDto
+            var dto = new CustomerUpsertRequestDto
             {
                 CustomerName = name,
                 PhoneNumber = phone,
@@ -177,7 +177,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 return;
             }
 
-            var dto = new CustomerCreateUpdateDto
+            var dto = new CustomerUpsertRequestDto
             {
                 CustomerName = name,
                 PhoneNumber = phone,

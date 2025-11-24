@@ -15,8 +15,10 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using System.Threading.Tasks;
 
 using TechHaven.Presentation.WinUI.Views;
+using TechHaven.Presentation.WinUI.Helpers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -43,8 +45,27 @@ namespace TechHaven.Presentation.WinUI
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Use mock restore for offline testing
+            TokenPersistence.UseMock = false;
+
+            try
+            {
+                var restored = await TokenPersistence.TryRestoreSessionAsync();
+                if (restored && AppState.IsLoggedIn)
+                {
+                    // open shell directly
+                    var shell = new ShellWindow();
+                    shell.Activate();
+                    return;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
             _window = new MainWindow();
             _window.Activate();
         }

@@ -2,7 +2,7 @@ using TechHaven.Shared.DTOs.Common;
 
 namespace TechHaven.Shared.DTOs.Customers;
 
-public class CustomerQueryDto : PagingRequest
+public class CustomerListQueryDto : PagingRequest
 {
     public string? SearchTerm { get; set; }
 

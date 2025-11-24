@@ -84,7 +84,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <CheckBox Content="Remember me" Foreground="#3A5FC0" />
+                    <CheckBox Content="Remember me" Foreground="#3A5FC0" IsChecked="{Binding RememberMe, Mode=TwoWay}" />
                     <TextBlock Grid.Column="1" Text="Forgot password?" Foreground="#3A5FC0" Margin="10,0,0,0" VerticalAlignment="Center" />
                 </Grid>
 

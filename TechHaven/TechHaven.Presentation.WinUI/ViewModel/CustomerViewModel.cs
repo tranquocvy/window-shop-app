@@ -48,7 +48,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             Customers.Clear();
 
-            var query = new CustomerQueryDto
+            var query = new CustomerListQueryDto
             {
                 SearchTerm = this.SearchTerm,
                 PageNumber = this.PageNumber,
@@ -81,7 +81,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         // Public API for dialog to create a customer and refresh list
-        public async Task CreateCustomerAsync(CustomerCreateUpdateDto dto)
+        public async Task CreateCustomerAsync(CustomerUpsertRequestDto dto)
         {
             _ = await _customerService.CreateCustomerAsync(dto);
             // Reload current page to reflect changes
@@ -89,7 +89,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         // Public API for dialog to update a customer and refresh list
-        public async Task UpdateCustomerAsync(int id, CustomerCreateUpdateDto dto)
+        public async Task UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
         {
             _ = await _customerService.UpdateCustomerAsync(id, dto);
             await LoadCustomersAsync();
