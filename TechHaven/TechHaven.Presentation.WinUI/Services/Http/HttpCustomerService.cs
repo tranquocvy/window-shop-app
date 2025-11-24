@@ -13,7 +13,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpCustomerService : ICustomerService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "api/customers";
+        private const string BaseUrl = "api/Customer";
 
         public HttpCustomerService(HttpClient httpClient)
         {
@@ -25,32 +25,31 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             // Build query string from CustomerListQueryDto
             var queryParams = new System.Collections.Generic.List<string>();
 
-            if (query.PageNumber > 0)
-                queryParams.Add($"pageRequest.PageNumber={query.PageNumber}");
-
-            if (query.PageSize > 0)
-                queryParams.Add($"pageRequest.PageSize={query.PageSize}");
-
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
-                queryParams.Add($"searchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
 
             if (query.Type.HasValue)
-                queryParams.Add($"type={query.Type.Value}");
+                queryParams.Add($"Type={query.Type.Value}");
 
             if (query.CreatedAt?.StartDate.HasValue == true)
-                queryParams.Add($"createdAt.StartDate={query.CreatedAt.StartDate.Value:O}");
+                queryParams.Add($"CreatedAt.StartDate={query.CreatedAt.StartDate.Value:O}");
 
             if (query.CreatedAt?.EndDate.HasValue == true)
-                queryParams.Add($"createdAt.EndDate={query.CreatedAt.EndDate.Value:O}");
+                queryParams.Add($"CreatedAt.EndDate={query.CreatedAt.EndDate.Value:O}");
 
             if (query.Sorting != null)
             {
                 if (!string.IsNullOrWhiteSpace(query.Sorting.SortBy))
-                    queryParams.Add($"sorting.SortBy={Uri.EscapeDataString(query.Sorting.SortBy)}");
+                    queryParams.Add($"Sorting.SortBy={Uri.EscapeDataString(query.Sorting.SortBy)}");
 
-                queryParams.Add($"sorting.Desc={query.Sorting.Desc}");
+                queryParams.Add($"Sorting.Desc={query.Sorting.Desc}");
             }
 
+            if (query.PageNumber > 0)
+                queryParams.Add($"PageNumber={query.PageNumber}");
+
+            if (query.PageSize > 0)
+                queryParams.Add($"PageSize={query.PageSize}");
             var queryString = string.Join("&", queryParams);
             var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
 

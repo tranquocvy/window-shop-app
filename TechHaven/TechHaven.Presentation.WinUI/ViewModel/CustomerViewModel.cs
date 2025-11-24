@@ -3,13 +3,16 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Shared.DTOs.Customers;
+using TechHaven.Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -17,6 +20,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         // Service to fetch data - can be injected or use default HttpCustomerService
         private readonly ICustomerService _customerService;
+
+        // CancellationTokenSource for debouncing search
+        private CancellationTokenSource? _searchCts;
 
         // Collection of sortable properties
         public ObservableCollection<string> SortableProperties { get; } = new()
@@ -34,20 +40,54 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             "Giảm dần"
         };
 
+        // Page size options
+        public ObservableCollection<int> PageSizeOptions { get; } = new() { 10, 20, 50 };
+
         // Collection of customers for data binding
         public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
 
         // Sortable Properties
         [ObservableProperty]
-        private string _selectedProperty;
+        private string _selectedProperty = "Không";
 
         // Sort Direction
         [ObservableProperty]
-        private string _selectedDirection;
+        private string _selectedDirection = "Không";
 
         // Search term property
         [ObservableProperty]
         private string _searchTerm;
+
+        // Filter: Customer type - explicit property
+        private CustomerType? _selectedType;
+        public CustomerType? SelectedType
+        {
+            get => _selectedType;
+            set => SetProperty(ref _selectedType, value);
+        }
+
+        // Filter: CreatedAt date range - explicit properties
+        private DateTime? _createdAtStart;
+        public DateTime? CreatedAtStart
+        {
+            get => _createdAtStart;
+            set => SetProperty(ref _createdAtStart, value);
+        }
+
+        private DateTime? _createdAtEnd;
+        public DateTime? CreatedAtEnd
+        {
+            get => _createdAtEnd;
+            set => SetProperty(ref _createdAtEnd, value);
+        }
+
+        // Selected page size (bind to UI selection) - explicit property
+        private int _selectedPageSize = 10;
+        public int SelectedPageSize
+        {
+            get => _selectedPageSize;
+            set => SetProperty(ref _selectedPageSize, value);
+        }
 
         // PAGING PROPERTIES
         [ObservableProperty]
@@ -69,6 +109,58 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             // Use injected service or create HttpCustomerService with default HttpClient
             _customerService = customerService ?? CreateDefaultHttpCustomerService();
+
+            // Initialize selected page size and subscribe initial load
+            PageSize = SelectedPageSize;
+
+            // Subscribe to property changed to react to filter changes
+            this.PropertyChanged += CustomerViewModel_PropertyChanged;
+
+            // Initial load
+            _ = LoadCustomersAsync();
+        }
+
+        private void CustomerViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            // Debounced search
+            if (e.PropertyName == nameof(SearchTerm))
+            {
+                _searchCts?.Cancel();
+                _searchCts = new CancellationTokenSource();
+                var token = _searchCts.Token;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(400, token);
+                        if (token.IsCancellationRequested) return;
+                        PageNumber = 1;
+                        await LoadCustomersAsync();
+                    }
+                    catch (TaskCanceledException) { }
+                }, token);
+                return;
+            }
+
+            // Page size selection changed
+            if (e.PropertyName == nameof(SelectedPageSize))
+            {
+                PageNumber = 1;
+                PageSize = SelectedPageSize;
+                _ = LoadCustomersAsync();
+                return;
+            }
+
+            // Other filters -> reset to first page and reload
+            if (e.PropertyName == nameof(SelectedProperty)
+                || e.PropertyName == nameof(SelectedDirection)
+                || e.PropertyName == nameof(SelectedType)
+                || e.PropertyName == nameof(CreatedAtStart)
+                || e.PropertyName == nameof(CreatedAtEnd))
+            {
+                PageNumber = 1;
+                _ = LoadCustomersAsync();
+            }
         }
 
         // Create default HttpCustomerService
@@ -76,9 +168,43 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             var httpClient = new System.Net.Http.HttpClient
             {
-                BaseAddress = new Uri("https://localhost:7139/") // Replace with your API base URL
+                BaseAddress = new Uri("https://localhost:7230/") // Replace with your API base URL
             };
             return new HttpCustomerService(httpClient);
+        }
+
+        // Build query from current UI state
+        private CustomerListQueryDto BuildQuery()
+        {
+            return new CustomerListQueryDto
+            {
+                SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm,
+                Type = SelectedType,
+                CreatedAt = (CreatedAtStart.HasValue || CreatedAtEnd.HasValue)
+                    ? new DateRangeFilter { StartDate = CreatedAtStart, EndDate = CreatedAtEnd }
+                    : null,
+                Sorting = GetSorting(),
+                PageNumber = PageNumber,
+                PageSize = PageSize
+            };
+        }
+
+        private SortingOption? GetSorting()
+        {
+            if (string.IsNullOrWhiteSpace(SelectedProperty) || SelectedProperty == "Không")
+                return null;
+
+            string sortBy = SelectedProperty switch
+            {
+                "ID" => "CustomerId",
+                "Hạng" => "Type",
+                "Tổng Mua" => "TotalPurchased",
+                _ => SelectedProperty
+            };
+
+            bool desc = SelectedDirection == "Giảm dần";
+            if (string.IsNullOrWhiteSpace(sortBy)) return null;
+            return new SortingOption { SortBy = sortBy, Desc = desc };
         }
 
         // Command to load customers
@@ -87,12 +213,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             Customers.Clear();
 
-            var query = new CustomerListQueryDto
+            // Ensure page size matches selected
+            if (PageSize != SelectedPageSize)
             {
-                SearchTerm = this.SearchTerm,
-                PageNumber = this.PageNumber,
-                PageSize = this.PageSize
-            };
+                PageSize = SelectedPageSize;
+            }
+
+            var query = BuildQuery();
 
             var response = await _customerService.QueryCustomersAsync(query);
 
@@ -106,7 +233,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 // Update paging state with accurate information
                 var totalPages = response.Data.TotalPages;
                 CanGoPrevious = PageNumber > 1;
-                // If returned items count equals page size, there might be a next page
                 CanGoNext = PageNumber < totalPages;
                 PageInfo = $"Trang {PageNumber} / {totalPages} (Tổng: {response.Data.TotalCount} khách hàng)";
             }
@@ -150,22 +276,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!CanGoPrevious) return;
             PageNumber = Math.Max(1, PageNumber - 1);
             await LoadCustomersAsync();
-        }
-
-        // Auto search when SearchTerm changes
-        partial void OnSearchTermChanged(string value)
-        {
-            // Reset to first page and load
-            PageNumber = 1;
-            // fire-and-forget
-            _ = LoadCustomersAsync();
-        }
-
-        // Called when page size changes
-        partial void OnPageSizeChanged(int value)
-        {
-            PageNumber = 1;
-            _ = LoadCustomersAsync();
         }
 
         // Deprecated helper - kept for compatibility

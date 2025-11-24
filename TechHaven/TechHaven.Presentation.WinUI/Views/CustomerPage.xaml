@@ -34,7 +34,7 @@
             <TextBox
                 Grid.Column="0"
                 PlaceholderText="Tìm kiếm theo Tên, SĐT, Email..."
-                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <ComboBox ItemsSource="{x:Bind ViewModel.SortableProperties}"
@@ -86,9 +86,9 @@
                 <Grid Padding="0,6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0.5*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
