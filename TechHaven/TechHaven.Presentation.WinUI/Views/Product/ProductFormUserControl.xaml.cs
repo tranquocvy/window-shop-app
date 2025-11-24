@@ -35,15 +35,15 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             BrandNameBox.Text = product.BrandName ?? string.Empty;
             DescriptionBox.Text = product.Description ?? string.Empty;
 
-            CostPriceBox.Value = product.CostPrice.HasValue ? (double)product.CostPrice.Value : double.NaN;
+            CostPriceBox.Value = product.CostPrice > 0 ? (double)product.CostPrice : double.NaN;
             SellPriceBox.Value = (double)product.SellPrice;
             StockQuantityBox.Value = product.StockQuantity;
 
             ColorBox.Text = product.Color ?? string.Empty;
-            StorageCapacityBox.Value = product.StorageCapacity ?? double.NaN;
+            StorageCapacityBox.Value = product.StorageCapacity.HasValue ? (double)product.StorageCapacity.Value : double.NaN;
             ProcessorBox.Text = product.Processor ?? string.Empty;
-            ScreenSizeBox.Value = (double?)product.ScreenSize ?? double.NaN;
-            BatteryCapacityBox.Value = product.BatteryCapacity ?? double.NaN;
+            ScreenSizeBox.Value = product.ScreenSize.HasValue ? (double)product.ScreenSize.Value : double.NaN;
+            BatteryCapacityBox.Value = product.BatteryCapacity.HasValue ? (double)product.BatteryCapacity.Value : double.NaN;
 
             ImageGalleryJsonBox.Text = product.ImageGalleryJson ?? string.Empty;
 
@@ -115,7 +115,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 ProductName = rawName,
                 BrandName = GetStringOrNull(BrandNameBox.Text),
 
-                CostPrice = IsValidNumber(CostPriceBox.Value) ? (decimal)CostPriceBox.Value : null,
+                CostPrice = IsValidNumber(CostPriceBox.Value) ? (decimal)CostPriceBox.Value : 0m,
                 SellPrice = (decimal)sellPrice,
                 StockQuantity = (int)stockQty,
 

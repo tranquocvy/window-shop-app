@@ -20,7 +20,7 @@ public class ProductUpsertRequest
 
     public string? ImageGalleryJson { get; set; }
 
-    public decimal? CostPrice { get; set; }
+    public decimal CostPrice { get; set; }
 
     public decimal SellPrice { get; set; }
 
