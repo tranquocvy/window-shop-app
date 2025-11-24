@@ -131,7 +131,11 @@ public class ProductController : BaseApiController
         request.ProductName, result.ErrorMessage);
     }
 
-    return HandleResult(result);
+    return HandleResult(
+      result,
+      nameof(GetProductById),
+      new { id = result.Data?.ProductId }
+    );
   }
 
   /// <summary>

@@ -111,6 +111,15 @@ try
 
     app.MapControllers();
 
+    // Log the server URLs
+    // foreach (var url in app.Urls)
+    // {
+    //     Log.Information("Server is running at {Url}", url);
+    // }
+    // Log the server URLs
+    var urls = builder.WebHost.GetSetting("urls") ?? "http://localhost:5207";
+    Log.Information("Server is running at {Urls}", urls);
+
     Log.Information("TechHaven API started successfully");
     app.Run();
 }

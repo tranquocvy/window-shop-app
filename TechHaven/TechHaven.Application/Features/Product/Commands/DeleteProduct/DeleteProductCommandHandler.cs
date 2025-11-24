@@ -28,6 +28,18 @@ public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand,
         );
       }
 
+      var hasOrders = await _unitOfWork.Products.AnyAsync(
+        p => p.ProductId == request.ProductId && p.OrderDetails != null && p.OrderDetails.Any(),
+        cancellationToken);
+
+      if (hasOrders == true)
+      {
+        return Result.Failure(
+          $"Product {request.ProductId} has order detail. You cannot delete product.",
+          ErrorType.Conflict
+        );
+      }
+
       await _unitOfWork.Products.DeleteAsync(product);
       await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -36,7 +48,7 @@ public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand,
     catch (Exception ex)
     {
       return Result.Failure(
-        $"Failed to create product: {ex.Message}",
+        $"Failed to delete product: {ex.Message}",
         ErrorType.InternalError);
     }
   }

@@ -21,20 +21,29 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Res
 
   public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
   {
-    // Try to find product
-    var product = await _unitOfWork.Products.GetByIdAsync(
-      request.ProductId,
-      cancellationToken
-    );
+    try
+    {
+      // Try to find product
+      var product = await _unitOfWork.Products.GetByIdAsync(
+        request.ProductId,
+        cancellationToken
+      );
 
-    if (product == null)
+      if (product == null)
+      {
+        return Result<ProductDto>.Failure(
+          $"Product with ID {request.ProductId} not found",
+          ErrorType.NotFound);
+      }
+
+      var productDto = _mapper.Map<ProductDto>(product);
+      return Result<ProductDto>.Success(productDto);
+    }
+    catch (Exception ex)
     {
       return Result<ProductDto>.Failure(
-        $"Product with ID {request.ProductId} not found",
-        ErrorType.NotFound);
+        $"Failed to get product with id {request.ProductId}: {ex.Message}",
+        ErrorType.InternalError);
     }
-
-    var productDto = _mapper.Map<ProductDto>(product);
-    return Result<ProductDto>.Success(productDto);
   }
 }

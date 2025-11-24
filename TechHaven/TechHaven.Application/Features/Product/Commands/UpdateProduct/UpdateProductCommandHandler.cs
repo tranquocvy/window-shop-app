@@ -66,7 +66,7 @@ public class UpdateProductCommandHandler
     catch (Exception ex)
     {
       return Result<ProductDto>.Failure(
-        $"Failed to create product: {ex.Message}",
+        $"Failed to update product: {ex.Message}",
         ErrorType.InternalError);
     }
   }

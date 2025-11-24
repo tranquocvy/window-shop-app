@@ -26,24 +26,6 @@ public class CreateProductCommandHandler
   {
     try
     {
-      // OLD
-      // // map command to entity
-      // var product = _mapper.Map<Domain.Entities.Product>(request);
-
-      // // set timestamps
-      // product.CreatedAt = DateTime.Now;
-      // product.UpdatedAt = null;
-
-      // // add to repository
-      // await _unitOfWork.Products.AddAsync(product, cancellationToken);
-
-      // // save changes
-      // await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-      // return _mapper.Map<ProductDto>(product);
-
-      // NEW RESULT PATTERN
-      // Validation: Check duplicate product name
       var existingProduct = await _unitOfWork.Products
         .FirstOrDefaultAsync(
           p => p.ProductName == request.ProductName,

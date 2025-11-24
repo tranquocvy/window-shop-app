@@ -23,25 +23,31 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Result<Pa
     GetProductsQuery request,
     CancellationToken cancellationToken)
   {
-    // 1. Lấy tiêu chí tìm kiếm từ request
-    var criteria = request.criteria;
-
-    // 2. Gọi repository để lấy dữ liệu với phân trang
-    var (products, totalCount) = await _unitOfWork.Products.SearchWithPaginationAsync(criteria, cancellationToken);
-
-    // 3. Map danh sách sản phẩm từ entity sang DTO
-    var productDtos = _mapper.Map<List<ProductDto>>(products);
-
-    // 4. Tạo đối tượng PagingResponse
-    var response = new PagingResponse<ProductDto>
+    try
     {
-      Items = productDtos,
-      TotalCount = totalCount,
-      PageNumber = criteria.PageNumber,
-      PageSize = criteria.PageSize
-    };
+      // 2. Gọi repository để lấy dữ liệu với phân trang
+      var (products, totalCount) = await _unitOfWork.Products.SearchWithPaginationAsync(request.criteria, cancellationToken);
 
-    // 5. Trả về kết quả thành công
-    return Result<PagingResponse<ProductDto>>.Success(response);
+      // 3. Map danh sách sản phẩm từ entity sang DTO
+      var productDtos = _mapper.Map<List<ProductDto>>(products);
+
+      // 4. Tạo đối tượng PagingResponse
+      var response = new PagingResponse<ProductDto>
+      {
+        Items = productDtos,
+        TotalCount = totalCount,
+        PageNumber = request.criteria.PageNumber,
+        PageSize = request.criteria.PageSize
+      };
+
+      // 5. Trả về kết quả thành công
+      return Result<PagingResponse<ProductDto>>.Success(response);
+    }
+    catch (Exception ex)
+    {
+      return Result<PagingResponse<ProductDto>>.Failure(
+        $"Failed to get products: {ex.Message}",
+        ErrorType.InternalError);
+    }
   }
 }
