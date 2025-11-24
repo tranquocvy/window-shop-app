@@ -26,7 +26,7 @@ public class CustomerController : ControllerBase
   [HttpGet]
   [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<CustomerDto>>), StatusCodes.Status200OK)]
   public async Task<ActionResult<ResponseWrapper<PagingResponse<CustomerDto>>>> GetCustomers(
-    [FromQuery] CustomerQueryDto queryDto,
+    [FromQuery] CustomerListQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
     // Map CustomerQueryDto -> CustomerSearchCriteria
@@ -88,7 +88,7 @@ public class CustomerController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<CustomerDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   public async Task<ActionResult<ResponseWrapper<CustomerDto>>> CreateCustomer(
-      [FromBody] CustomerCreateUpdateDto request,
+      [FromBody] CustomerUpsertRequestDto request,
       CancellationToken cancellationToken)
   {
     try
@@ -134,7 +134,7 @@ public class CustomerController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<ActionResult<ResponseWrapper<CustomerDto>>> UpdateCustomer(
       int id,
-      [FromBody] CustomerCreateUpdateDto request,
+      [FromBody] CustomerUpsertRequestDto request,
       CancellationToken cancellationToken)
   {
     try

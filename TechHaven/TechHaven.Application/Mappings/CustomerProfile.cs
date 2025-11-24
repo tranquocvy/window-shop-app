@@ -10,7 +10,7 @@ public class CustomerProfile : Profile
 	{
 		CreateMap<Customer, CustomerDto>();
 
-		CreateMap<CustomerCreateUpdateDto, Customer>()
+		CreateMap<CustomerUpsertRequestDto, Customer>()
 			.ForMember(dest => dest.CustomerId, opt => opt.Ignore())
 			.ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
 			.ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
