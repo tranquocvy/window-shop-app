@@ -70,7 +70,7 @@ namespace TechHaven.Presentation.WinUI
                 // ignore
             }
 
-            _window = new ShellWindow();
+            _window = new MainWindow();
             MainWindow = _window;
             _window.Activate();
         }
