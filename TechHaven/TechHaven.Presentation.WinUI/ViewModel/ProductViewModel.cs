@@ -172,7 +172,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 return;
 
             bool confirm = await DialogHelper.ShowConfirmAsync(
-                    (App.Current as App)!.MainWindow,
+                    App.MainWindow,
                     "Xác nhận xóa",
                     $"Bạn có chắc muốn xóa {selectedItems.Count} sản phẩm đã chọn không?"
                 );
@@ -204,7 +204,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (item == null) return;
 
             bool confirm = await DialogHelper.ShowConfirmAsync(
-                (App.Current as App)!.MainWindow,
+                App.MainWindow,
                 "Xác nhận xóa",
                 $"Bạn có chắc muốn xóa sản phẩm {item.Product.ProductName} không?"
             );

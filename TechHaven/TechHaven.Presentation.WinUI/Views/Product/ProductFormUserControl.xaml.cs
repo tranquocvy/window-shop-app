@@ -12,6 +12,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
     public sealed partial class ProductFormUserControl : UserControl
     {
         private string? SelectedImagePath = null;
+        private string? _originalImageUrl = null;
         public ProductFormUserControl()
         {
             this.InitializeComponent();
@@ -26,6 +27,9 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             if (product == null) return;
 
             ClearErrors();
+
+            SelectedImagePath = null;
+            _originalImageUrl = product.ImageUrl;
 
             ProductNameBox.Text = product.ProductName ?? string.Empty;
             BrandNameBox.Text = product.BrandName ?? string.Empty;
@@ -103,6 +107,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             if (!isValid)
                 return null;
 
+            string? finalImageUrl = !string.IsNullOrEmpty(SelectedImagePath) ? SelectedImagePath : _originalImageUrl;
+
             // ========== BUILD DTO ==========
             return new ProductUpsertRequest
             {
@@ -122,7 +128,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
                 ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
 
-                ImageUrl = SelectedImagePath,
+                ImageUrl = finalImageUrl,
 
                 IsDraft = false
             };
@@ -196,7 +202,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             picker.FileTypeFilter.Add(".jpeg");
 
             // WinUI 3 Desktop: dùng HWND từ cửa sổ hiện tại
-            var hwnd = WindowNative.GetWindowHandle(Window.Current as Microsoft.UI.Xaml.Window);
+            var window = App.MainWindow;
+            var hwnd = WindowNative.GetWindowHandle(window);
             InitializeWithWindow.Initialize(picker, hwnd);
 
             var file = await picker.PickSingleFileAsync();
