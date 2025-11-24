@@ -34,7 +34,7 @@ namespace TechHaven.Presentation.WinUI
 
 
         // thuộc tính này để gọi cái MainWindow từ các chỗ khác
-        public Window MainWindow => _window!;
+        public static Window MainWindow { get; private set; } = null!;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -70,7 +70,8 @@ namespace TechHaven.Presentation.WinUI
                 // ignore
             }
 
-            _window = new MainWindow();
+            _window = new ShellWindow();
+            MainWindow = _window;
             _window.Activate();
         }
     }
