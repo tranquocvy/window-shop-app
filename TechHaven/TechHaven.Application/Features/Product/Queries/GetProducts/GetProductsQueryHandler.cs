@@ -3,10 +3,12 @@ using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Domain.Interfaces;
 using AutoMapper;
+using TechHaven.Domain.SearchCriteria;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Product.Queries.GetProducts;
 
-public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, PagingResponse<ProductDto>>
+public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Result<PagingResponse<ProductDto>>>
 {
   private readonly IUnitOfWork _unitOfWork;
   private readonly IMapper _mapper;
@@ -17,28 +19,29 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, PagingRes
     _mapper = mapper;
   }
 
-  public async Task<PagingResponse<ProductDto>> Handle(
+  public async Task<Result<PagingResponse<ProductDto>>> Handle(
     GetProductsQuery request,
     CancellationToken cancellationToken)
   {
-    var (products, totalCount) = await _unitOfWork.Products.SearchWithPaginationAsync(
-      request.SearchTerm,
-      request.IsDraft,
-      request.PageNumber,
-      request.PageSize,
-      request.SortBy,
-      request.SortDescending,
-      cancellationToken
-    );
+    // 1. Lấy tiêu chí tìm kiếm từ request
+    var criteria = request.criteria;
 
-    var productsDto = _mapper.Map<IReadOnlyList<ProductDto>>(products);
+    // 2. Gọi repository để lấy dữ liệu với phân trang
+    var (products, totalCount) = await _unitOfWork.Products.SearchWithPaginationAsync(criteria, cancellationToken);
 
-    return new PagingResponse<ProductDto>
+    // 3. Map danh sách sản phẩm từ entity sang DTO
+    var productDtos = _mapper.Map<List<ProductDto>>(products);
+
+    // 4. Tạo đối tượng PagingResponse
+    var response = new PagingResponse<ProductDto>
     {
-      Items = productsDto,
-      PageNumber = request.PageNumber,
-      PageSize = request.PageSize,
-      TotalCount = totalCount
+      Items = productDtos,
+      TotalCount = totalCount,
+      PageNumber = criteria.PageNumber,
+      PageSize = criteria.PageSize
     };
+
+    // 5. Trả về kết quả thành công
+    return Result<PagingResponse<ProductDto>>.Success(response);
   }
 }

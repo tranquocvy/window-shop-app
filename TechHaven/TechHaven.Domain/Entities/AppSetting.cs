@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TechHaven.Domain.Enums;
 // Uncomment after installing EF Core
 // using Microsoft.EntityFrameworkCore;
 
@@ -77,66 +78,4 @@ public class AppSetting
     [DataType(DataType.DateTime)]
     // [Comment("Timestamp of the last update to this configuration")]
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
-}
-
-/// <summary>
-/// Defines the data types available for application settings.
-/// </summary>
-public enum SettingType
-{
-    /// <summary>
-    /// String value type.
-    /// </summary>
-    String = 0,
-
-    /// <summary>
-    /// Integer number value type.
-    /// </summary>
-    Number = 1,
-
-    /// <summary>
-    /// Decimal number value type.
-    /// </summary>
-    Decimal = 2,
-
-    /// <summary>
-    /// Boolean value type.
-    /// </summary>
-    Bool = 3,
-
-    /// <summary>
-    /// JSON object value type.
-    /// </summary>
-    Json = 4
-}
-
-/// <summary>
-/// Provides constant keys for commonly used application settings.
-/// </summary>
-public static class SettingKeys
-{
-    /// <summary>
-    /// Key for store name setting.
-    /// </summary>
-    public const string StoreName = "Store.Name";
-
-    /// <summary>
-    /// Key for store address setting.
-    /// </summary>
-    public const string StoreAddress = "Store.Address";
-
-    /// <summary>
-    /// Key for invoice footer text setting.
-    /// </summary>
-    public const string InvoiceFooter = "Invoice.Footer";
-
-    /// <summary>
-    /// Key for automatic receipt printing setting.
-    /// </summary>
-    public const string AutoPrintReceipt = "POS.AutoPrint";
-
-    /// <summary>
-    /// Key for default currency setting.
-    /// </summary>
-    public const string DefaultCurrency = "Currency.Default";
 }

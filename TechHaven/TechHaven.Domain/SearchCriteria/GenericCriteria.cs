@@ -10,7 +10,6 @@ namespace TechHaven.Domain.SearchCriteria
     {
         public string? SearchTerm { get; set; } // Tìm theo mã đơn hàng, tên sản phẩm, v.v.
 
-
         //Cho phân trang & sắp xếp
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 20;

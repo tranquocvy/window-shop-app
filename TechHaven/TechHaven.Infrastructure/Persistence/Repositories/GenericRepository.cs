@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TechHaven.Domain.Interfaces;
+using TechHaven.Domain.Specifications;
+using TechHaven.Infrastructure.Specifications;
 
 namespace TechHaven.Infrastructure.Persistence.Repositories;
 
@@ -31,25 +33,34 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return await _dbSet.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<TEntity>> GetAsync(
-        Expression<Func<TEntity, bool>>? predicate = null,
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+    // public virtual async Task<IReadOnlyList<TEntity>> GetAsync(
+    //     Expression<Func<TEntity, bool>>? predicate = null,
+    //     Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+    //     CancellationToken cancellationToken = default)
+    // {
+    //     IQueryable<TEntity> query = _dbSet;
+
+    //     if (predicate != null)
+    //     {
+    //         query = query.Where(predicate);
+    //     }
+
+    //     if (orderBy != null)
+    //     {
+    //         query = orderBy(query);
+    //     }
+
+    //     return await query.ToListAsync(cancellationToken);
+    // }
+
+    public async Task<IReadOnlyList<TEntity>> GetAsync(
+        ISpecification<TEntity> specification,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<TEntity> query = _dbSet;
-
-        if (predicate != null)
-        {
-            query = query.Where(predicate);
-        }
-
-        if (orderBy != null)
-        {
-            query = orderBy(query);
-        }
-
-        return await query.ToListAsync(cancellationToken);
+        var query = SpecificationEvaluator<TEntity>.GetQuery(_dbSet, specification);
+        return await query.AsNoTracking().ToListAsync(cancellationToken);
     }
+
 
     public virtual async Task<TEntity?> FirstOrDefaultAsync(
         Expression<Func<TEntity, bool>> predicate,
@@ -65,16 +76,24 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return await _dbSet.AnyAsync(predicate, cancellationToken);
     }
 
-    public virtual async Task<int> CountAsync(
-        Expression<Func<TEntity, bool>>? predicate = null,
+    // public virtual async Task<int> CountAsync(
+    //     Expression<Func<TEntity, bool>>? predicate = null,
+    //     CancellationToken cancellationToken = default)
+    // {
+    //     if (predicate == null)
+    //     {
+    //         return await _dbSet.CountAsync(cancellationToken);
+    //     }
+
+    //     return await _dbSet.CountAsync(predicate, cancellationToken);
+    // }
+
+    public async Task<int> CountAsync(
+        ISpecification<TEntity> specification,
         CancellationToken cancellationToken = default)
     {
-        if (predicate == null)
-        {
-            return await _dbSet.CountAsync(cancellationToken);
-        }
-
-        return await _dbSet.CountAsync(predicate, cancellationToken);
+        var query = SpecificationEvaluator<TEntity>.GetQuery(_dbSet, specification);
+        return await query.CountAsync(cancellationToken);
     }
 
     #endregion

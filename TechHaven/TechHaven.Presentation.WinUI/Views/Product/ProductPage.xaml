@@ -118,7 +118,9 @@
                         <TextBlock Grid.Column="3" Text="{Binding Product.SellPrice}"/>
                         <TextBlock Grid.Column="4" Text="{Binding Product.StockQuantity}"/>
                         <TextBlock Grid.Column="5" Text="{Binding Product.BrandName}"/>
-                        <TextBlock Grid.Column="6" Text="Còn hàng" Foreground="Green"/>
+                        <TextBlock Grid.Column="6" 
+                            Text="{Binding StatusText}" 
+                            Foreground="{Binding StatusColor}"/>     
 
                         <!-- Context Menu -->
                         <Grid.ContextFlyout>

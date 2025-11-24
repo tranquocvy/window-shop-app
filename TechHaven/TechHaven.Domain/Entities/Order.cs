@@ -1,7 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TechHaven.Domain.Enums;
 
 namespace TechHaven.Domain.Entities;
 
@@ -101,35 +100,4 @@ public class Order
     /// Gets or sets the collection of payments made for this order.
     /// </summary>
     public ICollection<Payment>? Payments { get; set; } = new HashSet<Payment>();
-}
-
-/// <summary>
-/// Defines the possible statuses of an order.
-/// </summary>
-public enum OrderStatus
-{
-    /// <summary>
-    /// Order is pending and awaiting processing.
-    /// </summary>
-    Pending = 1,
-
-    /// <summary>
-    /// Order is currently being processed.
-    /// </summary>
-    Processing = 2,
-
-    /// <summary>
-    /// Order has been completed successfully.
-    /// </summary>
-    Completed = 3,
-
-    /// <summary>
-    /// Order has been cancelled.
-    /// </summary>
-    Cancelled = 4,
-
-    /// <summary>
-    /// Order has been returned.
-    /// </summary>
-    Returned = 5
 }

@@ -109,7 +109,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             try
             {
-                var query = new OrderQueryDto
+                var query = new OrderListQueryDto
                 {
                     PageNumber = PageNumber,
                     PageSize = PageSize,
@@ -209,23 +209,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        [RelayCommand]
-        private async Task UpdateOrderStatusAsync(OrderUpdateStatusDto dto)
+        // New public update method matching IOrderService.UpdateOrderAsync
+        public async Task UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
         {
             if (dto == null) return;
 
             try
             {
-                var response = await _orderService.UpdateOrderStatusAsync(dto);
+                var response = await _orderService.UpdateOrderAsync(orderId, dto);
                 if (response.Success)
                 {
-                    // Status updated successfully
-                    // Reload will be called from the UI
+                    // Optionally refresh orders
                 }
             }
             catch (Exception)
             {
-                // Handle error silently for now
+                // swallow for now
             }
         }
 
@@ -237,7 +236,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         [RelayCommand]
-        private async Task CreateOrderAsync(OrderCreateDto dto)
+        private async Task CreateOrderAsync(OrderUpsertRequestDto dto)
         {
             if (dto == null) return;
 

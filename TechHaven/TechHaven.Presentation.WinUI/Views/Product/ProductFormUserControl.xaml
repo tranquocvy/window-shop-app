@@ -7,30 +7,81 @@
     mc:Ignorable="d">
 
     <ScrollViewer MaxHeight="520">
-        <StackPanel Spacing="8" Padding="8">
-            <!-- Tên sản phẩm -->
-            <TextBlock Text="Tên sản phẩm" FontWeight="SemiBold"/>
-            <TextBox x:Name="NameBox" PlaceholderText="Nhập tên sản phẩm..." />
+        <StackPanel Spacing="12" Padding="12">
 
-            <!-- Giá bán -->
-            <TextBlock Text="Giá bán" FontWeight="SemiBold"/>
-            <TextBox x:Name="PriceBox" InputScope="Number" PlaceholderText="0" />
+            <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold"/>
+            <TextBox x:Name="ProductNameBox" 
+                     PlaceholderText="Nhập tên sản phẩm..." 
+                     TextChanged="OnInputChanged"/>
 
-            <!-- Số lượng tồn -->
-            <TextBlock Text="Số lượng tồn" FontWeight="SemiBold"/>
-            <TextBox x:Name="StockBox" InputScope="Number" PlaceholderText="0" />
+            <TextBlock x:Name="ProductNameErrorText"
+                       Text="Vui lòng nhập tên sản phẩm."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
 
-            <!-- Thương hiệu -->
-            <TextBlock Text="Thương hiệu / Danh mục" FontWeight="SemiBold"/>
-            <TextBox x:Name="BrandBox" PlaceholderText="Thương hiệu" />
 
-            <!-- Mô tả -->
+            <TextBlock Text="Thương hiệu" FontWeight="SemiBold"/>
+            <TextBox x:Name="BrandNameBox" PlaceholderText="Nhập thương hiệu..." />
+            
+            <TextBlock x:Name="BrandNameErrorText"
+                       Text="Phải nhập tên thương hiệu."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>   
+
             <TextBlock Text="Mô tả" FontWeight="SemiBold"/>
-            <TextBox x:Name="DescBox" 
-                     AcceptsReturn="True" 
-                     TextWrapping="Wrap" 
+            <TextBox x:Name="DescriptionBox"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
                      Height="120"
-                     PlaceholderText="Mô tả chi tiết sản phẩm..."/>
+                     PlaceholderText="Mô tả chi tiết sản phẩm..." />
+
+            <TextBlock Text="Giá bán *" FontWeight="SemiBold"/>
+            <NumberBox x:Name="SellPriceBox" 
+                       PlaceholderText="0" 
+                       ValueChanged="OnNumberChanged"/>
+
+            <TextBlock x:Name="SellPriceErrorText"
+                       Text="Giá bán phải lớn hơn 0."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
+
+
+            <TextBlock Text="Số lượng tồn *" FontWeight="SemiBold"/>
+            <NumberBox x:Name="StockQuantityBox" 
+                       PlaceholderText="0" 
+                       ValueChanged="OnNumberChanged"/>
+
+            <TextBlock x:Name="StockQuantityErrorText"
+                       Text="Số lượng tồn không được âm."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
+
+
+            <TextBlock Text="Màu sắc" FontWeight="SemiBold"/>
+            <TextBox x:Name="ColorBox" PlaceholderText="VD: Đen, Trắng..." />
+
+            <TextBlock Text="Dung lượng lưu trữ (GB)" FontWeight="SemiBold"/>
+            <NumberBox x:Name="StorageCapacityBox" PlaceholderText="64 / 128 / 256..." />
+
+            <TextBlock Text="Bộ xử lý" FontWeight="SemiBold"/>
+            <TextBox x:Name="ProcessorBox" PlaceholderText="VD: Snapdragon 8 Gen 2..." />
+
+            <TextBlock Text="Kích thước màn hình (inch)" FontWeight="SemiBold"/>
+            <NumberBox x:Name="ScreenSizeBox" PlaceholderText="6.1 / 6.7..." />
+
+            <TextBlock Text="Dung lượng pin (mAh)" FontWeight="SemiBold"/>
+            <NumberBox x:Name="BatteryCapacityBox" PlaceholderText="4000 / 5000..." />
+
+            <TextBlock Text="ImageUrl (ảnh chính)" FontWeight="SemiBold"/>
+            <TextBox x:Name="ImageUrlBox" PlaceholderText="https://..." />
+
+            <TextBlock Text="Image Gallery (JSON)" FontWeight="SemiBold"/>
+            <TextBox x:Name="ImageGalleryJsonBox" 
+                     TextWrapping="Wrap" 
+                     AcceptsReturn="True"
+                     Height="100"
+                     PlaceholderText='["img1.png","img2.png"]' />
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>
