@@ -64,7 +64,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Tạo khách hàng mới
-        public Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerCreateUpdateDto dto)
+        public Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerUpsertRequestDto dto)
         {
             var newCustomer = new CustomerDto
             {
@@ -89,7 +89,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Cập nhật thông tin khách hàng
-        public Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerCreateUpdateDto dto)
+        public Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
         {
             var existing = _mockCustomers.FirstOrDefault(c => c.CustomerId == id);
             if (existing != null)
@@ -133,7 +133,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
         }
 
         // Lọc & sắp xếp (CustomerQueryDto)
-        public Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerQueryDto query)
+        public Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
         {
             IEnumerable<CustomerDto> result = _mockCustomers;
 
