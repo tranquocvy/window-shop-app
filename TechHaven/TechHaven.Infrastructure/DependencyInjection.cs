@@ -9,7 +9,7 @@ using TechHaven.Domain.Interfaces;
 using TechHaven.Infrastructure.Persistence;
 using TechHaven.Infrastructure.Persistence.Repositories;
 using TechHaven.Infrastructure.Services;
-using AutoMapper;
+using TechHaven.Infrastructure.Configuration;
 
 namespace TechHaven.Infrastructure;
 
@@ -124,6 +124,13 @@ public static class DependencyInjection
         services.AddAuthorization();
 
         services.AddAutoMapper(typeof(DependencyInjection).Assembly);
+
+        // Configure SMTP Settings
+        services.Configure<SmtpSettings>(
+            configuration.GetSection("SmtpSettings"));
+
+        // Register Email Service
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }

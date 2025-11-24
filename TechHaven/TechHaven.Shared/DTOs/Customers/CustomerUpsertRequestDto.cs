@@ -1,6 +1,6 @@
 namespace TechHaven.Shared.DTOs.Customers;
 
-public class CustomerCreateUpdateDto
+public class CustomerUpsertRequestDto
 {
     public string CustomerName { get; set; } = string.Empty;
 

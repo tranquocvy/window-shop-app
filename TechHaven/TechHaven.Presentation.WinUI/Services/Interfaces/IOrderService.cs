@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Orders;
 
@@ -7,11 +6,14 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<ResponseWrapper<List<OrderDto>>> GetAllOrdersAsync();
+        Task<ResponseWrapper<PagingResponse<OrderDto>>> GetOrdersAsync(OrderListQueryDto query);
+        
         Task<ResponseWrapper<OrderDto>> GetOrderByIdAsync(int id);
-        Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderCreateDto dto);
+        
+        Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequestDto dto);
+        
         Task<ResponseWrapper<bool>> DeleteOrderAsync(int id);
-        Task<ResponseWrapper<OrderDto>> UpdateOrderStatusAsync(OrderUpdateStatusDto dto);
-        Task<ResponseWrapper<List<OrderDto>>> QueryOrdersAsync(OrderQueryDto query);
+        
+        Task<ResponseWrapper<OrderDto>> UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto);
     }
 }

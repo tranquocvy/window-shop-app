@@ -21,12 +21,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginAsync(string username, string password)
         {
-            var payload = new LoginRequestDto
-            {
-                UserName = username,
-                Password = password
-            };
-
+            var payload = new LoginRequestDto { UserName = username, Password = password };
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/login", payload);
             return await response.EnsureSuccessAndReadWrapperAsync<LoginResponseDto>("Failed to verify login");
         }
@@ -37,11 +32,10 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<OtpVerifyResponseDto>("Failed to verify OTP");
         }
 
-        public async Task<ResponseWrapper<bool>> ResendOtpAsync(int userId)
+        public async Task<ResponseWrapper<OtpResendResponseDto>> ResendOtpAsync(OtpResendRequestDto dto)
         {
-            // send an empty object body to trigger resend on server
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp/{userId}", new { });
-            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to resend OTP");
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<OtpResendResponseDto>("Failed to resend OTP");
         }
     }
 }

@@ -1,17 +1,21 @@
+﻿using TechHaven.Shared.DTOs.Common;
+
 namespace TechHaven.Shared.DTOs.Orders;
 
-public class OrderCreateDto
+public class OrderUpsertRequestDto : PagingRequest
 {
     public int? CustomerId { get; set; }
+
+    public OrderStatus Status { get; set; }
 
     public decimal Discount { get; set; }
 
     public string? Notes { get; set; }
 
-    public IReadOnlyList<OrderCreateItemDto> Items { get; set; } = Array.Empty<OrderCreateItemDto>();
+    public IReadOnlyList<OrderUpsertItemDto> Items { get; set; } = Array.Empty<OrderUpsertItemDto>();
 }
 
-public class OrderCreateItemDto
+public class OrderUpsertItemDto
 {
     public int ProductId { get; set; }
 

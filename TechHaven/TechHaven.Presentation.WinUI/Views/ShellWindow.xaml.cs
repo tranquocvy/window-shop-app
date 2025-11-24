@@ -97,6 +97,20 @@ namespace TechHaven.Presentation.WinUI.Views
                         // 1. Xóa trạng thái đăng nhập
                         AppState.CurrentUser = null;
 
+                        // Remove persisted refresh token and clear in-memory tokens
+                        try
+                        {
+                            TokenPersistence.RemoveRefreshToken();
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Logout: failed to remove persisted token: {ex.Message}");
+                        }
+
+                        // clear in-memory tokens
+                        try { TokenStore.RefreshToken = null; } catch { }
+                        try { TokenStore.AccessToken = null; } catch { }
+
                         // 2. Mở lại cửa sổ Login (MainWindow)
                         var loginWindow = new MainWindow();
                         loginWindow.Activate();

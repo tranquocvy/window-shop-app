@@ -4,14 +4,15 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Common;
-using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
     public class MockAuthService : IAuthService
     {
         private readonly MockUserService _userService = new();
-        private readonly Dictionary<int, string> _otpStore = new();
+
+        // map sessionId -> (userId, otpCode)
+        private readonly Dictionary<string, (int UserId, string Otp)> _otpSessions = new();
 
         public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginAsync(string username, string password)
         {
@@ -24,38 +25,48 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             if (user == null || !user.IsActive || password != username)
                 return new ResponseWrapper<LoginResponseDto> { Success = false, Message = "Invalid username or password" };
 
+            // create a mock OtpSessionId
+            var sessionId = "sessionid";
+            var otpCode = "000000";
+            _otpSessions[sessionId] = (user.UserId, otpCode);
+
             var loginResponse = new LoginResponseDto
             {
-                UserId = user.UserId,
-                UserName = user.UserName ?? string.Empty,
                 UserFullName = user.UserFullName ?? string.Empty,
-                RoleId = user.RoleId,
-                RoleName = user.RoleName ?? string.Empty,
-                RequiresOtp = true
+                MaskedEmail = "qu***@***.com",
+                RequiresOtp = true,
+                OtpExpiresIn = 10,
+                OtpSessionId = sessionId
             };
-
-            _otpStore[user.UserId] = "000000";
 
             return new ResponseWrapper<LoginResponseDto> { Success = true, Message = "Login accepted, OTP required", Data = loginResponse };
         }
 
         public Task<ResponseWrapper<OtpVerifyResponseDto>> VerifyOtpAsync(OtpVerifyRequestDto dto)
         {
-            if (!_otpStore.TryGetValue(dto.UserId, out var entry))
-                return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "OTP not found" });
+            if (!_otpSessions.TryGetValue(dto.OtpSessionId, out var entry))
+                return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "OTP session not found" });
 
-            if (entry == dto.OtpCode)
+            if (entry.Otp == dto.OtpCode)
             {
-                _otpStore.Remove(dto.UserId);
+                _otpSessions.Remove(dto.OtpSessionId);
 
                 // Return token + user info as OtpVerifyResponseDto
-                var user = _userService.GetUserByIdAsync(dto.UserId).Result.Data!;
+                var userResp = _userService.GetUserByIdAsync(entry.UserId).Result;
+                if (!userResp.Success || userResp.Data == null)
+                {
+                    return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "User not found" });
+                }
+
+                var user = userResp.Data;
                 var otpResp = new OtpVerifyResponseDto
                 {
-                    AccessToken = "mock-token",
-                    UserId = user.UserId,
+                    AccessToken = "mock-access-token",
+                    RefreshToken = "mock-refresh-token",
                     UserName = user.UserName ?? string.Empty,
                     UserFullName = user.UserFullName ?? string.Empty,
+                    Email = user.Email ?? string.Empty,
+                    RoleId = user.RoleId,
                     RoleName = user.RoleName ?? string.Empty
                 };
 
@@ -65,23 +76,26 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "Invalid OTP" });
         }
 
-        public async Task<ResponseWrapper<bool>> ResendOtpAsync(int userId)
+        public async Task<ResponseWrapper<OtpResendResponseDto>> ResendOtpAsync(OtpResendRequestDto dto)
         {
-            var userResponse = await _userService.GetUserByIdAsync(userId);
-            if (!userResponse.Success || userResponse.Data == null)
-                return new ResponseWrapper<bool> { Success = false, Message = "User not found" };
+            if (string.IsNullOrWhiteSpace(dto.OtpSessionId))
+                return new ResponseWrapper<OtpResendResponseDto> { Success = false, Message = "Invalid session" };
 
-            _otpStore[userId] = "000000";
-            return new ResponseWrapper<bool> { Success = true, Message = "OTP resent", Data = true };
-        }
+            if (!_otpSessions.TryGetValue(dto.OtpSessionId, out var entry))
+                return new ResponseWrapper<OtpResendResponseDto> { Success = false, Message = "OTP session not found" };
 
-        public async Task<ResponseWrapper<UserDto>> GetUserDtoAsync(int userId)
-        {
-            var userResponse = await _userService.GetUserByIdAsync(userId);
-            if (!userResponse.Success)
-                return new ResponseWrapper<UserDto> { Success = false, Message = userResponse.Message };
+            var newSessionId = dto.OtpSessionId + "-r";
+            _otpSessions.Remove(dto.OtpSessionId);
+            _otpSessions[newSessionId] = (entry.UserId, "000000");
 
-            return new ResponseWrapper<UserDto> { Success = true, Message = "User retrieved", Data = userResponse.Data };
+            var resp = new OtpResendResponseDto
+            {
+                IsOtpResent = true,
+                NewOtpSessionId = newSessionId,
+                OtpExpiresIn = 15
+            };
+
+            return new ResponseWrapper<OtpResendResponseDto> { Success = true, Message = "OTP resent", Data = resp };
         }
     }
 }
