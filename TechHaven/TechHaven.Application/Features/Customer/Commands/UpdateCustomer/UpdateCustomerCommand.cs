@@ -11,6 +11,5 @@ public record UpdateCustomerCommand() : ICommand<CustomerDto>
   public string? Email { get; set; }
   public string? Address { get; set; }
   public CustomerType Type { get; set; }
-  public decimal TotalPurchased { get; set; }
   public string? Note { get; set; }
 }
