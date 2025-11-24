@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Auth;
@@ -6,6 +7,7 @@ using TechHaven.Application.Features.Auth.Login;
 using TechHaven.Application.Features.Auth.VerifyOtp;
 using TechHaven.Application.Features.Auth.RefreshToken;
 using TechHaven.Application.Features.Auth.ResendOtp;
+using TechHaven.Application.Features.Auth.Queries.GetCurrentUser;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -145,5 +147,35 @@ public class AuthController : ControllerBase
         Errors = new List<string> { ex.Message }
       });
     }
+  }
+
+  /// <summary>
+  /// Get current user information from access token
+  /// </summary>
+  /// <returns>User information</returns>
+  [HttpGet("me")]
+  [Authorize] // Yêu cầu access token hợp lệ
+  [ProducesResponseType(typeof(ResponseWrapper<UserInfoDto>), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status401Unauthorized)]
+  public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken)
+  {
+    var query = new GetCurrentUserQuery();
+    var result = await _mediator.Send(query, cancellationToken);
+
+    if (!result.IsSuccess)
+    {
+      return Unauthorized(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = result.ErrorMessage ?? "Unauthorized"
+      });
+    }
+
+    return Ok(new ResponseWrapper<UserInfoDto>
+    {
+      Success = true,
+      Message = "User information retrieved successfully.",
+      Data = result.Data
+    });
   }
 }
