@@ -26,8 +26,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private int _otpExpiresInInternal = 0;
 
         // Use http-based auth service by default, if you want to use mock, uncomment the other constructor
-        //public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient)) { }
-        public MainWindowViewModel() : this(new MockAuthService()) { }
+        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient)) { }
+        //public MainWindowViewModel() : this(new MockAuthService()) { }
 
         public MainWindowViewModel(IAuthService authService)
         {

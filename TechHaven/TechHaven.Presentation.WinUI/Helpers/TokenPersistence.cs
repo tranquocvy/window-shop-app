@@ -83,17 +83,33 @@ namespace TechHaven.Presentation.WinUI.Helpers
             try
             {
                 var vault = new PasswordVault();
-                var list = vault.RetrieveAll();
-                var entry = list.FirstOrDefault(x => x.Resource == ResourceName);
-                if (entry != null)
+                // remove all entries matching the resource name (matches SaveRefreshToken behavior)
+                try
                 {
-                    var cred = vault.Retrieve(ResourceName, entry.UserName);
-                    vault.Remove(cred);
-                    Debug.WriteLine("RemoveRefreshToken: removed refresh token from PasswordVault");
+                    var existing = vault.RetrieveAll().Where(c => c.Resource == ResourceName).ToList();
+                    if (existing.Count == 0)
+                    {
+                        Debug.WriteLine("RemoveRefreshToken: no entry to remove");
+                        return;
+                    }
+
+                    foreach (var e in existing)
+                    {
+                        try
+                        {
+                            vault.Remove(e);
+                        }
+                        catch (Exception exRem)
+                        {
+                            Debug.WriteLine($"RemoveRefreshToken: failed to remove one entry: {exRem.Message}");
+                        }
+                    }
+
+                    Debug.WriteLine($"RemoveRefreshToken: removed {existing.Count} refresh token(s) from PasswordVault");
                 }
-                else
+                catch (Exception exExisting)
                 {
-                    Debug.WriteLine("RemoveRefreshToken: no entry to remove");
+                    Debug.WriteLine($"RemoveRefreshToken: error retrieving entries: {exExisting.Message}");
                 }
             }
             catch (Exception ex)
