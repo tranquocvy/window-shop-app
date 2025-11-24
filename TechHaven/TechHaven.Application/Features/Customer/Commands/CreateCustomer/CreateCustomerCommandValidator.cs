@@ -29,9 +29,6 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
         RuleFor(x => x.Type)
             .IsInEnum().WithMessage("Customer type is required.");
 
-        RuleFor(x => x.TotalPurchased)
-            .GreaterThanOrEqualTo(0).WithMessage("Total purchased cannot be negative.");
-
         RuleFor(x => x.Note)
             .MaximumLength(255).WithMessage("Note cannot exceed 255 characters.");
     }

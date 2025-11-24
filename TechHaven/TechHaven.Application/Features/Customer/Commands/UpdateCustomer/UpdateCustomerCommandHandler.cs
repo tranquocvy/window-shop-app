@@ -38,8 +38,12 @@ public class UpdateCustomerCommandHandler : ICommandHandler<UpdateCustomerComman
     customer.PhoneNumber = request.PhoneNumber;
     customer.Email = request.Email;
     customer.Address = request.Address;
+<<<<<<< HEAD
     customer.Type = (TechHaven.Domain.Enums.CustomerType)request.Type;
     customer.TotalPurchased = request.TotalPurchased;
+=======
+    customer.Type = (Domain.Entities.CustomerType)request.Type;
+>>>>>>> develop
     customer.Note = request.Note;
 
     await _unitOfWork.Customers.UpdateAsync(customer);
