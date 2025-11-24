@@ -59,9 +59,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="ViewModels\**" />
+    <Compile Remove="Views\Order\**" />
     <EmbeddedResource Remove="ViewModels\**" />
+    <EmbeddedResource Remove="Views\Order\**" />
     <None Remove="ViewModels\**" />
+    <None Remove="Views\Order\**" />
     <Page Remove="ViewModels\**" />
+    <Page Remove="Views\Order\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
@@ -168,7 +172,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\Order\" />
     <Folder Include="Views\Product\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Views\Order\**" />
   </ItemGroup>
 </Project>

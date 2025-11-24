@@ -76,17 +76,26 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(new ResponseWrapper<OtpVerifyResponseDto> { Success = false, Message = "Invalid OTP" });
         }
 
-        public async Task<ResponseWrapper<bool>> ResendOtpAsync(OtpResendRequestDto dto)
+        public async Task<ResponseWrapper<OtpResendResponseDto>> ResendOtpAsync(OtpResendRequestDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.OtpSessionId))
-                return new ResponseWrapper<bool> { Success = false, Message = "Invalid session" };
+                return new ResponseWrapper<OtpResendResponseDto> { Success = false, Message = "Invalid session" };
 
             if (!_otpSessions.TryGetValue(dto.OtpSessionId, out var entry))
-                return new ResponseWrapper<bool> { Success = false, Message = "OTP session not found" };
+                return new ResponseWrapper<OtpResendResponseDto> { Success = false, Message = "OTP session not found" };
 
-            // reset OTP code (still mock)
-            _otpSessions[dto.OtpSessionId] = (entry.UserId, "000000");
-            return new ResponseWrapper<bool> { Success = true, Message = "OTP resent", Data = true };
+            var newSessionId = dto.OtpSessionId + "-r";
+            _otpSessions.Remove(dto.OtpSessionId);
+            _otpSessions[newSessionId] = (entry.UserId, "000000");
+
+            var resp = new OtpResendResponseDto
+            {
+                IsOtpResent = true,
+                NewOtpSessionId = newSessionId,
+                OtpExpiresIn = 15
+            };
+
+            return new ResponseWrapper<OtpResendResponseDto> { Success = true, Message = "OTP resent", Data = resp };
         }
     }
 }
