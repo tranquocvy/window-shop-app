@@ -6,9 +6,22 @@
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
     mc:Ignorable="d"
     Background="#EEEEEE"
     Foreground="#0A2E8C">
+
+    <Page.Resources>
+        <converters:CustomerTypeToBrushConverter x:Key="CustomerTypeToBrush"/>
+        <converters:DecimalToCurrencyConverter x:Key="DecimalToCurrency"/>
+        <Style x:Key="BadgeTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+    </Page.Resources>
 
     <Grid Padding="16" RequestedTheme="Light">
         <Grid.RowDefinitions>
@@ -107,7 +120,7 @@
                             <TextBlock Grid.Column="2" Text="Số Điện Thoại" FontWeight="SemiBold" TextAlignment="Left"/>
                             <TextBlock Grid.Column="3" Text="Email" FontWeight="SemiBold" TextAlignment="Left"/>
                             <TextBlock Grid.Column="4" Text="Địa chỉ" FontWeight="SemiBold" TextAlignment="Left"/>
-                            <TextBlock Grid.Column="5" Text="Loại" FontWeight="SemiBold" TextAlignment="Left"/>
+                            <TextBlock Grid.Column="5" Text="Hạng" FontWeight="SemiBold" TextAlignment="Left"/>
                             <TextBlock Grid.Column="6" Text="Tổng Mua" FontWeight="SemiBold" TextAlignment="Left"/>
                         </Grid>
                     </ListView.Header>
@@ -131,8 +144,19 @@
                                 <TextBlock Grid.Column="2" Text="{Binding PhoneNumber}" TextAlignment="Left"/>
                                 <TextBlock Grid.Column="3" Text="{Binding Email}" TextAlignment="Left"/>
                                 <TextBlock Grid.Column="4" Text="{Binding Address}" TextTrimming="CharacterEllipsis" TextAlignment="Left"/>
-                                <TextBlock Grid.Column="5" Text="{Binding Type}" TextAlignment="Left"/>
-                                <TextBlock Grid.Column="6" Text="{Binding TotalPurchased}" TextAlignment="Left"/>
+
+                                <!-- Colored badge for Type -->
+                                <Border Grid.Column="5"
+                                        CornerRadius="12"
+                                        Padding="6,2"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Background="{Binding Type, Converter={StaticResource CustomerTypeToBrush}}">
+                                    <TextBlock Text="{Binding Type}"
+                                               Style="{StaticResource BadgeTextStyle}"/>
+                                </Border>
+
+                                <TextBlock Grid.Column="6" Text="{Binding TotalPurchased, Converter={StaticResource DecimalToCurrency}}" TextAlignment="Left"/>
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>

@@ -30,7 +30,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             "Không",
             "ID",
-            "Hạng",
+            "Tên",
             "Tổng Mua"
         };
         // Collection of sort directions
@@ -191,7 +191,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             string sortBy = SelectedProperty switch
             {
                 "ID" => "CustomerId",
-                "Hạng" => "Type",
+                "Tên" => "CustomerName",
                 "Tổng Mua" => "TotalPurchased",
                 _ => SelectedProperty
             };
