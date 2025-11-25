@@ -25,12 +25,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // CancellationTokenSource for debouncing search (kept for possible future use)
         private CancellationTokenSource? _searchCts;
 
+        // Request counter to identify latest load request and ignore stale responses
+        private int _loadRequestCounter = 0;
+
         // Collection of sortable properties
         public ObservableCollection<string> SortableProperties { get; } = new()
         {
             "Không",
             "ID",
-            "Tên",
+            "Hạng",
             "Tổng Mua"
         };
         // Collection of sort directions
@@ -139,6 +142,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (e.PropertyName == nameof(SelectedPageSize))
             {
                 PageNumber = 1;
+                // Keep PageSize in sync when user explicitly changes page size
                 PageSize = SelectedPageSize;
                 _ = LoadCustomersAsync();
                 return;
@@ -178,8 +182,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     : null,
                 Sorting = GetSorting(),
                 PageNumber = PageNumber,
-                // Always send the selected page size (default 10)
-                PageSize = SelectedPageSize
+                // Use current PageSize (do not overwrite user's selection when searching)
+                PageSize = PageSize > 0 ? PageSize : SelectedPageSize
             };
         }
 
@@ -191,7 +195,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             string sortBy = SelectedProperty switch
             {
                 "ID" => "CustomerId",
-                "Tên" => "CustomerName",
+                "Hạng" => "Type",
                 "Tổng Mua" => "TotalPurchased",
                 _ => SelectedProperty
             };
@@ -205,19 +209,21 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         private async Task LoadCustomersAsync()
         {
-            Customers.Clear();
-
-            // Ensure page size matches selected
-            if (PageSize != SelectedPageSize)
-            {
-                PageSize = SelectedPageSize;
-            }
+            // Capture request id so we can ignore stale responses
+            var requestId = Interlocked.Increment(ref _loadRequestCounter);
 
             var query = BuildQuery();
 
             try
             {
                 var response = await _customerService.QueryCustomersAsync(query);
+
+                // If a newer request was started, ignore this response
+                if (requestId != _loadRequestCounter)
+                {
+                    Debug.WriteLine("Ignoring stale response for LoadCustomersAsync");
+                    return;
+                }
 
                 if (response == null)
                 {
@@ -242,10 +248,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     return;
                 }
 
+                // Clear collection before adding latest results (only after response validated)
+                Customers.Clear();
+
+                // Prevent duplicates within the incoming page: track IDs seen in this response
+                var addedIds = new HashSet<int>();
+
                 foreach (var customer in response.Data.Items)
                 {
-                    if (customer != null)
+                    if (customer == null) continue;
+
+                    if (addedIds.Add(customer.CustomerId))
+                    {
                         Customers.Add(customer);
+                    }
                 }
 
                 // Update paging state with accurate information
