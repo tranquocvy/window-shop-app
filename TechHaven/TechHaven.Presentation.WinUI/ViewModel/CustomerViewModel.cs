@@ -13,6 +13,7 @@ using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Shared.DTOs.Customers;
 using TechHaven.Shared.DTOs.Common;
+using System.Diagnostics;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -21,7 +22,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Service to fetch data - can be injected or use default HttpCustomerService
         private readonly ICustomerService _customerService;
 
-        // CancellationTokenSource for debouncing search
+        // CancellationTokenSource for debouncing search (kept for possible future use)
         private CancellationTokenSource? _searchCts;
 
         // Collection of sortable properties
@@ -122,23 +123,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private void CustomerViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Debounced search
+            // Immediate search: call API as the user types
             if (e.PropertyName == nameof(SearchTerm))
             {
+                // Cancel any previous debounce token (for future use if reintroducing debounce)
                 _searchCts?.Cancel();
-                _searchCts = new CancellationTokenSource();
-                var token = _searchCts.Token;
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await Task.Delay(400, token);
-                        if (token.IsCancellationRequested) return;
-                        PageNumber = 1;
-                        await LoadCustomersAsync();
-                    }
-                    catch (TaskCanceledException) { }
-                }, token);
+
+                // Immediately request first page and load
+                PageNumber = 1;
+                _ = LoadCustomersAsync();
                 return;
             }
 
@@ -222,13 +215,37 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             var query = BuildQuery();
 
-            var response = await _customerService.QueryCustomersAsync(query);
-
-            if (response.Success && response.Data != null)
+            try
             {
+                var response = await _customerService.QueryCustomersAsync(query);
+
+                if (response == null)
+                {
+                    Debug.WriteLine("QueryCustomersAsync returned null response");
+                    return;
+                }
+
+                if (!response.Success)
+                {
+                    Debug.WriteLine($"QueryCustomersAsync failed: {response.Message}");
+                    if (response.Errors != null)
+                    {
+                        foreach (var e in response.Errors)
+                            Debug.WriteLine(" - " + e);
+                    }
+                    return;
+                }
+
+                if (response.Data?.Items == null)
+                {
+                    Debug.WriteLine("QueryCustomersAsync returned empty data or items");
+                    return;
+                }
+
                 foreach (var customer in response.Data.Items)
                 {
-                    Customers.Add(customer);
+                    if (customer != null)
+                        Customers.Add(customer);
                 }
 
                 // Update paging state with accurate information
@@ -236,6 +253,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 CanGoPrevious = PageNumber > 1;
                 CanGoNext = PageNumber < totalPages;
                 PageInfo = $"Trang {PageNumber} / {totalPages} (Tổng: {response.Data.TotalCount} khách hàng)";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception in LoadCustomersAsync: " + ex);
             }
         }
 

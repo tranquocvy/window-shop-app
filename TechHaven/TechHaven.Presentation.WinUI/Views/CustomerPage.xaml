@@ -36,7 +36,7 @@
                 PlaceholderText="Tìm kiếm theo Tên, SĐT, Email..."
                 VerticalContentAlignment="Center"
                 HorizontalAlignment="Stretch"
-                Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <ComboBox ItemsSource="{x:Bind ViewModel.SortableProperties}"
                       Grid.Column="1"
                       SelectedItem="{x:Bind ViewModel.SelectedProperty, Mode=TwoWay}"
@@ -75,7 +75,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Optional header inside card -->
-                <TextBlock Grid.Row="0" Text="Danh sách khách hàng" FontWeight="SemiBold" Margin="4,0,0,8" Foreground="#0A2E8C"/>
+                <TextBlock Grid.Row="0" Text="Danh sách khách hàng" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#0A2E8C"/>
 
                 <ListView
                     x:Name="CustomersList"
@@ -91,7 +91,6 @@
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         </Style>
                     </ListView.ItemContainerStyle>
-
                     <ListView.Header>
                         <Grid Padding="0,6">
                             <Grid.ColumnDefinitions>
@@ -112,7 +111,7 @@
                             <TextBlock Grid.Column="6" Text="Tổng Mua" FontWeight="SemiBold" TextAlignment="Left"/>
                         </Grid>
                     </ListView.Header>
-
+                    
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid Padding="0,6">
