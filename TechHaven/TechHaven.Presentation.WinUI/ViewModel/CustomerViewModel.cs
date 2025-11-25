@@ -282,7 +282,26 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Public API for dialog to create a customer and refresh list
         public async Task CreateCustomerAsync(CustomerUpsertRequestDto dto)
         {
-            _ = await _customerService.CreateCustomerAsync(dto);
+            var response = await _customerService.CreateCustomerAsync(dto);
+            
+            if (response == null)
+            {
+                Debug.WriteLine("CreateCustomerAsync returned null response");
+                return;
+            }
+            
+            if (!response.Success)
+            {
+                Debug.WriteLine($"CreateCustomerAsync failed: {response.Message}");
+                if (response.Errors != null)
+                {
+                    foreach (var err in response.Errors)
+                        Debug.WriteLine($" - {err}");
+                }
+                return;
+            }
+            
+            Debug.WriteLine($"Customer created successfully: {response.Data?.CustomerName}");
             // Reload current page to reflect changes
             await LoadCustomersAsync();
         }
@@ -290,7 +309,26 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Public API for dialog to update a customer and refresh list
         public async Task UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
         {
-            _ = await _customerService.UpdateCustomerAsync(id, dto);
+            var response = await _customerService.UpdateCustomerAsync(id, dto);
+            
+            if (response == null)
+            {
+                Debug.WriteLine("UpdateCustomerAsync returned null response");
+                return;
+            }
+            
+            if (!response.Success)
+            {
+                Debug.WriteLine($"UpdateCustomerAsync failed: {response.Message}");
+                if (response.Errors != null)
+                {
+                    foreach (var err in response.Errors)
+                        Debug.WriteLine($" - {err}");
+                }
+                return;
+            }
+            
+            Debug.WriteLine($"Customer updated successfully: {response.Data?.CustomerName}");
             await LoadCustomersAsync();
         }
 
