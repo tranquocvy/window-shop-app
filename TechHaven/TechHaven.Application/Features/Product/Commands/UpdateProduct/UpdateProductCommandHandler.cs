@@ -40,20 +40,7 @@ public class UpdateProductCommandHandler
         );
       }
 
-      // Update properties
-      product.ProductName = request.ProductName;
-      product.BrandName = request.BrandName;
-      product.Color = request.Color;
-      product.StorageCapacity = request.StorageCapacity;
-      product.Processor = request.Processor;
-      product.ScreenSize = request.ScreenSize;
-      product.BatteryCapacity = request.BatteryCapacity;
-      product.ImageUrl = request.ImageUrl;
-      product.ImageGalleryJson = request.ImageGalleryJson;
-      product.SellPrice = request.SellPrice;
-      product.StockQuantity = request.StockQuantity;
-      product.Description = request.Description;
-      product.IsDraft = request.IsDraft;
+      _mapper.Map(request, product);
       product.UpdatedAt = DateTime.Now;
 
       await _unitOfWork.Products.UpdateAsync(product);
