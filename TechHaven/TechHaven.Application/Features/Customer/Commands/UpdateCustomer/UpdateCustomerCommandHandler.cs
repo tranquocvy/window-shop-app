@@ -40,12 +40,8 @@ public class UpdateCustomerCommandHandler : ICommandHandler<UpdateCustomerComman
       }
 
       // Update properties
-      customer.CustomerName = request.CustomerName;
-      customer.PhoneNumber = request.PhoneNumber;
-      customer.Email = request.Email;
-      customer.Address = request.Address;
-      customer.Type = (Domain.Enums.CustomerType)request.Type;
-      customer.Note = request.Note;
+      _mapper.Map(request, customer);
+      customer.UpdatedAt = DateTime.Now;
 
       await _unitOfWork.Customers.UpdateAsync(customer);
       await _unitOfWork.SaveChangesAsync();
