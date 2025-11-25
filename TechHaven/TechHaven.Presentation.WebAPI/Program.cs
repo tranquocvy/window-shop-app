@@ -43,6 +43,19 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    // Ensure the app uses the same port/url as configured by TECHHAVEN_API_BASEURL when present,
+    // otherwise fall back to the team's default (http://localhost:5207)
+    var explicitUrl = Environment.GetEnvironmentVariable("TECHHAVEN_API_BASEURL") ?? "http://localhost:5207";
+    try
+    {
+        builder.WebHost.UseUrls(explicitUrl);
+        Log.Information("Configured URLs from environment/fallback: {Url}", explicitUrl);
+    }
+    catch (Exception exUrls)
+    {
+        Log.Warning(exUrls, "Failed to call UseUrls with {Url}", explicitUrl);
+    }
+
     // Use Serilog for logging
     builder.Host.UseSerilog();
 
@@ -119,7 +132,7 @@ try
     //     Log.Information("Server is running at {Url}", url);
     // }
     // Log the server URLs
-    var urls = builder.WebHost.GetSetting("urls") ?? "http://localhost:5207";
+    var urls = builder.WebHost.GetSetting("urls") ?? explicitUrl;
     Log.Information("Server is running at {Urls}", urls);
 
     Log.Information("TechHaven API started successfully");
