@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using TechHaven.Application.Interfaces;
 
 namespace TechHaven.Infrastructure.Services;
@@ -12,8 +13,12 @@ public class OtpService : IOtpService
 
     public (string OtpSessionId, string OtpCode) GenerateOtp(int userId)
     {
+        // OLD: Dễ đoán mã OTP nếu như có mã nguồn
         // Generate 6-digit OTP
-        var otpCode = new Random().Next(100000, 999999).ToString();
+        // var otpCode = new Random().Next(100000, 999999).ToString();
+        
+        // NEW: SỬ DỤNG Cryptographically Secure Random
+        var otpCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
 
         // Generate session ID (GUID)
         var sessionId = Guid.NewGuid().ToString();

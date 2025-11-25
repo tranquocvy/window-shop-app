@@ -74,6 +74,9 @@
     <PRIResource Remove="ViewModels\**" />
   </ItemGroup>
   <ItemGroup>
+    <Content Remove="Assets\RoleToVisibilityConverter.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Views\CustomerPage.xaml" />
     <None Remove="Views\DashboardPage.xaml" />
     <None Remove="Views\OrderPage.xaml" />

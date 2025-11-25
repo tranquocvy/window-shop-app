@@ -82,7 +82,5 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
                 .ThenInclude(od => od.Product)
             .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.OrderId == orderId, cancellationToken);
-    }
-
-   
+    }  
 }

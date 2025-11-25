@@ -32,6 +32,10 @@ namespace TechHaven.Presentation.WinUI
     {
         private Window? _window;
 
+
+        // thuộc tính này để gọi cái MainWindow từ các chỗ khác
+        public static Window MainWindow { get; private set; } = null!;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -67,6 +71,7 @@ namespace TechHaven.Presentation.WinUI
             }
 
             _window = new MainWindow();
+            MainWindow = _window;
             _window.Activate();
         }
     }

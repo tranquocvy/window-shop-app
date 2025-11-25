@@ -2,10 +2,12 @@ using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Customers;
 using AutoMapper;
 using TechHaven.Domain.Interfaces;
+using TechHaven.Domain.Common;
+using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Application.Features.Customer.Commands.CreateCustomer;
 
-public class CreateCustomerCommandHandler : ICommandHandler<CreateCustomerCommand, CustomerDto>
+public class CreateCustomerCommandHandler : ICommandHandler<CreateCustomerCommand, Result<CustomerDto>>
 {
   private readonly IUnitOfWork _unitOfWork;
   private readonly IMapper _mapper;
@@ -18,23 +20,45 @@ public class CreateCustomerCommandHandler : ICommandHandler<CreateCustomerComman
     _mapper = mapper;
   }
 
-  public async Task<CustomerDto> Handle(
+  public async Task<Result<CustomerDto>> Handle(
     CreateCustomerCommand request,
     CancellationToken cancellationToken)
   {
-    // map command to entity
-    var customer = _mapper.Map<Domain.Entities.Customer>(request);
+    try
+    {
+      var existingCustomer = await _unitOfWork.Customers.FirstOrDefaultAsync(p =>
+      p.PhoneNumber == request.PhoneNumber,
+      cancellationToken
+    );
 
-    // set timestamps
-    customer.CreatedAt = DateTime.Now;
-    customer.UpdatedAt = null;
+      if (existingCustomer != null)
+      {
+        return Result<CustomerDto>.Failure(
+          $"Customer with name '{request.CustomerName}' and email '{request.Email}' already exists",
+          ErrorType.Conflict
+        );
+      }
 
-    // add to repository
-    await _unitOfWork.Customers.AddAsync(customer, cancellationToken);
+      // map command to entity
+      var customer = _mapper.Map<Domain.Entities.Customer>(request);
 
-    // save changes
-    await _unitOfWork.SaveChangesAsync(cancellationToken);
+      // set timestamps
+      customer.CreatedAt = DateTime.Now;
+      customer.UpdatedAt = null;
 
-    return _mapper.Map<CustomerDto>(customer);
+      // add to repository
+      await _unitOfWork.Customers.AddAsync(customer, cancellationToken);
+      await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+      var customerDto = _mapper.Map<CustomerDto>(customer);
+
+      return Result<CustomerDto>.Success(customerDto);
+    }
+    catch (Exception ex)
+    {
+      return Result<CustomerDto>.Failure(
+        $"Failed to create customer: {ex.Message}",
+        ErrorType.InternalError);
+    }
   }
 }

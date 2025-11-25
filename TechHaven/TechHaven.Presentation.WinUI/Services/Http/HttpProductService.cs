@@ -20,23 +20,18 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public Task<ResponseWrapper<List<ProductDto>>> GetAllProductsAsync()
-        {
-            return _httpClient.GetWrapperFromJsonAsync<List<ProductDto>>(BaseUrl, "Failed to retrieve products");
-        }
-
         public Task<ResponseWrapper<ProductDto>> GetProductsByIdAsync(int id)
         {
             return _httpClient.GetWrapperFromJsonAsync<ProductDto>($"{BaseUrl}/{id}", "Failed to retrieve product");
         }
 
-        public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto)
+        public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto)
         {
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to create product");
         }
 
-        public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto)
+        public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto)
         {
             var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{id}", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to update product");
@@ -48,10 +43,14 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete product");
         }
 
-        public async Task<ResponseWrapper<List<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
+        public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
-            return await response.EnsureSuccessAndReadWrapperAsync<List<ProductDto>>("Failed to query products");
+
+            return await response.EnsureSuccessAndReadWrapperAsync<PagingResponse<ProductDto>>(
+                "Failed to query products"
+            );
         }
+
     }
 }

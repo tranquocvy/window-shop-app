@@ -1,9 +1,10 @@
 using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Products;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Product.Commands.CreateProduct;
 
-public record CreateProductCommand() : ICommand<ProductDto>
+public record CreateProductCommand() : ICommand<Result<ProductDto>>
 {
   public string ProductName { get; init; } = string.Empty;
   public string BrandName { get; init; } = string.Empty;
