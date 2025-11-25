@@ -8,6 +8,7 @@ using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Customers;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
 {
@@ -69,8 +70,38 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerUpsertRequestDto customerDto)
         {
-            var response = await _httpClient.PostAsJsonAsync(BaseUrl, customerDto);
-            return await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to create customer");
+            if (customerDto == null) throw new ArgumentNullException(nameof(customerDto));
+
+            var url = BaseUrl;
+
+            try
+            {
+                Debug.WriteLine($"HttpCustomerService.CreateCustomerAsync -> POST URL: {_httpClient.BaseAddress?.ToString().TrimEnd('/')}/{url}");
+                Debug.WriteLine($"HttpCustomerService.CreateCustomerAsync -> Payload: {JsonSerializer.Serialize(customerDto)}");
+
+                var response = await _httpClient.PostAsJsonAsync(url, customerDto);
+
+                // Read wrapper via extension (this safely reads content) and log details for debugging
+                var wrapper = await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to create customer");
+
+                Debug.WriteLine($"CreateCustomerAsync -> HTTP {(int)response.StatusCode} {response.ReasonPhrase}, Success={wrapper?.Success}");
+                if (wrapper != null)
+                {
+                    Debug.WriteLine($"CreateCustomerAsync -> Message: {wrapper.Message}");
+                    if (wrapper.Errors != null && wrapper.Errors.Count > 0)
+                    {
+                        foreach (var err in wrapper.Errors)
+                            Debug.WriteLine($"CreateCustomerAsync -> Error: {err}");
+                    }
+                }
+
+                return wrapper;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception in CreateCustomerAsync: {ex}");
+                throw;
+            }
         }
 
         public async Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
