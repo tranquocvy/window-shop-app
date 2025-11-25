@@ -4,16 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
-using TechHaven.Shared.DTOs.Customers;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Common;
-using System.Diagnostics;
+using TechHaven.Shared.DTOs.Customers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -45,7 +43,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         };
 
         // Page size options
-        public ObservableCollection<int> PageSizeOptions { get; } = new() {5, 10, 15, 20 };
+        public ObservableCollection<int> PageSizeOptions { get; } = new() { 5, 10, 15, 20 };
 
         // Collection of customers for data binding
         public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
@@ -163,10 +161,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Create default HttpCustomerService
         private static ICustomerService CreateDefaultHttpCustomerService()
         {
-            var httpClient = new System.Net.Http.HttpClient
-            {
-                BaseAddress = new Uri("https://localhost:7230/") // Replace with your API base URL
-            };
+            var httpClient = ApiClientFactory.GetHttpClient();
             return new HttpCustomerService(httpClient);
         }
 
