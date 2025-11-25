@@ -42,8 +42,8 @@ public class CreateCustomerCommandHandler : ICommandHandler<CreateCustomerComman
       // map command to entity
       var customer = _mapper.Map<Domain.Entities.Customer>(request);
 
-      // set timestamps
-      customer.CreatedAt = DateTime.Now;
+      // set timestamps with UTC for PostgreSQL compatibility
+      customer.CreatedAt = DateTime.UtcNow;
       customer.UpdatedAt = null;
 
       // add to repository
@@ -56,8 +56,9 @@ public class CreateCustomerCommandHandler : ICommandHandler<CreateCustomerComman
     }
     catch (Exception ex)
     {
+      var innerMessage = ex.InnerException?.Message ?? ex.Message;
       return Result<CustomerDto>.Failure(
-        $"Failed to create customer: {ex.Message}",
+        $"Failed to create customer: {innerMessage}",
         ErrorType.InternalError);
     }
   }

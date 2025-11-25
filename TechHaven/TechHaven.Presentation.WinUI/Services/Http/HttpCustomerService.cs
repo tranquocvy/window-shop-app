@@ -7,8 +7,6 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Customers;
-using System.Diagnostics;
-using System.Text.Json;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
 {
@@ -57,9 +55,6 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             var queryString = string.Join("&", queryParams);
             var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
 
-            // Debug log the final URL so we can confirm PageSize
-            Debug.WriteLine($"HttpCustomerService.QueryCustomersAsync -> Request URL: {_httpClient.BaseAddress?.ToString().TrimEnd('/')}/{url}");
-
             return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<CustomerDto>>(url, "Failed to query customers");
         }
 
@@ -72,36 +67,8 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         {
             if (customerDto == null) throw new ArgumentNullException(nameof(customerDto));
 
-            var url = BaseUrl;
-
-            try
-            {
-                Debug.WriteLine($"HttpCustomerService.CreateCustomerAsync -> POST URL: {_httpClient.BaseAddress?.ToString().TrimEnd('/')}/{url}");
-                Debug.WriteLine($"HttpCustomerService.CreateCustomerAsync -> Payload: {JsonSerializer.Serialize(customerDto)}");
-
-                var response = await _httpClient.PostAsJsonAsync(url, customerDto);
-
-                // Read wrapper via extension (this safely reads content) and log details for debugging
-                var wrapper = await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to create customer");
-
-                Debug.WriteLine($"CreateCustomerAsync -> HTTP {(int)response.StatusCode} {response.ReasonPhrase}, Success={wrapper?.Success}");
-                if (wrapper != null)
-                {
-                    Debug.WriteLine($"CreateCustomerAsync -> Message: {wrapper.Message}");
-                    if (wrapper.Errors != null && wrapper.Errors.Count > 0)
-                    {
-                        foreach (var err in wrapper.Errors)
-                            Debug.WriteLine($"CreateCustomerAsync -> Error: {err}");
-                    }
-                }
-
-                return wrapper;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Exception in CreateCustomerAsync: {ex}");
-                throw;
-            }
+            var response = await _httpClient.PostAsJsonAsync(BaseUrl, customerDto);
+            return await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to create customer");
         }
 
         public async Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
@@ -113,6 +80,19 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         public async Task<ResponseWrapper<bool>> DeleteCustomerAsync(int id)
         {
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/{id}");
+
+            // DELETE returns 204 NoContent on success, so check status code directly
+            if (response.IsSuccessStatusCode)
+            {
+                return new ResponseWrapper<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Message = "Customer deleted successfully"
+                };
+            }
+
+            // If not successful, try to read error response
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete customer");
         }
     }
