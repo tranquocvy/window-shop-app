@@ -43,6 +43,9 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             base.OnNavigatedTo(e); 
 
+            // Force default page size and page number before initial load so request includes PageSize=10
+            ViewModel.SelectedPageSize = 10;
+            ViewModel.PageNumber = 1;
             ViewModel.LoadCustomersCommand.Execute(null);
         }
 
