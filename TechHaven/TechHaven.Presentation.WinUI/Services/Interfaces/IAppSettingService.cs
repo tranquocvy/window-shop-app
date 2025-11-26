@@ -7,6 +7,6 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
     public interface IAppSettingService
     {
         Task<AppSettingDto?> GetByKeyAsync(string key, CancellationToken cancellationToken = default);
-        Task<bool> UpsertAsync(string key, AppSettingCreateUpdateDto dto, CancellationToken cancellationToken = default);
+        Task<bool> UpsertAsync(string key, AppSettingUpsertRequestDto dto, CancellationToken cancellationToken = default);
     }
 }

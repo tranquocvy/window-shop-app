@@ -29,7 +29,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public async Task<bool> SetThemeAsync(string selected)
         {
-            var dto = new AppSettingCreateUpdateDto
+            var dto = new AppSettingUpsertRequestDto
             {
                 Value = selected,
                 ValueType = SettingType.String,

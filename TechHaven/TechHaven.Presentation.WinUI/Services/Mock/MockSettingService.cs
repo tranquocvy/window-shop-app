@@ -31,7 +31,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult<AppSettingDto?>(null);
         }
 
-        public Task<bool> UpsertAsync(string key, AppSettingCreateUpdateDto dto, CancellationToken cancellationToken = default)
+        public Task<bool> UpsertAsync(string key, AppSettingUpsertRequestDto dto, CancellationToken cancellationToken = default)
         {
             if (_stored == null)
             {
