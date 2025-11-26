@@ -284,26 +284,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             var response = await _customerService.CreateCustomerAsync(dto);
             
-            if (response == null)
+            if (response?.Success == true)
             {
-                Debug.WriteLine("CreateCustomerAsync returned null response");
-                return;
+                await LoadCustomersAsync();
             }
-            
-            if (!response.Success)
-            {
-                Debug.WriteLine($"CreateCustomerAsync failed: {response.Message}");
-                if (response.Errors != null)
-                {
-                    foreach (var err in response.Errors)
-                        Debug.WriteLine($" - {err}");
-                }
-                return;
-            }
-            
-            Debug.WriteLine($"Customer created successfully: {response.Data?.CustomerName}");
-            // Reload current page to reflect changes
-            await LoadCustomersAsync();
         }
 
         // Public API for dialog to update a customer and refresh list
@@ -311,25 +295,21 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             var response = await _customerService.UpdateCustomerAsync(id, dto);
             
-            if (response == null)
+            if (response?.Success == true)
             {
-                Debug.WriteLine("UpdateCustomerAsync returned null response");
-                return;
+                await LoadCustomersAsync();
             }
+        }
+
+        // Public API for dialog to delete a customer and refresh list
+        public async Task DeleteCustomerAsync(int id)
+        {
+            var response = await _customerService.DeleteCustomerAsync(id);
             
-            if (!response.Success)
+            if (response?.Success == true)
             {
-                Debug.WriteLine($"UpdateCustomerAsync failed: {response.Message}");
-                if (response.Errors != null)
-                {
-                    foreach (var err in response.Errors)
-                        Debug.WriteLine($" - {err}");
-                }
-                return;
+                await LoadCustomersAsync();
             }
-            
-            Debug.WriteLine($"Customer updated successfully: {response.Data?.CustomerName}");
-            await LoadCustomersAsync();
         }
 
         // NEXT / PREVIOUS PAGE COMMANDS

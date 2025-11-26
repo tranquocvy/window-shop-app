@@ -41,7 +41,7 @@ public class UpdateCustomerCommandHandler : ICommandHandler<UpdateCustomerComman
 
       // Update properties
       _mapper.Map(request, customer);
-      customer.UpdatedAt = DateTime.Now;
+      customer.UpdatedAt = DateTime.UtcNow;
 
       await _unitOfWork.Customers.UpdateAsync(customer);
       await _unitOfWork.SaveChangesAsync();
