@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Math.EC.Rfc7748;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
@@ -13,6 +14,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     public OrderRepository(AppDbContext context) : base(context)
     {
     }
+
     public async Task<(IReadOnlyList<Order> Items, int TotalCount)>
     SearchOrdersAsync(OrderSearchCriteria criteria, CancellationToken cancellationToken)
     {
@@ -48,7 +50,8 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             query = query.Where(o => o.OrderDate >= criteria.FromDate.Value);
         }
 
-        if (criteria.ToDate.HasValue) { 
+        if (criteria.ToDate.HasValue)
+        {
             query = query.Where(o => o.OrderDate <= criteria.ToDate.Value);
         }
 
@@ -82,5 +85,99 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
                 .ThenInclude(od => od.Product)
             .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.OrderId == orderId, cancellationToken);
-    }  
+    }
+
+    // IMPLEMENT REPOSITORY FOR DASHBOARD
+
+    public async Task<int> GetTodayOrderCountAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+
+        return await _dbSet
+            .Where(o => o.OrderDate >= today && o.OrderDate < tomorrow)
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<decimal> GetTodayRevenueAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+
+        return await _dbSet
+            .Where(o => o.OrderDate >= today && o.OrderDate < tomorrow)
+            .Where(o => o.Status == Domain.Enums.OrderStatus.Completed)
+            .SumAsync(o => o.TotalAmount, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Order>> GetRecentOrdersAsync(int count = 3, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(o => o.Customer)
+            .OrderByDescending(o => o.OrderDate)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Dictionary<DateTime, (decimal Revenue, int OrderCount)>> GetMonthlyRevenueAsync(int year, int month, CancellationToken cancellationToken = default)
+    {
+        var startDate = new DateTime(year, month, 1);
+        var endDate = startDate.AddMonths(1);
+
+        var orders = await _dbSet
+            .Where(o => o.OrderDate >= startDate && o.OrderDate < endDate)
+            .Where(o => o.Status == Domain.Enums.OrderStatus.Completed)
+            .Select(o => new
+            {
+                Date = o.OrderDate.Date,
+                o.TotalAmount
+            })
+            .ToListAsync(cancellationToken);
+
+        return orders
+            .GroupBy(o => o.Date)
+            .ToDictionary(
+                g => g.Key,
+                g => (
+                    Revenue: g.Sum(x => x.TotalAmount),
+                    OrderCount: g.Count()
+                )
+            );
+    }
+
+    public async Task<List<(int ProductId, string ProductName, string BrandName, int TotalSold, decimal TotalRevenue)>> GetTopSellingProductsAsync(int count = 5, CancellationToken cancellationToken = default)
+    {
+        // Lấy cả order và order detail để tính TotalSold và TotalRevenue
+        var productSales = await _context.OrderDetails
+            .Include(od => od.Product)
+            .Include(od => od.Order)
+            .Where(od => od.Order!.Status == Domain.Enums.OrderStatus.Completed)
+            .GroupBy(od => new
+            {
+                od.ProductId,
+                od.Product!.ProductName,
+                od.Product!.BrandName
+            })
+            .Select(g => new
+            {
+                g.Key.ProductId,
+                g.Key.ProductName,
+                g.Key.BrandName,
+                TotalSold = g.Sum(od => od.Quantity),
+                TotalRevenue = g.Sum(od => od.SubTotal)
+            })
+            .OrderByDescending(x => x.TotalSold)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+
+        return productSales
+            .Select(x => (
+                x.ProductId,
+                x.ProductName,
+                x.BrandName,
+                x.TotalSold,
+                x.TotalRevenue
+            ))
+            .ToList();
+    }
 }

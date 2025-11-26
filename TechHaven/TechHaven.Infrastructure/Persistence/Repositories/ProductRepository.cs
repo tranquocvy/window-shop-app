@@ -64,4 +64,11 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         var spec = new LowStockProductsSpecification(threshold);
         return await GetAsync(spec, cancellationToken);
     }
+
+  public async Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default)
+  {
+    return await _dbSet
+        .Where(p => p.IsDraft == false)
+        .CountAsync(cancellationToken);
+  }
 }
