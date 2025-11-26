@@ -175,6 +175,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Docs\" />
     <Folder Include="Views\Product\" />
   </ItemGroup>
   <ItemGroup>

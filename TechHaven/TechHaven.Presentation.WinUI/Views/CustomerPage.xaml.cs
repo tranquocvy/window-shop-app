@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -48,6 +49,60 @@ namespace TechHaven.Presentation.WinUI.Views
             ViewModel.SelectedPageSize = 10;
             ViewModel.PageNumber = 1;
             ViewModel.LoadCustomersCommand.Execute(null);
+        }
+
+        private (bool isValid, string errorMessage) ValidateCustomerInput(string name, string phone, string email, string address, string note)
+        {
+            // Validate CustomerName
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return (false, "Vui lòng nhập tên khách hàng.");
+            }
+            if (name.Length > 150)
+            {
+                return (false, "Tên khách hàng không được vượt quá 150 ký tự.");
+            }
+
+            // Validate PhoneNumber
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                return (false, "Vui lòng nhập số điện thoại.");
+            }
+            if (phone.Length > 15)
+            {
+                return (false, "Số điện thoại không được vượt quá 15 ký tự.");
+            }
+            if (!Regex.IsMatch(phone, @"^[\d\-\+\(\)\s]+$"))
+            {
+                return (false, "Số điện thoại chứa ký tự không hợp lệ. Chỉ cho phép số, dấu +, -, (, ), và khoảng trắng.");
+            }
+
+            // Validate Email (optional)
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                if (email.Length > 150)
+                {
+                    return (false, "Email không được vượt quá 150 ký tự.");
+                }
+                if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    return (false, "Định dạng email không hợp lệ.");
+                }
+            }
+
+            // Validate Address (optional)
+            if (!string.IsNullOrWhiteSpace(address) && address.Length > 300)
+            {
+                return (false, "Địa chỉ không được vượt quá 300 ký tự.");
+            }
+
+            // Validate Note (optional)
+            if (!string.IsNullOrWhiteSpace(note) && note.Length > 255)
+            {
+                return (false, "Ghi chú không được vượt quá 255 ký tự.");
+            }
+
+            return (true, string.Empty);
         }
 
         private async void AddCustomer_Click(object sender, RoutedEventArgs e)
@@ -116,37 +171,29 @@ namespace TechHaven.Presentation.WinUI.Views
                     return;
                 }
 
-                // Basic validation
+                // Get and trim all input values
                 string name = nameBox.Text?.Trim() ?? string.Empty;
                 string phone = phoneBox.Text?.Trim() ?? string.Empty;
+                string email = emailBox.Text?.Trim() ?? string.Empty;
+                string address = addressBox.Text?.Trim() ?? string.Empty;
+                string note = noteBox.Text?.Trim() ?? string.Empty;
                 
-                // Save current input
+                // Save current input for reopening dialog
                 lastName = name;
                 lastPhone = phone;
-                lastEmail = emailBox.Text?.Trim() ?? string.Empty;
-                lastAddress = addressBox.Text?.Trim() ?? string.Empty;
+                lastEmail = email;
+                lastAddress = address;
                 lastType = typeCombo.SelectedItem is CustomerType t ? t : CustomerType.Regular;
-                lastNote = noteBox.Text?.Trim() ?? string.Empty;
+                lastNote = note;
                 
-                if (string.IsNullOrWhiteSpace(name))
+                // Comprehensive validation
+                var (isValid, errorMessage) = ValidateCustomerInput(name, phone, email, address, note);
+                if (!isValid)
                 {
                     var err = new ContentDialog
                     {
                         Title = "Lỗi nhập liệu",
-                        Content = "Vui lòng nhập tên khách hàng.",
-                        CloseButtonText = "Đóng"
-                    };
-                    err.XamlRoot = this.Content.XamlRoot;
-                    await err.ShowAsync();
-                    continue; // Reopen dialog
-                }
-                
-                if (string.IsNullOrWhiteSpace(phone))
-                {
-                    var err = new ContentDialog
-                    {
-                        Title = "Lỗi nhập liệu",
-                        Content = "Vui lòng nhập số điện thoại.",
+                        Content = errorMessage,
                         CloseButtonText = "Đóng"
                     };
                     err.XamlRoot = this.Content.XamlRoot;
@@ -158,10 +205,10 @@ namespace TechHaven.Presentation.WinUI.Views
                 {
                     CustomerName = name,
                     PhoneNumber = phone,
-                    Email = string.IsNullOrWhiteSpace(lastEmail) ? null : lastEmail,
-                    Address = string.IsNullOrWhiteSpace(lastAddress) ? null : lastAddress,
+                    Email = string.IsNullOrWhiteSpace(email) ? null : email,
+                    Address = string.IsNullOrWhiteSpace(address) ? null : address,
                     Type = lastType,
-                    Note = string.IsNullOrWhiteSpace(lastNote) ? null : lastNote
+                    Note = string.IsNullOrWhiteSpace(note) ? null : note
                 };
 
                 try
@@ -356,47 +403,34 @@ namespace TechHaven.Presentation.WinUI.Views
                     return;
                 }
 
-                // Validate input
+                // Get and trim all input values
                 string name = nameBox.Text?.Trim() ?? string.Empty;
                 string phone = phoneBox.Text?.Trim() ?? string.Empty;
+                string email = emailBox.Text?.Trim() ?? string.Empty;
+                string address = addressBox.Text?.Trim() ?? string.Empty;
+                string note = noteBox.Text?.Trim() ?? string.Empty;
+                CustomerType selectedType = typeCombo.SelectedItem is CustomerType t ? t : selected.Type;
                 
-                if (string.IsNullOrWhiteSpace(name))
+                // Comprehensive validation
+                var (isValid, errorMessage) = ValidateCustomerInput(name, phone, email, address, note);
+                if (!isValid)
                 {
                     var err = new ContentDialog
                     {
                         Title = "Lỗi nhập liệu",
-                        Content = "Vui lòng nhập tên khách hàng.",
+                        Content = errorMessage,
                         CloseButtonText = "Đóng"
                     };
                     err.XamlRoot = this.Content.XamlRoot;
                     await err.ShowAsync();
+                    
                     // Update selected values to keep user input
                     selected.CustomerName = name;
                     selected.PhoneNumber = phone;
-                    selected.Email = emailBox.Text?.Trim();
-                    selected.Address = addressBox.Text?.Trim();
-                    selected.Type = typeCombo.SelectedItem is CustomerType t ? t : selected.Type;
-                    selected.Note = noteBox.Text?.Trim();
-                    continue; // Reopen dialog
-                }
-                
-                if (string.IsNullOrWhiteSpace(phone))
-                {
-                    var err = new ContentDialog
-                    {
-                        Title = "Lỗi nhập liệu",
-                        Content = "Vui lòng nhập số điện thoại.",
-                        CloseButtonText = "Đóng"
-                    };
-                    err.XamlRoot = this.Content.XamlRoot;
-                    await err.ShowAsync();
-                    // Update selected values to keep user input
-                    selected.CustomerName = name;
-                    selected.PhoneNumber = phone;
-                    selected.Email = emailBox.Text?.Trim();
-                    selected.Address = addressBox.Text?.Trim();
-                    selected.Type = typeCombo.SelectedItem is CustomerType t ? t : selected.Type;
-                    selected.Note = noteBox.Text?.Trim();
+                    selected.Email = email;
+                    selected.Address = address;
+                    selected.Type = selectedType;
+                    selected.Note = note;
                     continue; // Reopen dialog
                 }
 
@@ -404,10 +438,10 @@ namespace TechHaven.Presentation.WinUI.Views
                 {
                     CustomerName = name,
                     PhoneNumber = phone,
-                    Email = string.IsNullOrWhiteSpace(emailBox.Text) ? null : emailBox.Text.Trim(),
-                    Address = string.IsNullOrWhiteSpace(addressBox.Text) ? null : addressBox.Text.Trim(),
-                    Type = typeCombo.SelectedItem is CustomerType t2 ? t2 : selected.Type,
-                    Note = string.IsNullOrWhiteSpace(noteBox.Text) ? null : noteBox.Text.Trim()
+                    Email = string.IsNullOrWhiteSpace(email) ? null : email,
+                    Address = string.IsNullOrWhiteSpace(address) ? null : address,
+                    Type = selectedType,
+                    Note = string.IsNullOrWhiteSpace(note) ? null : note
                 };
 
                 // Skip update if nothing changed
