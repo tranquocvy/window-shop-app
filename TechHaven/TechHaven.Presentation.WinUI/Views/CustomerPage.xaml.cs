@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using TechHaven.Presentation.WinUI.ViewModel;
@@ -197,7 +198,66 @@ namespace TechHaven.Presentation.WinUI.Views
         private async void CustomersList_ItemClick(object sender, ItemClickEventArgs e)
         {
             if (e.ClickedItem is not CustomerDto selected) return;
+            await EditCustomerAsync(selected);
+        }
 
+        private async void EditCustomer_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem menuItem && menuItem.Tag is CustomerDto selected)
+            {
+                await EditCustomerAsync(selected);
+            }
+        }
+
+        private async void DeleteCustomer_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem menuItem && menuItem.Tag is CustomerDto selected)
+            {
+                var confirmDialog = new ContentDialog
+                {
+                    Title = "Xác nhận xóa",
+                    Content = $"Bạn có chắc chắn muốn xóa khách hàng '{selected.CustomerName}'?",
+                    PrimaryButtonText = "Xóa",
+                    CloseButtonText = "Hủy",
+                    DefaultButton = ContentDialogButton.Close
+                };
+                confirmDialog.XamlRoot = this.Content.XamlRoot;
+                
+                var confirmResult = await confirmDialog.ShowAsync();
+                if (confirmResult == ContentDialogResult.Primary)
+                {
+                    var customerName = selected.CustomerName;
+                    
+                    try
+                    {
+                        await ViewModel.DeleteCustomerAsync(selected.CustomerId);
+                        
+                        var successDialog = new ContentDialog
+                        {
+                            Title = "Thành công",
+                            Content = $"Đã xóa khách hàng '{customerName}' thành công!",
+                            CloseButtonText = "Đóng"
+                        };
+                        successDialog.XamlRoot = this.Content.XamlRoot;
+                        await successDialog.ShowAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var err = new ContentDialog
+                        {
+                            Title = "Lỗi xóa khách hàng",
+                            Content = ex.Message,
+                            CloseButtonText = "Đóng"
+                        };
+                        err.XamlRoot = this.Content.XamlRoot;
+                        await err.ShowAsync();
+                    }
+                }
+            }
+        }
+
+        private async Task EditCustomerAsync(CustomerDto selected)
+        {
             bool dialogActive = true;
             
             while (dialogActive)

@@ -128,6 +128,22 @@
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid Padding="0,6">
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Sửa" Click="EditCustomer_Click" Tag="{Binding}">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE70F;"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem Text="Xóa" Click="DeleteCustomer_Click" Tag="{Binding}">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE74D;" Foreground="Red"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                                
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="0.5*"/>
                                     <ColumnDefinition Width="1.5*"/>
