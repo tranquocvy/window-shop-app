@@ -4,6 +4,7 @@ using TechHaven.Infrastructure.Data;
 using TechHaven.Infrastructure.Persistence;
 using DotNetEnv;
 using Serilog;
+using TechHaven.Presentation.WebAPI.Middleware;
 
 // ============================================
 // Serilog Configuration Guide
@@ -82,6 +83,9 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
+
+    // THÊM Global Exception Handler (phải đặt đầu tiên)
+    app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
     // Add request logging middleware
     app.UseSerilogRequestLogging(options =>
