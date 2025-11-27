@@ -35,11 +35,8 @@
     <Color x:Key="TH.Color.TextDisabled">#FF9E9E9E</Color>
     <!-- disabled text -->
 
-    <!-- ========================================================= -->
-    <!-- =====================  NO STATUS COLORS  ================= -->
-    <!-- Success / Warning / Error removed → bỏ vào Common.xaml -->
-    <!-- ========================================================= -->
-
+    <Color x:Key="TH.Color.NavItemPointerOver">#FFE0E0E0</Color>
+    <Color x:Key="TH.Color.NavItemSelected">#FFE0E0E0</Color>
 
     <!-- ========================================================= -->
     <!-- ======================= BRUSHES ========================= -->
@@ -58,6 +55,10 @@
     <SolidColorBrush x:Key="TH.NavBackground"
                      Color="{StaticResource TH.Color.NavBackground}" />
 
+    <!-- NavigationView item brushes -->
+    <SolidColorBrush x:Key="TH.NavItemPointerOver" Color="{StaticResource TH.Color.NavItemPointerOver}" />
+    <SolidColorBrush x:Key="TH.NavItemSelected" Color="{StaticResource TH.Color.NavItemSelected}" />
+
     <!-- ========== Border Brushes ========== -->
     <SolidColorBrush x:Key="TH.BorderBrush"
                      Color="{StaticResource TH.Color.Border}" />
@@ -74,5 +75,18 @@
 
     <SolidColorBrush x:Key="TH.TextDisabled"
                      Color="{StaticResource TH.Color.TextDisabled}" />
+
+    <!-- Map to NavigationView system resource keys so built-in template uses these colors -->
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="{StaticResource TH.Color.NavItemPointerOver}" />
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="{StaticResource TH.Color.NavItemSelected}" />
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPointerOver" Color="{StaticResource TH.Color.NavItemSelected}" />
+
+    <SolidColorBrush x:Key="NavigationViewItemForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+
+    <!-- Additional states to ensure text color remains correct -->
+    <SolidColorBrush x:Key="NavigationViewItemForegroundPressed" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundDisabled" Color="{StaticResource TH.Color.TextDisabled}" />
 
 </ResourceDictionary>
