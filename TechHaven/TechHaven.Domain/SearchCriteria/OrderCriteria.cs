@@ -13,6 +13,10 @@ namespace TechHaven.Domain.SearchCriteria
         public int? CustomerId { get; set; } // Lọc theo khách hàng
         public int? UserId { get; set; } // Lọc theo nhân viên bán hàng
         public OrderStatus? Status { get; set; } // Lọc theo trạng thái đơn hàng (vd: pending, completed, cancelled)
+
+        public decimal? MinTotalAmount { get; set; }
+        public decimal? MaxTotalAmount { get; set; }
+
         public DateTime? FromDate { get; set; } //  ngày bắt đầu
         public DateTime? ToDate { get; set; } // ngày kết thúc
     }
