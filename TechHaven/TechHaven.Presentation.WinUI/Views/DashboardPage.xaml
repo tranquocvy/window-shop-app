@@ -13,6 +13,8 @@
     <Page.Resources>
         <conv:CurrencyConverter x:Key="CurrencyConverter" />
         <conv:DateTimeConverter x:Key="DateTimeConverter" />
+        <conv:StatusToBrushConverter x:Key="StatusToBrush" />
+
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White" />
             <Setter Property="CornerRadius" Value="16" />
@@ -20,16 +22,24 @@
             <Setter Property="BorderBrush" Value="#E6EAF0" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="0" />
-            <!-- DropShadowEffect removed for WinUI compatibility -->
         </Style>
         <Style x:Key="SectionTitle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Foreground" Value="Black" />
+        </Style>
+
+        <!-- ListViewItem style to remove default padding/indent so grid columns align with header -->
+        <Style x:Key="ListViewItemNoPadding" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
     </Page.Resources>
 
-    <!-- 3-column grid with 3 responsive rows: 20% / 40% / 40% -->
     <Grid Padding="24" ColumnSpacing="20" RowSpacing="20">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
@@ -37,51 +47,110 @@
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <!-- row ratios 1:2:2 -> 20% / 40% / 40% -->
             <RowDefinition Height="1*" />
             <RowDefinition Height="2*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
 
-        <!-- Row 0: KPI cards -->
+        <!-- Total products -->
         <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
-            <StackPanel>
-                <TextBlock Text="Total Products" FontSize="12" Foreground="#666" />
-                <TextBlock Text="{Binding TotalProducts}" FontSize="28" FontWeight="Bold" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="48" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding TotalProducts}" FontSize="42" FontWeight="Bold" Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Left" />
+
+                <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0">
+                    <TextBlock Text="Total Products" FontSize="20" Foreground="#444" />
+                    <TextBlock Text="Total number of products" FontSize="12" Foreground="#666" />
+                </StackPanel>
+
+                <FontIcon Grid.Column="2" Glyph="&#xE719;" Foreground="#666" FontSize="40" VerticalAlignment="Center" HorizontalAlignment="Right" />
+            </Grid>
         </Border>
+
+        <!-- Today's Orders -->
         <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
-            <StackPanel>
-                <TextBlock Text="Today's Orders" FontSize="12" Foreground="#666" />
-                <TextBlock Text="{Binding TodayOrderCount}" FontSize="28" FontWeight="Bold" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="48" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding TodayOrderCount}" FontSize="42" FontWeight="Bold" Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Left" />
+
+                <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0">
+                    <TextBlock Text="Today's Orders" FontSize="20" Foreground="#444" />
+                    <TextBlock Text="Orders processed today" FontSize="12" Foreground="#666" />
+                </StackPanel>
+
+                <FontIcon Grid.Column="2" Glyph="&#xE7BF;" Foreground="#666" FontSize="40" VerticalAlignment="Center" HorizontalAlignment="Right" />
+            </Grid>
         </Border>
+
+        <!-- Today's Revenue -->
         <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
-            <StackPanel>
-                <TextBlock Text="Today's Revenue" FontSize="12" Foreground="#666" />
-                <TextBlock Text="{Binding TodayRevenue}" FontSize="28" FontWeight="Bold" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="48" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding TodayRevenue}" FontSize="32" FontWeight="Bold" Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis" />
+
+                <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0">
+                    <TextBlock Text="Today's Revenue" FontSize="14" Foreground="#444" />
+                    <TextBlock Text="Total revenue for today" FontSize="12" Foreground="#666" />
+                </StackPanel>
+
+                <FontIcon Grid.Column="2" Glyph="&#xe825;" Foreground="#666" FontSize="40" VerticalAlignment="Center" HorizontalAlignment="Right" />
+            </Grid>
         </Border>
 
         <!-- Row 1: RecentOrders (left two columns) -->
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
             <StackPanel VerticalAlignment="Stretch">
-                <TextBlock Text="Recent Orders" Style="{StaticResource SectionTitle}" />
-                <ListView ItemsSource="{Binding RecentOrders}" VerticalAlignment="Stretch">
+                <TextBlock Text="Details of the 3 Most Recent Orders" Style="{StaticResource SectionTitle}" />
+
+                <!-- Header for columns -->
+                <Grid Margin="0,0,0,8" Background="#FAFBFC" Padding="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120" /> <!-- OrderId -->
+                        <ColumnDefinition Width="2*" />   <!-- CustomerName -->
+                        <ColumnDefinition Width="160" /> <!-- OrderDate -->
+                        <ColumnDefinition Width="140" /> <!-- TotalAmount -->
+                        <ColumnDefinition Width="100" /> <!-- Status -->
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="OrderId" Foreground="Black" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="CustomerName" Foreground="Black" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="2" Text="OrderDate" Foreground="Black" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="3" Text="TotalAmount" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="0" Text="OrderId" Foreground="Black" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="4" Text="Status" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                </Grid>
+
+                <ListView ItemsSource="{Binding RecentOrders}" VerticalAlignment="Stretch" Foreground="Black" Padding="0" ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="dashboard:RecentOrderDto">
                             <Grid Padding="8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="160" />
+                                    <ColumnDefinition Width="140" />
                                     <ColumnDefinition Width="100" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding OrderId}" FontSize="12" Foreground="#666" />
-                                </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding OrderDate, Converter={StaticResource DateTimeConverter}, ConverterParameter='g'}" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="2" Text="{Binding TotalAmount, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="0" Text="{Binding OrderId}" FontWeight="SemiBold" Foreground="Black" />
+                                <TextBlock Grid.Column="1" Text="{Binding CustomerName}" Foreground="Black" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" Text="{Binding OrderDate, Converter={StaticResource DateTimeConverter}, ConverterParameter='g'}" Foreground="Black" />
+                                <TextBlock Grid.Column="0" Text="{Binding OrderId}" FontWeight="SemiBold" Foreground="Black" />
+                                <TextBlock Grid.Column="3" Text="{Binding TotalAmount, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" Foreground="Black" />
+                                <TextBlock Grid.Column="4" Text="{Binding Status}" HorizontalAlignment="Center" Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" FontWeight="SemiBold" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -91,67 +160,125 @@
 
         <!-- Row 1: LowStockProducts (right column) -->
         <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
-            <StackPanel VerticalAlignment="Stretch">
-                <TextBlock Text="Low Stock Products" Style="{StaticResource SectionTitle}" />
-                <ListView ItemsSource="{Binding LowStockProducts}" VerticalAlignment="Stretch">
+            <Grid VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" /> <!-- title -->
+                    <RowDefinition Height="Auto" /> <!-- header -->
+                    <RowDefinition Height="*" />   <!-- list -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Low Stock Products" Style="{StaticResource SectionTitle}" />
+
+                <!-- Header for LowStock columns -->
+                <Grid Grid.Row="1" Margin="0,0,0,8" Padding="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="10*" />
+                        <ColumnDefinition Width="45*" />
+                        <ColumnDefinition Width="10*" />
+                        <ColumnDefinition Width="35*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Text="Product" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="Stock" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="Sell Price" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <ListView Grid.Row="2" ItemsSource="{Binding LowStockProducts}" VerticalAlignment="Stretch" Foreground="Black" Padding="0" ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="dashboard:LowStockProductDto">
                             <Grid Padding="8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="44" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="10*" />
+                                    <ColumnDefinition Width="45*" />
+                                    <ColumnDefinition Width="10*" />
+                                    <ColumnDefinition Width="35*" />
                                 </Grid.ColumnDefinitions>
                                 <Image Grid.Column="0" Source="{x:Bind Image_Url}" Width="40" Height="40" Stretch="UniformToFill" />
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="#666" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="Black" TextTrimming="CharacterEllipsis" FontSize="13" />
+                                    <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="#666" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2" Text="{x:Bind StockQuantity}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#D32F2F" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind StockQuantity}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#D32F2F" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="3" Text="{Binding SellPrice, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="Black" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-            </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Row 2: MonthlyRevenue (left two columns) -->
         <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
-            <StackPanel VerticalAlignment="Stretch">
-                <TextBlock Text="Monthly Revenue" Style="{StaticResource SectionTitle}" />
-                <Border Background="#F6F9FF" CornerRadius="12" BorderBrush="#E6EFFB" BorderThickness="1" VerticalAlignment="Stretch">
+            <Grid VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Monthly Revenue" Style="{StaticResource SectionTitle}" />
+                <Border Grid.Row="1" x:Name="MonthlyChartBorder" Background="#F6F9FF" CornerRadius="12" BorderBrush="#E6EFFB" BorderThickness="1" VerticalAlignment="Stretch">
                     <Grid>
-                        <TextBlock Text="[Monthly revenue chart placeholder]" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#7A8696" />
+                        <Path x:Name="MonthlyRevenuePath"
+                              Data="{Binding MonthlyRevenueGeometry}"
+                              Stroke="#2B6FFF"
+                              StrokeThickness="2"
+                              Stretch="None"
+                              StrokeLineJoin="Round"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"/>
                     </Grid>
                 </Border>
-            </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Row 2: TopSellingProducts (right column) -->
         <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
-            <StackPanel VerticalAlignment="Stretch">
-                <TextBlock Text="Top Selling Products" Style="{StaticResource SectionTitle}" />
-                <ListView ItemsSource="{Binding TopSellingProducts}" VerticalAlignment="Stretch">
+            <Grid VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Top Selling Products" Style="{StaticResource SectionTitle}" />
+
+                <!-- Header for TopSelling columns -->
+                <Grid Grid.Row="1" Margin="0,0,0,8" Padding="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="10*" />
+                        <ColumnDefinition Width="45*" />
+                        <ColumnDefinition Width="10*" />
+                        <ColumnDefinition Width="35*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Text="Product" Foreground="Black" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="Sold" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="Revenue" Foreground="Black" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <ListView Grid.Row="2" ItemsSource="{Binding TopSellingProducts}" VerticalAlignment="Stretch" Foreground="Black" Padding="0" ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="dashboard:TopSellingProductDto">
                             <Grid Padding="8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="44" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="10*" />
+                                    <ColumnDefinition Width="45*" />
+                                    <ColumnDefinition Width="10*" />
+                                    <ColumnDefinition Width="35*" />
                                 </Grid.ColumnDefinitions>
                                 <Image Grid.Column="0" Source="{x:Bind Image_Url}" Width="40" Height="40" Stretch="UniformToFill" />
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="#666" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="Black" TextTrimming="CharacterEllipsis" FontSize="13" />
+                                    <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="#666" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2" Text="{x:Bind TotalSold}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </StackPanel>
-        </Border>
+                                <TextBlock Grid.Column="2" Text="{x:Bind TotalSold}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="Green" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="3" Text="{Binding TotalRevenue, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="Black" />
+                             </Grid>
+                         </DataTemplate>
+                     </ListView.ItemTemplate>
+                 </ListView>
+             </Grid>
+         </Border>
 
     </Grid>
 </Page>
