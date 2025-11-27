@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace TechHaven.Presentation.WinUI.Themes
 {
@@ -14,11 +17,14 @@ namespace TechHaven.Presentation.WinUI.Themes
 
         public static ThemeType CurrentTheme { get; private set; } = ThemeType.Light;
 
-        // Updated paths to match actual filenames in the Themes folder
         private const string LightPath = "ms-appx:///Themes/Light.xaml";
         private const string DarkPath = "ms-appx:///Themes/Dark.xaml";
         private const string AccentsPath = "ms-appx:///Themes/Accents.xaml";
 
+        // Registered roots to update when theme changes
+        private static readonly List<WeakReference<FrameworkElement>> _registeredRoots = new();
+
+        // Initialize just loads the requested dictionaries. No automatic re-application.
         public static void Initialize(ThemeType defaultTheme = ThemeType.Light, bool loadAccents = false)
         {
             ApplyTheme(defaultTheme);
@@ -39,10 +45,13 @@ namespace TechHaven.Presentation.WinUI.Themes
                 var dict = new ResourceDictionary { Source = new Uri(path) };
                 app.Resources.MergedDictionaries.Add(dict);
                 CurrentTheme = theme;
+
+                // Re-apply to registered roots
+                ReapplyAll();
             }
             catch (Exception)
             {
-                // ignore load errors (file missing or invalid)
+                // ignore load errors
             }
         }
 
@@ -56,9 +65,7 @@ namespace TechHaven.Presentation.WinUI.Themes
             var app = Application.Current;
             if (app == null) return;
 
-            // remove existing accents if any
-            var existing = app.Resources.MergedDictionaries.FirstOrDefault(d =>
-                d.Source != null && d.Source.OriginalString.Contains("Accents.xaml", StringComparison.OrdinalIgnoreCase));
+            var existing = app.Resources.MergedDictionaries.FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains("Accents.xaml", StringComparison.OrdinalIgnoreCase));
             if (existing != null)
                 app.Resources.MergedDictionaries.Remove(existing);
 
@@ -66,6 +73,9 @@ namespace TechHaven.Presentation.WinUI.Themes
             {
                 var accentDict = new ResourceDictionary { Source = new Uri(AccentsPath) };
                 app.Resources.MergedDictionaries.Add(accentDict);
+
+                // Re-apply to registered roots
+                ReapplyAll();
             }
             catch (Exception)
             {
@@ -83,6 +93,111 @@ namespace TechHaven.Presentation.WinUI.Themes
 
             foreach (var d in toRemove)
                 app.Resources.MergedDictionaries.Remove(d);
+        }
+
+        // Apply theme brushes to a specific root element on demand
+        public static void ApplyTo(FrameworkElement root)
+        {
+            if (root == null) return;
+            var appRes = Application.Current?.Resources;
+            if (appRes == null) return;
+
+            // Use the TH.* keys used in your XAML
+            if (appRes.ContainsKey("TH.SurfaceBackground"))
+            {
+                var brush = appRes["TH.SurfaceBackground"] as Brush;
+                if (brush != null)
+                {
+                    if (root is Panel panel)
+                        panel.Background = brush;
+                    else if (root is Control control)
+                        control.Background = brush;
+                    else
+                    {
+                        var prop = root.GetType().GetProperty("Background");
+                        if (prop != null && prop.CanWrite && prop.PropertyType.IsAssignableFrom(typeof(Brush)))
+                            prop.SetValue(root, brush);
+                    }
+                }
+            }
+
+            // If there's a NavigationView named 'navView' under this root, apply nav brushes
+            try
+            {
+                var nav = root.FindName("navView") as NavigationView;
+                if (nav != null)
+                {
+                    if (appRes.ContainsKey("TH.NavBackground"))
+                    {
+                        var nb = appRes["TH.NavBackground"] as Brush;
+                        if (nb != null) nav.Background = nb;
+                    }
+
+                    if (appRes.ContainsKey("TH.TextPrimary"))
+                    {
+                        var tp = appRes["TH.TextPrimary"] as Brush;
+                        if (tp != null) nav.Foreground = tp;
+                    }
+                }
+            }
+            catch
+            {
+                // ignore find/assign errors
+            }
+
+            // Also apply Text brushes to known named textblocks if present
+            try
+            {
+                var fullName = root.FindName("currentUserFullNameText") as TextBlock;
+                if (fullName != null && appRes.ContainsKey("TH.TextPrimary"))
+                {
+                    var tp = appRes["TH.TextPrimary"] as Brush;
+                    if (tp != null) fullName.Foreground = tp;
+                }
+
+                var role = root.FindName("currentUserRoleText") as TextBlock;
+                if (role != null && appRes.ContainsKey("TH.TextSecondary"))
+                {
+                    var ts = appRes["TH.TextSecondary"] as Brush;
+                    if (ts != null) role.Foreground = ts;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        public static void RegisterRoot(FrameworkElement root)
+        {
+            if (root == null) return;
+            lock (_registeredRoots)
+            {
+                // avoid duplicates
+                if (!_registeredRoots.Any(wr => wr.TryGetTarget(out var t) && t == root))
+                    _registeredRoots.Add(new WeakReference<FrameworkElement>(root));
+            }
+
+            // apply immediately
+            ApplyTo(root);
+        }
+
+        private static void ReapplyAll()
+        {
+            lock (_registeredRoots)
+            {
+                for (int i = _registeredRoots.Count - 1; i >= 0; i--)
+                {
+                    if (_registeredRoots[i].TryGetTarget(out var root) && root != null)
+                    {
+                        ApplyTo(root);
+                    }
+                    else
+                    {
+                        _registeredRoots.RemoveAt(i);
+                    }
+                }
+            }
         }
     }
 }

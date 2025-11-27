@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 using TechHaven.Presentation.WinUI.Views;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Themes;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -51,6 +52,16 @@ namespace TechHaven.Presentation.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Initialize theme manager and load default theme so windows/pages can register and receive brushes
+            try
+            {
+                ThemeManager.Initialize(ThemeManager.ThemeType.Light, loadAccents: true);
+            }
+            catch
+            {
+                // ignore theme init failures
+            }
+
             // Use mock restore for offline testing
             TokenPersistence.UseMock = false;
 
@@ -70,7 +81,7 @@ namespace TechHaven.Presentation.WinUI
                 // ignore
             }
 
-            _window = new MainWindow();
+            _window = new ShellWindow();
             MainWindow = _window;
             _window.Activate();
         }
