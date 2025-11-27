@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TechHaven.Application.Features.Product.Commands.CreateProduct;
 using TechHaven.Application.Features.Product.Commands.DeleteProduct;
 using TechHaven.Application.Features.Product.Commands.UpdateProduct;

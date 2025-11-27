@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
@@ -9,7 +10,8 @@ namespace TechHaven.Infrastructure.Persistence.Repositories;
 
 public class ProductRepository : GenericRepository<Product>, IProductRepository
 {
-    public ProductRepository(AppDbContext context) : base(context)
+    public ProductRepository(AppDbContext context, ILoggerFactory loggerFactory)
+        : base(context, loggerFactory)
     {
     }
 
@@ -45,6 +47,10 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
 
         var spec = new ProductSearchSpecification(criteria);
 
+        _logger.LogInformation(
+            "Searching products with criteria {@Criteria}",
+            criteria);
+
         var items = await GetAsync(spec, cancellationToken);
 
         // Count total (không paging)
@@ -62,13 +68,16 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         CancellationToken cancellationToken = default)
     {
         var spec = new LowStockProductsSpecification(threshold);
+        _logger.LogInformation("Fetching products with stock threshold {Threshold}", threshold);
         return await GetAsync(spec, cancellationToken);
     }
 
-  public async Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default)
+    public async Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default)
   {
-    return await _dbSet
-        .Where(p => p.IsDraft == false)
-        .CountAsync(cancellationToken);
+    return await ExecuteOperationAsync(
+        "GetTotalProductCount",
+        () => _dbSet
+            .Where(p => p.IsDraft == false)
+            .CountAsync(cancellationToken));
   }
 }

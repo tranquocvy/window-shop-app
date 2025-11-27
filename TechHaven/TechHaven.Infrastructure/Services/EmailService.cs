@@ -79,16 +79,12 @@ public class EmailService : IEmailService
       // Send message
       await client.SendAsync(message, cancellationToken);
 
-      // Disconnect
       await client.DisconnectAsync(true, cancellationToken);
 
       _logger.LogInformation(
         "OTP email sent successfully to {Email}",
         MaskEmail(recipientEmail)
       );
-
-      // Disconnect
-      await client.DisconnectAsync(true, cancellationToken);
     }
     catch (Exception ex)
     {

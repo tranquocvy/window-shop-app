@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Enums;
 using TechHaven.Infrastructure.Persistence;
@@ -7,10 +8,11 @@ namespace TechHaven.Infrastructure.Data;
 
 public static class DbInitializer
 {
-    public static async Task SeedAsync(AppDbContext context)
+    public static async Task SeedAsync(AppDbContext context, ILogger logger)
     {
-        // Apply migrations
+        logger.LogInformation("Applying database migrations...");
         await context.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied.");
 
         // 1. Tạo Roles
         if (!await context.Roles.AnyAsync())
@@ -22,6 +24,7 @@ public static class DbInitializer
             };
             await context.Roles.AddRangeAsync(roles);
             await context.SaveChangesAsync();
+            logger.LogInformation("Seeded default roles.");
         }
 
         // 2. Tạo Users (password: "123456")
@@ -71,7 +74,7 @@ public static class DbInitializer
             };
             await context.Users.AddRangeAsync(users);
             await context.SaveChangesAsync();
-            Console.WriteLine("Seed data for Users created successfully!");
+            logger.LogInformation("Seeded default users.");
         }
 
         // 3. Seed Products
@@ -136,7 +139,7 @@ public static class DbInitializer
             };
             await context.Products.AddRangeAsync(products);
             await context.SaveChangesAsync();
-            Console.WriteLine("Seed data for Products created successfully!");
+            logger.LogInformation("Seeded sample products.");
         }
 
         // 4. Seed Customers
@@ -169,7 +172,7 @@ public static class DbInitializer
             };
             await context.Customers.AddRangeAsync(customers);
             await context.SaveChangesAsync();
-            Console.WriteLine("Seed data for Customers created successfully!");
+            logger.LogInformation("Seeded sample customers.");
         }
     }
 }

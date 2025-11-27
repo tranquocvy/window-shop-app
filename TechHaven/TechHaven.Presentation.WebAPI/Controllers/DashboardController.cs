@@ -1,6 +1,7 @@
 using MediatR;
 // using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TechHaven.Application.Features.Dashboard.Queries.GetDashboard;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Dashboard;

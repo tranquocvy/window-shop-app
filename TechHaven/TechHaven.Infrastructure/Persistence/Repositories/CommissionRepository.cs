@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Interfaces;
 
@@ -9,7 +10,8 @@ namespace TechHaven.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class CommissionRepository : GenericRepository<Commission>, ICommissionRepository
 {
-    public CommissionRepository(AppDbContext context) : base(context)
+    public CommissionRepository(AppDbContext context, ILoggerFactory loggerFactory)
+        : base(context, loggerFactory)
     {
     }
 
@@ -19,21 +21,27 @@ public class CommissionRepository : GenericRepository<Commission>, ICommissionRe
         int year,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Include(c => c.User)
-            .FirstOrDefaultAsync(
-                c => c.UserId == userId && c.Month == month && c.Year == year,
-                cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetByUserAndMonth",
+            () => _dbSet
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(
+                    c => c.UserId == userId && c.Month == month && c.Year == year,
+                    cancellationToken),
+            new { userId, month, year });
     }
 
     public async Task<IReadOnlyList<Commission>> GetByUserAsync(int userId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Include(c => c.User)
-            .Where(c => c.UserId == userId)
-            .OrderByDescending(c => c.Year)
-            .ThenByDescending(c => c.Month)
-            .ToListAsync(cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetByUser",
+            () => _dbSet
+                .Include(c => c.User)
+                .Where(c => c.UserId == userId)
+                .OrderByDescending(c => c.Year)
+                .ThenByDescending(c => c.Month)
+                .ToListAsync(cancellationToken),
+            new { userId });
     }
 
     public async Task<IReadOnlyList<Commission>> GetByMonthYearAsync(
@@ -41,12 +49,15 @@ public class CommissionRepository : GenericRepository<Commission>, ICommissionRe
         int year,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Include(c => c.User)
-                .ThenInclude(u => u!.Role)
-            .Where(c => c.Month == month && c.Year == year)
-            .OrderByDescending(c => c.TotalSales)
-            .ToListAsync(cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetByMonthYear",
+            () => _dbSet
+                .Include(c => c.User)
+                    .ThenInclude(u => u!.Role)
+                .Where(c => c.Month == month && c.Year == year)
+                .OrderByDescending(c => c.TotalSales)
+                .ToListAsync(cancellationToken),
+            new { month, year });
     }
 
     public async Task<decimal> GetTotalCommissionAsync(
@@ -58,12 +69,15 @@ public class CommissionRepository : GenericRepository<Commission>, ICommissionRe
         CancellationToken cancellationToken = default)
     {
         // Convert month/year to a comparable format
-        var commissions = await _dbSet
-            .Where(c => c.UserId == userId)
-            .Where(c =>
-                (c.Year > startYear || (c.Year == startYear && c.Month >= startMonth)) &&
-                (c.Year < endYear || (c.Year == endYear && c.Month <= endMonth)))
-            .ToListAsync(cancellationToken);
+        var commissions = await ExecuteOperationAsync(
+            "GetRangeForTotal",
+            () => _dbSet
+                .Where(c => c.UserId == userId)
+                .Where(c =>
+                    (c.Year > startYear || (c.Year == startYear && c.Month >= startMonth)) &&
+                    (c.Year < endYear || (c.Year == endYear && c.Month <= endMonth)))
+                .ToListAsync(cancellationToken),
+            new { userId, startMonth, startYear, endMonth, endYear });
 
         // Calculate total commission amount (computed property)
         return commissions.Sum(c => c.CommissionAmount);

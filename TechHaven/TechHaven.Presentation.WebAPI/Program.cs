@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TechHaven.Application;
 using TechHaven.Infrastructure;
 using TechHaven.Infrastructure.Data;
@@ -23,7 +24,8 @@ Env.Load();
 
 // Configure Serilog BEFORE creating builder
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
+    // .MinimumLevel.Information()
+    .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
@@ -105,7 +107,9 @@ try
         try
         {
             var context = services.GetRequiredService<AppDbContext>();
-            await DbInitializer.SeedAsync(context);
+            var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+            var seedLogger = loggerFactory.CreateLogger("DbInitializer");
+            await DbInitializer.SeedAsync(context, seedLogger);
             Log.Information("Database seeding completed successfully");
         }
         catch (Exception ex)
