@@ -6,8 +6,10 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Products;
@@ -16,7 +18,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class ProductViewModel : ObservableObject
     {
-        private readonly IProductService _productService = new MockProductService();
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
+        private readonly IProductService _productService = new HttpProductService(SharedHttpClient);
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
 
