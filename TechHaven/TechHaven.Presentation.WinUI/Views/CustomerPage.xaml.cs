@@ -29,6 +29,45 @@ namespace TechHaven.Presentation.WinUI.Views
     {
         public CustomerViewModel ViewModel { get; }
 
+        // Danh sách các tỉnh thành Việt Nam
+        private static readonly List<string> VietnamProvinces = new List<string>
+        {
+            "Hà Nội",
+            "Huế",
+            "Hải Phòng",
+            "Đà Nẵng",
+            "Cần Thơ",
+            "TP.HCM",
+            "Tuyên Quang",
+            "Lào Cai",
+            "Thái Nguyên",
+            "Phú Thọ",
+            "Bắc Ninh",
+            "Hưng Yên",
+            "Ninh Bình",
+            "Quảng Ninh",
+            "Cao Bằng",
+            "Lạng Sơn",
+            "Lai Châu",
+            "Điện Biên",
+            "Sơn La",
+            "Thanh Hóa",
+            "Nghệ An",
+            "Hà Tĩnh",
+            "Quảng Trị",
+            "Quảng Ngãi",
+            "Gia Lai",
+            "Khánh Hòa",
+            "Lâm Đồng",
+            "Đắk Lắk",
+            "Đồng Nai",
+            "Tây Ninh",
+            "Vĩnh Long",
+            "Đồng Tháp",
+            "Cà Mau",
+            "An Giang"
+        };
+
         public CustomerPage()
         {
             this.InitializeComponent();
@@ -62,12 +101,31 @@ namespace TechHaven.Presentation.WinUI.Views
             {
                 return (false, "Tên khách hàng không được vượt quá 150 ký tự.");
             }
+            // NEW: Check if name contains digits
+            if (Regex.IsMatch(name, @"\d"))
+            {
+                return (false, "Tên khách hàng không được chứa số.");
+            }
 
             // Validate PhoneNumber
             if (string.IsNullOrWhiteSpace(phone))
             {
                 return (false, "Vui lòng nhập số điện thoại.");
             }
+            
+            // Remove all non-digit characters for validation
+            string digitsOnly = Regex.Replace(phone, @"\D", "");
+            
+            // NEW: Check if phone has exactly 10 digits and starts with 0
+            if (digitsOnly.Length != 10)
+            {
+                return (false, "Số điện thoại phải có đúng 10 chữ số.");
+            }
+            if (!digitsOnly.StartsWith("0"))
+            {
+                return (false, "Số điện thoại phải bắt đầu bằng số 0.");
+            }
+            
             if (phone.Length > 15)
             {
                 return (false, "Số điện thoại không được vượt quá 15 ký tự.");
@@ -111,7 +169,7 @@ namespace TechHaven.Presentation.WinUI.Views
             string lastName = string.Empty;
             string lastPhone = string.Empty;
             string lastEmail = string.Empty;
-            string lastAddress = string.Empty;
+            string lastProvince = string.Empty;
             CustomerType lastType = CustomerType.Regular;
             string lastNote = string.Empty;
             
@@ -121,7 +179,22 @@ namespace TechHaven.Presentation.WinUI.Views
                 var nameBox = new TextBox { PlaceholderText = "Tên khách hàng", Text = lastName };
                 var phoneBox = new TextBox { PlaceholderText = "Số điện thoại", Text = lastPhone };
                 var emailBox = new TextBox { PlaceholderText = "Email (tuỳ chọn)", Text = lastEmail };
-                var addressBox = new TextBox { PlaceholderText = "Địa chỉ (tuỳ chọn)", Text = lastAddress };
+                
+                // Province ComboBox
+                var provinceCombo = new ComboBox 
+                { 
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    PlaceholderText = "Chọn tỉnh/thành phố"
+                };
+                foreach (var provinceName in VietnamProvinces)
+                {
+                    provinceCombo.Items.Add(provinceName);
+                }
+                if (!string.IsNullOrEmpty(lastProvince))
+                {
+                    provinceCombo.SelectedItem = lastProvince;
+                }
+                
                 var typeCombo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
                 typeCombo.Items.Add(CustomerType.Regular);
                 typeCombo.Items.Add(CustomerType.Student);
@@ -146,8 +219,8 @@ namespace TechHaven.Presentation.WinUI.Views
                 panel.Children.Add(phoneBox);
                 panel.Children.Add(new TextBlock { Text = "Email" });
                 panel.Children.Add(emailBox);
-                panel.Children.Add(new TextBlock { Text = "Địa chỉ" });
-                panel.Children.Add(addressBox);
+                panel.Children.Add(new TextBlock { Text = "Tỉnh/Thành phố" });
+                panel.Children.Add(provinceCombo);
                 panel.Children.Add(new TextBlock { Text = "Loại khách hàng" });
                 panel.Children.Add(typeCombo);
                 panel.Children.Add(new TextBlock { Text = "Ghi chú" });
@@ -175,19 +248,19 @@ namespace TechHaven.Presentation.WinUI.Views
                 string name = nameBox.Text?.Trim() ?? string.Empty;
                 string phone = phoneBox.Text?.Trim() ?? string.Empty;
                 string email = emailBox.Text?.Trim() ?? string.Empty;
-                string address = addressBox.Text?.Trim() ?? string.Empty;
+                string province = provinceCombo.SelectedItem as string ?? string.Empty;
                 string note = noteBox.Text?.Trim() ?? string.Empty;
                 
                 // Save current input for reopening dialog
                 lastName = name;
                 lastPhone = phone;
                 lastEmail = email;
-                lastAddress = address;
+                lastProvince = province;
                 lastType = typeCombo.SelectedItem is CustomerType t ? t : CustomerType.Regular;
                 lastNote = note;
                 
                 // Comprehensive validation
-                var (isValid, errorMessage) = ValidateCustomerInput(name, phone, email, address, note);
+                var (isValid, errorMessage) = ValidateCustomerInput(name, phone, email, province, note);
                 if (!isValid)
                 {
                     var err = new ContentDialog
@@ -206,7 +279,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     CustomerName = name,
                     PhoneNumber = phone,
                     Email = string.IsNullOrWhiteSpace(email) ? null : email,
-                    Address = string.IsNullOrWhiteSpace(address) ? null : address,
+                    Address = string.IsNullOrWhiteSpace(province) ? null : province,
                     Type = lastType,
                     Note = string.IsNullOrWhiteSpace(note) ? null : note
                 };
@@ -313,7 +386,37 @@ namespace TechHaven.Presentation.WinUI.Views
                 var nameBox = new TextBox { Text = selected.CustomerName ?? string.Empty };
                 var phoneBox = new TextBox { Text = selected.PhoneNumber ?? string.Empty };
                 var emailBox = new TextBox { Text = selected.Email ?? string.Empty };
-                var addressBox = new TextBox { Text = selected.Address ?? string.Empty };
+                
+                // Province ComboBox - find matching province from existing address
+                var provinceCombo = new ComboBox 
+                { 
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    PlaceholderText = "Chọn tỉnh/thành phố"
+                };
+                foreach (var provinceName in VietnamProvinces)
+                {
+                    provinceCombo.Items.Add(provinceName);
+                }
+                
+                // Try to match existing address with a province
+                string existingProvince = string.Empty;
+                if (!string.IsNullOrWhiteSpace(selected.Address))
+                {
+                    foreach (var provinceName in VietnamProvinces)
+                    {
+                        if (selected.Address.Equals(provinceName, StringComparison.OrdinalIgnoreCase) ||
+                            selected.Address.Contains(provinceName))
+                        {
+                            existingProvince = provinceName;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!string.IsNullOrEmpty(existingProvince))
+                {
+                    provinceCombo.SelectedItem = existingProvince;
+                }
                 
                 var typeCombo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
                 typeCombo.Items.Add(CustomerType.Regular);
@@ -339,8 +442,8 @@ namespace TechHaven.Presentation.WinUI.Views
                 panel.Children.Add(phoneBox);
                 panel.Children.Add(new TextBlock { Text = "Email" });
                 panel.Children.Add(emailBox);
-                panel.Children.Add(new TextBlock { Text = "Địa chỉ" });
-                panel.Children.Add(addressBox);
+                panel.Children.Add(new TextBlock { Text = "Tỉnh/Thành phố" });
+                panel.Children.Add(provinceCombo);
                 panel.Children.Add(new TextBlock { Text = "Loại khách hàng" });
                 panel.Children.Add(typeCombo);
                 panel.Children.Add(new TextBlock { Text = "Ghi chú" });
@@ -407,12 +510,12 @@ namespace TechHaven.Presentation.WinUI.Views
                 string name = nameBox.Text?.Trim() ?? string.Empty;
                 string phone = phoneBox.Text?.Trim() ?? string.Empty;
                 string email = emailBox.Text?.Trim() ?? string.Empty;
-                string address = addressBox.Text?.Trim() ?? string.Empty;
+                string province = provinceCombo.SelectedItem as string ?? string.Empty;
                 string note = noteBox.Text?.Trim() ?? string.Empty;
                 CustomerType selectedType = typeCombo.SelectedItem is CustomerType t ? t : selected.Type;
                 
                 // Comprehensive validation
-                var (isValid, errorMessage) = ValidateCustomerInput(name, phone, email, address, note);
+                var (isValid, errorMessage) = ValidateCustomerInput(name, phone, email, province, note);
                 if (!isValid)
                 {
                     var err = new ContentDialog
@@ -428,7 +531,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     selected.CustomerName = name;
                     selected.PhoneNumber = phone;
                     selected.Email = email;
-                    selected.Address = address;
+                    selected.Address = province;
                     selected.Type = selectedType;
                     selected.Note = note;
                     continue; // Reopen dialog
@@ -439,7 +542,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     CustomerName = name,
                     PhoneNumber = phone,
                     Email = string.IsNullOrWhiteSpace(email) ? null : email,
-                    Address = string.IsNullOrWhiteSpace(address) ? null : address,
+                    Address = string.IsNullOrWhiteSpace(province) ? null : province,
                     Type = selectedType,
                     Note = string.IsNullOrWhiteSpace(note) ? null : note
                 };
