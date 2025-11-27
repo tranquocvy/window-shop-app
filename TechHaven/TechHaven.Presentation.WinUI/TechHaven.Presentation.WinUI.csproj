@@ -108,7 +108,19 @@
     <Page Remove="Views\SettingsPage.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Themes\Common.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Accents.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\CustomerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\Dark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\Light.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <None Update="Views\AddCustomerDialog.xaml">
