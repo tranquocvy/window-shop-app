@@ -12,7 +12,6 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
     {
         public Task<ResponseWrapper<DashboardDto>> GetDashboardAsync()
         {
-            // Create mock data
             var img = "ms-appx:///Assets/phone.jpg";
             var dashboard = new DashboardDto
             {
@@ -21,7 +20,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 TodayRevenue = 1250000m,
                 LowStockProducts = new List<LowStockProductDto>
                 {
-                    new LowStockProductDto { ProductId = 14, ProductName = "Samsung Galaxy Z Fold5", BrandName = "Samsung", StockQuantity = 4, SellPrice = 40990000, Image_Url = img },
+                    new LowStockProductDto { ProductId = 14, ProductName = "Samsung Galaxy Z Fold5", BrandName = "Samsung", StockQuantity = 4, SellPrice = 4099000000, Image_Url = img },
                     new LowStockProductDto { ProductId = 5, ProductName = "iPhone 14 Pro", BrandName = "Apple", StockQuantity = 3, SellPrice = 26990000, Image_Url = img },
                     new LowStockProductDto { ProductId = 2, ProductName = "iPhone 15 Pro Max", BrandName = "Apple", StockQuantity = 2, SellPrice = 33990000, Image_Url = img },
                     new LowStockProductDto { ProductId = 31, ProductName = "Xiaomi 14T", BrandName = "Xiaomi", StockQuantity = 4, SellPrice = 14990000, Image_Url = img },
@@ -29,7 +28,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 },
                 TopSellingProducts = new List<TopSellingProductDto>
                 {
-                    new TopSellingProductDto { ProductId = 1, ProductName = "iPhone 15 Pro", BrandName = "Apple", TotalSold = 150, TotalRevenue = 150 * 28990000m, Image_Url = img },
+                    new TopSellingProductDto { ProductId = 1, ProductName = "iPhone 15 Pro", BrandName = "Apple", TotalSold = 150, TotalRevenue = 150 * 289900000m, Image_Url = img },
                     new TopSellingProductDto { ProductId = 12, ProductName = "Samsung Galaxy S24+", BrandName = "Samsung", TotalSold = 120, TotalRevenue = 120 * 23990000m, Image_Url = img },
                     new TopSellingProductDto { ProductId = 6, ProductName = "iPhone 13", BrandName = "Apple", TotalSold = 95, TotalRevenue = 95 * 17990000m, Image_Url = img },
                     new TopSellingProductDto { ProductId = 21, ProductName = "Xiaomi 14T", BrandName = "Xiaomi", TotalSold = 80, TotalRevenue = 80 * 14990000m, Image_Url = img },
