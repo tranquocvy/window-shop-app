@@ -11,11 +11,6 @@ public class DashboardDto
     public int TotalProducts { get; set; }
 
     /// <summary>
-    /// Tổng số đơn hàng trong hệ thống
-    /// </summary>
-    public int TotalOrders { get; set; }
-
-    /// <summary>
     /// Top 5 sản phẩm sắp hết hàng (số lượng < 5)
     /// </summary>
     public List<LowStockProductDto> LowStockProducts { get; set; } = new();

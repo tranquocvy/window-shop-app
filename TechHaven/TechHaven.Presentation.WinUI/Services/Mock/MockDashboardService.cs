@@ -17,7 +17,6 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             var dashboard = new DashboardDto
             {
                 TotalProducts = 120,
-                TotalOrders = 35,
                 TodayOrderCount = 5,
                 TodayRevenue = 1250000m,
                 LowStockProducts = new List<LowStockProductDto>
