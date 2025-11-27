@@ -92,6 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <Page Remove="Views\AddCustomerDialog.xaml" />
+    <Page Remove="Views\Controls\LineChart.xaml" />
     <Page Remove="Views\CustomersPage.xaml" />
     <Page Remove="Views\MainShellPage.xaml" />
     <Page Remove="Views\OrdersPage.xaml" />
@@ -112,6 +113,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <None Update="Views\AddCustomerDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Controls\LineChart.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
     <None Update="Views\CustomersPage.xaml">
