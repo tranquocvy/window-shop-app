@@ -58,12 +58,16 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Docs\**" />
     <Compile Remove="ViewModels\**" />
     <Compile Remove="Views\Order\**" />
+    <EmbeddedResource Remove="Docs\**" />
     <EmbeddedResource Remove="ViewModels\**" />
     <EmbeddedResource Remove="Views\Order\**" />
+    <None Remove="Docs\**" />
     <None Remove="ViewModels\**" />
     <None Remove="Views\Order\**" />
+    <Page Remove="Docs\**" />
     <Page Remove="ViewModels\**" />
     <Page Remove="Views\Order\**" />
   </ItemGroup>
@@ -175,10 +179,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Docs\" />
     <Folder Include="Views\Product\" />
   </ItemGroup>
   <ItemGroup>
     <PRIResource Remove="Views\Order\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Docs\**" />
   </ItemGroup>
 </Project>
