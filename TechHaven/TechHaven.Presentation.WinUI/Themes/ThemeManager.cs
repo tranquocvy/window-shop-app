@@ -28,6 +28,9 @@ namespace TechHaven.Presentation.WinUI.Themes
         // Registered roots to update when theme changes
         private static readonly List<WeakReference<FrameworkElement>> _registeredRoots = new();
 
+        // Event raised when theme changes so callers can react (e.g. update status text)
+        public static event Action<ThemeType>? ThemeChanged;
+
         // Initialize just loads the requested dictionaries. No automatic re-application.
         public static void Initialize(ThemeType defaultTheme = ThemeType.Light, bool loadAccents = false)
         {
@@ -71,6 +74,9 @@ namespace TechHaven.Presentation.WinUI.Themes
 
                 // Re-apply to registered roots
                 ReapplyAll();
+
+                // notify listeners
+                ThemeChanged?.Invoke(theme);
             }
             catch (Exception)
             {
@@ -103,6 +109,9 @@ namespace TechHaven.Presentation.WinUI.Themes
 
                 // Re-apply to registered roots
                 ReapplyAll();
+
+                // notify listeners - accents might affect visuals too
+                ThemeChanged?.Invoke(CurrentTheme);
             }
             catch (Exception)
             {

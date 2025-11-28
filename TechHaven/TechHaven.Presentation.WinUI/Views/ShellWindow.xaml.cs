@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Themes;
+using TechHaven.Presentation.WinUI.ViewModel;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Input;
@@ -11,6 +12,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using System.Drawing;
+using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -23,10 +25,13 @@ namespace TechHaven.Presentation.WinUI.Views
     public sealed partial class ShellWindow : Window
     {
         private AppWindow? _appWindow;
+        private readonly SettingViewModel _settingViewModel;
 
         public ShellWindow()
         {
             this.InitializeComponent();
+
+            _settingViewModel = new SettingViewModel();
 
             // Extend content into title bar so we can use a custom title area
             try
@@ -81,6 +86,56 @@ namespace TechHaven.Presentation.WinUI.Views
                 currentUserRoleText.Text = roleName;
 
             }
+
+            // Initialize settings and navigate to last visited page (or dashboard)
+            _ = InitializeSettingsAndNavigateAsync();
+        }
+
+        private async Task InitializeSettingsAndNavigateAsync()
+        {
+            try
+            {
+                await _settingViewModel.InitializeAsync();
+
+                // ensure navView is ready
+                if (!navView.IsLoaded)
+                {
+                    // wait for Loaded event
+                    var tcs = new TaskCompletionSource<bool>();
+                    void handler(object s, RoutedEventArgs e) { navView.Loaded -= handler; tcs.SetResult(true); }
+                    navView.Loaded += handler;
+                    await tcs.Task;
+                }
+
+                var tag = _settingViewModel.LastVisitedPage;
+                Type pageType = typeof(DashboardPage);
+
+                if (!string.IsNullOrWhiteSpace(tag))
+                {
+                    switch (tag)
+                    {
+                        case "dashboard": pageType = typeof(DashboardPage); break;
+                        case "product": pageType = typeof(ProductPage); break;
+                        case "order": pageType = typeof(OrderPage); break;
+                        case "customer": pageType = typeof(CustomerPage); break;
+                        case "report": pageType = typeof(ReportPage); break;
+                        case "setting": pageType = typeof(SettingPage); break;
+                        default: pageType = typeof(DashboardPage); break;
+                    }
+
+                    // try to select the nav item if available
+                    var navItem = navView.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(x => (x.Tag?.ToString()) == tag);
+                    if (navItem != null) navView.SelectedItem = navItem;
+                }
+
+                // Navigate frame
+                contentFrame.Navigate(pageType);
+            }
+            catch
+            {
+                // fallback to dashboard
+                try { contentFrame.Navigate(typeof(DashboardPage)); } catch { }
+            }
         }
 
         private void ThemeManager_ThemeChanged_ForTitlebar(ThemeManager.ThemeType obj)
@@ -111,9 +166,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private void navView_Loaded(object sender, RoutedEventArgs e)
         {
-            navView.SelectedItem = navView.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(x => x.Tag.ToString() == "dashboard");
-            contentFrame.Navigate(typeof(DashboardPage)); // <-- Nhớ using .Views
-
+            // only update visual aspects here; actual navigation handled by InitializeSettingsAndNavigateAsync
             try
             {
                 UpdateNavToggleBrush();
@@ -348,6 +401,16 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Điều hướng Frame đến trang đã chọn
             contentFrame.Navigate(pageType);
+
+            // Persist last visited (ignore logout)
+            try
+            {
+                if (tag != "logout")
+                {
+                    await _settingViewModel.SetLastVisitedPageAsync(tag);
+                }
+            }
+            catch { }
         }
 
         // Recursive helper to find descendant in Visual Tree
