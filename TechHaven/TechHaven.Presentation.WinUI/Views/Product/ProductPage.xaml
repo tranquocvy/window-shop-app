@@ -62,7 +62,7 @@
 
             <!--  NÚT XÓA  -->
             <Button Content="Xóa sản phẩm đã chọn"
-                    Background="Red"
+                    Background="#D7292A"
                     Foreground="White"
                     CornerRadius="5"
                     Command="{Binding DeleteSelectedCommand}"
