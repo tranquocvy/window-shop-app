@@ -92,7 +92,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40"/>
                         <ColumnDefinition Width="60"/>
-                        <ColumnDefinition Width="50"/>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1.2*"/>
                         <ColumnDefinition Width="1.2*"/>
@@ -103,15 +102,15 @@
 
                     <CheckBox Grid.Column="0" IsChecked="{Binding IsAllSelected, Mode=TwoWay}" MinWidth="0" Margin="0"/>
                     <TextBlock Grid.Column="1" Text="Ảnh" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="ID" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="3" Text="Tên Sản Phẩm" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="4" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="5" Text="Giá Bán" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="6" Text="SL" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="7" Text="Hãng" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="8" Text="Trạng Thái" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="4" Text="Giá Bán" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="SL" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="6" Text="Hãng" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="7" Text="Trạng Thái" FontWeight="Bold" VerticalAlignment="Center"/>
                 </Grid>
             </ListView.Header>
+
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ProductItemViewModel">
@@ -119,7 +118,6 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40"/>
                             <ColumnDefinition Width="60"/>
-                            <ColumnDefinition Width="50"/>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="1.2*"/>
                             <ColumnDefinition Width="1.2*"/>
@@ -134,33 +132,31 @@
                             <Image Source="{Binding Product.ImageUrl, Converter={StaticResource UrlToImageConverter}}" Stretch="UniformToFill"/>
                         </Border>
 
+                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold"/>
 
-                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductId}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Product.CostPrice}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="3" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Product.SellPrice}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="4" Text="{Binding Product.CostPrice}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="5" Text="{Binding Product.SellPrice}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="6" Text="{Binding Product.BrandName}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="6" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center"/>
-
-                        <TextBlock Grid.Column="7" Text="{Binding Product.BrandName}" VerticalAlignment="Center"/>
-
-                        <TextBlock Grid.Column="8" Text="{Binding StatusText}" Foreground="{Binding StatusColor}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="7" Text="{Binding StatusText}" Foreground="{Binding StatusColor}" VerticalAlignment="Center"/>
 
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem Text="Xem chi tiết" Click="ViewDetails_Click"/>
                                 <MenuFlyoutItem Text="Xóa sản phẩm"
-                                        Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
-                                        CommandParameter="{Binding}"/>
+                                    Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
+                                    CommandParameter="{Binding}"/>
                             </MenuFlyout>
                         </Grid.ContextFlyout>
 
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
+
         </ListView>
 
 
