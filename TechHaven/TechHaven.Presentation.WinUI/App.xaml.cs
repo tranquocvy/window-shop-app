@@ -1,6 +1,8 @@
 ﻿using Microsoft.UI.Xaml;
+using System;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Themes;
+using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -34,10 +36,27 @@ namespace TechHaven.Presentation.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            // Initialize theme manager and load default theme so windows/pages can register and receive brushes
+            // Try to load persisted theme from settings service so the app starts with user's choice
+            ThemeManager.ThemeType initialTheme = ThemeManager.ThemeType.Midnight;
             try
             {
-                ThemeManager.Initialize(ThemeManager.ThemeType.Midnight, loadAccents: true);
+                var vm = new SettingViewModel();
+                await vm.InitializeAsync();
+                if (!string.IsNullOrWhiteSpace(vm.CurrentTheme) &&
+                    Enum.TryParse<ThemeManager.ThemeType>(vm.CurrentTheme, true, out var parsed))
+                {
+                    initialTheme = parsed;
+                }
+            }
+            catch
+            {
+                // ignore and fall back to default
+            }
+
+            // Initialize theme manager with the persisted or fallback theme
+            try
+            {
+                ThemeManager.Initialize(initialTheme, loadAccents: true);
             }
             catch
             {

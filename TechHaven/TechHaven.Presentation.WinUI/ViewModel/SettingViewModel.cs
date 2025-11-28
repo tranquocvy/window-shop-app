@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Shared.DTOs.AppSettings;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
@@ -19,12 +20,24 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         [ObservableProperty]
-        private string currentTheme = "Light";
+        private string? currentTheme = null;
 
         public async Task InitializeAsync()
         {
             var dto = await _settingService.GetByKeyAsync("ThemeMode");
-            CurrentTheme = dto?.Value ?? "Light";
+            if (dto?.Value != null)
+            {
+                CurrentTheme = dto.Value;
+
+                if (Enum.TryParse<ThemeManager.ThemeType>(dto.Value, true, out var parsed))
+                {
+                    ThemeManager.ApplyTheme(parsed);
+                }
+            }
+            else
+            {
+                CurrentTheme = null;
+            }
         }
 
         public async Task<bool> SetThemeAsync(string selected)

@@ -16,7 +16,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             {
                 AppSettingId = 1,
                 Key = "ThemeMode",
-                Value = "Light",
+                Value = "Midnight",
                 ValueType = SettingType.String,
                 Category = "UI",
                 Description = "User-selected color mode",

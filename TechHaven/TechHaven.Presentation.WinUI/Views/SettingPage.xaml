@@ -12,6 +12,19 @@
         <StackPanel Spacing="18">
             <TextBlock Text="Application Settings" FontSize="20" FontWeight="SemiBold" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
 
+            <!-- Row 1: Current user info -->
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Border Width="48" Height="48" CornerRadius="24" Background="{ThemeResource SystemControlBackgroundAccentBrush}" VerticalAlignment="Center">
+                    <TextBlock Text="U" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}" FontWeight="SemiBold"/>
+                </Border>
+
+                <StackPanel>
+                    <TextBlock x:Name="currentUserFullNameText" Text="Not signed in" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
+                    <TextBlock x:Name="currentUserRoleText" Text="-" FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Row 2: Theme selection -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
                 <TextBlock Text="Color mode" VerticalAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
 
@@ -20,15 +33,6 @@
 
             <TextBlock x:Name="themeStatusText" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
 
-            <!-- Preview panel to visualize theme changes locally -->
-            <Border x:Name="previewPanel" CornerRadius="8" Padding="12" BorderThickness="1" BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}" Margin="0,12,0,0" Background="{ThemeResource SystemControlBackgroundBaseLowBrush}">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Preview" FontWeight="SemiBold" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
-                    <TextBlock Text="This area shows how controls look under the selected theme." TextWrapping="Wrap" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
-                    <Button Content="Sample Button" Width="140" Background="{ThemeResource SystemControlBackgroundAccentBrush}" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
-                    <TextBox PlaceholderText="Sample input" Width="220" Background="{ThemeResource SystemControlBackgroundBaseLowBrush}" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}" BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                </StackPanel>
-            </Border>
         </StackPanel>
     </Grid>
 </Page>

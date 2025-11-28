@@ -11,6 +11,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpSettingService : IAppSettingService
     {
         private readonly HttpClient _client;
+        private const string BaseUrl = "api/Setting";
 
         public HttpSettingService(HttpClient client)
         {
@@ -19,14 +20,14 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<AppSettingDto?> GetByKeyAsync(string key, CancellationToken cancellationToken = default)
         {
-            var resp = await _client.GetAsync($"api/appsettings/{key}", cancellationToken);
+            var resp = await _client.GetAsync($"{BaseUrl}/{key}", cancellationToken);
             if (!resp.IsSuccessStatusCode) return null;
             return await resp.Content.ReadFromJsonAsync<AppSettingDto>(cancellationToken: cancellationToken);
         }
 
         public async Task<bool> UpsertAsync(string key, AppSettingUpsertRequestDto dto, CancellationToken cancellationToken = default)
         {
-            var resp = await _client.PostAsJsonAsync($"api/appsettings/{key}", dto, cancellationToken);
+            var resp = await _client.PostAsJsonAsync($"{BaseUrl}/{key}", dto, cancellationToken);
             return resp.IsSuccessStatusCode;
         }
     }
