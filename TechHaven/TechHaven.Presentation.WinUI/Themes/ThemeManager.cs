@@ -12,13 +12,17 @@ namespace TechHaven.Presentation.WinUI.Themes
         public enum ThemeType
         {
             Light,
-            Dark
+            Dark,
+            HyperViolet,
+            Midnight
         }
 
         public static ThemeType CurrentTheme { get; private set; } = ThemeType.Light;
 
-        private const string LightPath = "ms-appx:///Themes/Light.xaml";
-        private const string DarkPath = "ms-appx:///Themes/Dark.xaml";
+        private const string LightPath = "ms-appx:///Themes/LightTheme.xaml";
+        private const string DarkPath = "ms-appx:///Themes/DarkTheme.xaml";
+        private const string HyperVioletPath = "ms-appx:///Themes/HyperVioletTheme.xaml";
+        private const string MidnightPath = "ms-appx:///Themes/MidnightTheme.xaml";
         private const string AccentsPath = "ms-appx:///Themes/Accents.xaml";
 
         // Registered roots to update when theme changes
@@ -39,7 +43,26 @@ namespace TechHaven.Presentation.WinUI.Themes
 
             RemoveThemeDictionaries(app);
 
-            var path = theme == ThemeType.Light ? LightPath : DarkPath;
+            string path;
+            switch (theme)
+            {
+                case ThemeType.Light:
+                    path = LightPath;
+                    break;
+                case ThemeType.Dark:
+                    path = DarkPath;
+                    break;
+                case ThemeType.HyperViolet:
+                    path = HyperVioletPath;
+                    break;
+                case ThemeType.Midnight:
+                    path = MidnightPath;
+                    break;
+                default:
+                    path = LightPath;
+                    break;
+            }
+
             try
             {
                 var dict = new ResourceDictionary { Source = new Uri(path) };
@@ -57,7 +80,11 @@ namespace TechHaven.Presentation.WinUI.Themes
 
         public static void ToggleTheme()
         {
-            ApplyTheme(CurrentTheme == ThemeType.Light ? ThemeType.Dark : ThemeType.Light);
+            // Cycle through available themes in enum order
+            var values = Enum.GetValues(typeof(ThemeType)).Cast<ThemeType>().ToArray();
+            int idx = Array.IndexOf(values, CurrentTheme);
+            int next = (idx + 1) % values.Length;
+            ApplyTheme(values[next]);
         }
 
         public static void ApplyAccents()
@@ -87,8 +114,7 @@ namespace TechHaven.Presentation.WinUI.Themes
         {
             var toRemove = app.Resources.MergedDictionaries
                 .Where(d => d.Source != null && (
-                    d.Source.OriginalString.Contains("Light.xaml", StringComparison.OrdinalIgnoreCase) ||
-                    d.Source.OriginalString.Contains("Dark.xaml", StringComparison.OrdinalIgnoreCase)))
+                    d.Source.OriginalString.Contains("Theme.xaml", StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             foreach (var d in toRemove)

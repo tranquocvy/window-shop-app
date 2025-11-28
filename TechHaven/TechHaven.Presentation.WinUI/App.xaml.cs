@@ -37,7 +37,7 @@ namespace TechHaven.Presentation.WinUI
             // Initialize theme manager and load default theme so windows/pages can register and receive brushes
             try
             {
-                ThemeManager.Initialize(ThemeManager.ThemeType.Dark, loadAccents: true);
+                ThemeManager.Initialize(ThemeManager.ThemeType.Midnight, loadAccents: true);
             }
             catch
             {

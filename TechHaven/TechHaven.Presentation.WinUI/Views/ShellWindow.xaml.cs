@@ -39,14 +39,12 @@ namespace TechHaven.Presentation.WinUI.Views
                     // Set system title bar buttons (minimize/maximize/close) colors
                     try
                     {
-                        // Use hard transparent for all button background states
                         var transparent = Colors.Transparent;
                         appWindow.TitleBar.ButtonBackgroundColor = transparent;
                         appWindow.TitleBar.ButtonHoverBackgroundColor = transparent;
                         appWindow.TitleBar.ButtonPressedBackgroundColor = transparent;
                         appWindow.TitleBar.ButtonInactiveBackgroundColor = transparent;
 
-                        // Keep foreground from theme if available, otherwise use white
                         Windows.UI.Color foreground = TryGetColorFromResource("TH.TextPrimary", Windows.UI.Color.FromArgb(255, 255, 255, 255)); appWindow.TitleBar.ButtonForegroundColor = foreground;
                         appWindow.TitleBar.ButtonHoverForegroundColor = foreground;
                         appWindow.TitleBar.ButtonPressedForegroundColor = foreground;
@@ -379,7 +377,6 @@ namespace TechHaven.Presentation.WinUI.Views
                     {
                         return scb.Color;
                     }
-                    // If resource is a Brush but not SolidColorBrush, try to extract via ToString parse
                 }
             }
             catch { }
