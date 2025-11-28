@@ -8,30 +8,55 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Padding="24">
+    <Grid Padding="24" Background="{ThemeResource TH.SurfaceBackground}">
         <StackPanel Spacing="18">
-            <TextBlock Text="Application Settings" FontSize="20" FontWeight="SemiBold" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
+            <TextBlock x:Name="titleText" Text="Application Settings" FontSize="20" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}"/>
 
             <!-- Row 1: Current user info -->
             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <Border Width="48" Height="48" CornerRadius="24" Background="{ThemeResource SystemControlBackgroundAccentBrush}" VerticalAlignment="Center">
-                    <TextBlock Text="U" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}" FontWeight="SemiBold"/>
+                <Border Width="48" Height="48" CornerRadius="24" Background="{ThemeResource TH.PrimaryBrush}" VerticalAlignment="Center">
+                    <TextBlock Text="U" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}" FontWeight="SemiBold"/>
                 </Border>
 
                 <StackPanel>
-                    <TextBlock x:Name="currentUserFullNameText" Text="Not signed in" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
-                    <TextBlock x:Name="currentUserRoleText" Text="-" FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                    <TextBlock x:Name="currentUserFullNameText" Text="Not signed in" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="6">
+                            <TextBlock Text="Username" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <TextBlock Text="Role" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <TextBlock Text="Email" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="6">
+                            <TextBlock x:Name="currentUserUserNameText" Text="" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}" />
+                            <TextBlock x:Name="currentUserRoleText" Text="-" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <TextBlock x:Name="currentUserEmailText" Text="" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Grid>
+
                 </StackPanel>
             </StackPanel>
 
             <!-- Row 2: Theme selection -->
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                <TextBlock Text="Color mode" VerticalAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
+                <TextBlock x:Name="colorModeLabel" Text="Color mode" VerticalAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}"/>
 
-                <Button x:Name="themeButton" Click="ThemeButton_Click" Margin="8,0,0,0"/>
+                <Button x:Name="themeButton" Click="ThemeButton_Click" Margin="8,0,0,0" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="8,6"/>
+
+                <!-- New: Page size control -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8" Margin="24,0,0,0">
+                    <TextBlock Text="Items per page" VerticalAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}"/>
+                    <ComboBox x:Name="pageSizeCombo" Width="80" SelectionChanged="PageSizeCombo_SelectionChanged"/>
+                </StackPanel>
             </StackPanel>
 
-            <TextBlock x:Name="themeStatusText" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+            <TextBlock x:Name="themeStatusText" Foreground="{ThemeResource TH.TextSecondary}"/>
 
         </StackPanel>
     </Grid>
