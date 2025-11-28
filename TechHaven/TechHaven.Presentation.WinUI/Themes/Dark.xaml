@@ -66,4 +66,8 @@
     <SolidColorBrush x:Key="TH.TextDisabled"
                      Color="{StaticResource TH.Color.TextDisabled}" />
 
+    <!-- Map success/danger colors from Common to brushes for convenient use in XAML -->
+    <SolidColorBrush x:Key="TH.SuccessBrush" Color="{StaticResource TH.SuccessColor}" />
+    <SolidColorBrush x:Key="TH.DangerBrush" Color="{StaticResource TH.DangerColor}" />
+
 </ResourceDictionary>

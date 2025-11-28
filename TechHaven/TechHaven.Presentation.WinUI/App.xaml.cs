@@ -1,25 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using System.Threading.Tasks;
-
-using TechHaven.Presentation.WinUI.Views;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Themes;
+using TechHaven.Presentation.WinUI.Views;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -55,7 +37,7 @@ namespace TechHaven.Presentation.WinUI
             // Initialize theme manager and load default theme so windows/pages can register and receive brushes
             try
             {
-                ThemeManager.Initialize(ThemeManager.ThemeType.Light, loadAccents: true);
+                ThemeManager.Initialize(ThemeManager.ThemeType.Dark, loadAccents: true);
             }
             catch
             {
@@ -81,7 +63,7 @@ namespace TechHaven.Presentation.WinUI
                 // ignore
             }
 
-            _window = new ShellWindow();
+            _window = new MainWindow();
             MainWindow = _window;
             _window.Activate();
         }
