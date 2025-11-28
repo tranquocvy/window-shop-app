@@ -55,7 +55,16 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private bool _isUpdatingAll = false;
 
+        public ObservableCollection<string> BrandNameFilter { get; } = new()
+        {
+            "Không",
+            "Iphone",
+            "Samsung",
+            "Nokia"
+        };
 
+        [ObservableProperty]
+        private string _selectedBrandName = "Không";
 
         // ========================
         // Search triggers reload
@@ -63,8 +72,19 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         partial void OnSearchTermChanged(string value)
         {
             PageNumber = 1;
-            _ = LoadProductsAsync();
+
+            // Tạo query trực tiếp
+            var query = new ProductListQueryDto
+            {
+                SearchTerm = value,      // lấy từ value mới gõ
+                PageNumber = PageNumber,
+                PageSize = PageSize
+            };
+
+            // Gọi API
+            _ = LoadProductsAsync(query);
         }
+
 
 
         // ========================
@@ -87,11 +107,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Main load function
         // ========================
         [RelayCommand]
-        private async Task LoadProductsAsync()
+        private async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
             Products.Clear();
 
-            var query = new ProductListQueryDto
+            query ??= new ProductListQueryDto
             {
                 SearchTerm = SearchTerm,
                 PageNumber = PageNumber,
@@ -102,36 +122,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!response.Success || response.Data == null)
                 return;
 
-            var paging = response.Data; // PagingResponse<ProductDto>
+            var paging = response.Data;
 
-            // Add items
             foreach (var product in paging.Items)
             {
-                var itemVM = new ProductItemViewModel(product);
-
-                itemVM.PropertyChanged += (s, e) =>
+                if (!Products.Any(p => p.Product.ProductId == product.ProductId))
                 {
-                    if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
+                    var itemVM = new ProductItemViewModel(product);
+                    itemVM.PropertyChanged += (s, e) =>
                     {
-                        if (_isUpdatingAll) return;
-
-                        _isUpdatingAll = true;
-                        IsAllSelected = Products.All(p => p.IsSelected);
-                        _isUpdatingAll = false;
-                    }
-                };
-
-                Products.Add(itemVM);
+                        if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
+                        {
+                            if (_isUpdatingAll) return;
+                            _isUpdatingAll = true;
+                            IsAllSelected = Products.All(p => p.IsSelected);
+                            _isUpdatingAll = false;
+                        }
+                    };
+                    Products.Add(itemVM);
+                }
             }
 
-            // Update selection
             _isUpdatingAll = true;
             IsAllSelected = Products.All(p => p.IsSelected);
             _isUpdatingAll = false;
 
-            // --- Update pagination using TotalCount (short way) ---
             UpdatePaginationState(paging.TotalCount);
         }
+
 
 
 

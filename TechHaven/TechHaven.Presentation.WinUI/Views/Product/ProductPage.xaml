@@ -55,13 +55,12 @@
                 PlaceholderText="Tìm kiếm theo tên, danh mục..."
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <ComboBox Grid.Column="1"
-                Width="150"
-                PlaceholderText="Chọn hãng"
-                SelectedItem="{Binding SelectedBrand, Mode=TwoWay}">
-                <ComboBoxItem Content="Samsung"/>
-                <ComboBoxItem Content="iPhone"/>
-                <ComboBoxItem Content="Xiaomi"/>
+            <ComboBox ItemsSource="{x:Bind ViewModel.BrandNameFilter}"
+                Grid.Column="1"
+                SelectedItem="{x:Bind ViewModel.SelectedBrandName, Mode=TwoWay}"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                PlaceholderText="Tiêu chí">
             </ComboBox>
 
             <ComboBox Grid.Column="2"

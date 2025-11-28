@@ -45,7 +45,15 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
-            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>($"{BaseUrl}", "Failed to query products");
+            // Build query string from CustomerListQueryDto
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
         }
 
     }
