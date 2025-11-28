@@ -30,6 +30,10 @@ public class EmailService : IEmailService
       string otpCode,
       CancellationToken cancellationToken = default)
   {
+    _logger.LogInformation(
+        "Attempting to send OTP email to {Email} (User: {UserName})",
+        MaskEmail(recipientEmail), recipientName);
+
     try
     {
       // 1. Create email message
@@ -37,6 +41,8 @@ public class EmailService : IEmailService
       message.From.Add(new MailboxAddress(_smtpSettings.SenderName, _smtpSettings.SenderEmail));
       message.To.Add(new MailboxAddress(recipientName, recipientEmail));
       message.Subject = "Your TechHaven OTP Code";
+
+      _logger.LogDebug("Email message created with subject: {Subject}", message.Subject);
 
       // 2. Create HTML body
       var bodyBuilder = new BodyBuilder
@@ -48,6 +54,11 @@ public class EmailService : IEmailService
       // 3. Send email using SMTP
       using var client = new SmtpClient();
 
+      _logger.LogDebug(
+        "Connecting to SMTP server: {Host}:{Port} (SSL: {EnableSsl})",
+        _smtpSettings.Host, _smtpSettings.Port, _smtpSettings.EnableSsl
+      );
+
       // Connect to SMTP server
       await client.ConnectAsync(
           _smtpSettings.Host,
@@ -55,28 +66,32 @@ public class EmailService : IEmailService
           _smtpSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None,
           cancellationToken);
 
+      _logger.LogDebug("Connected to SMTP server successfully");
+
       // Authenticate
       await client.AuthenticateAsync(
           _smtpSettings.Username,
           _smtpSettings.Password,
           cancellationToken);
 
+      _logger.LogDebug("SMTP authentication successful");
+
       // Send message
       await client.SendAsync(message, cancellationToken);
 
-      // Disconnect
       await client.DisconnectAsync(true, cancellationToken);
 
       _logger.LogInformation(
-          "OTP email sent successfully to {Email} (User: {UserName})",
-          recipientEmail, recipientName);
+        "OTP email sent successfully to {Email}",
+        MaskEmail(recipientEmail)
+      );
     }
     catch (Exception ex)
     {
       _logger.LogError(
           ex,
-          "Failed to send OTP email to {Email}. Error: {ErrorMessage}",
-          recipientEmail, ex.Message);
+          "Failed to send OTP email to {Email}. SMTP: {SmtpHost}:{SmtpPort}",
+          MaskEmail(recipientEmail), _smtpSettings.Host, _smtpSettings.Port);
 
       // Re-throw để caller xử lý
       throw new InvalidOperationException($"Failed to send OTP email: {ex.Message}", ex);
@@ -85,6 +100,8 @@ public class EmailService : IEmailService
 
   private string GenerateOtpEmailHtml(string recipientName, string otpCode)
   {
+    _logger.LogDebug("Generating OTP email HTML for {UserName}", recipientName);
+    
     return $@"
 <!DOCTYPE html>
 <html lang='vi'>
@@ -106,7 +123,11 @@ public class EmailService : IEmailService
         <p>Mã OTP của bạn là:</p>
         
         <div style='background-color: #667eea; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 5px; letter-spacing: 8px; margin: 20px 0;'>
-            {otpCode}
+            <span id='otp-code'>{otpCode}</span>
+            <button onclick=""navigator.clipboard.writeText(document.getElementById('otp-code').innerText)"" 
+                style='margin-left: 20px; padding: 10px 18px; font-size: 16px; background: #fff; color: #667eea; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
+                Copy
+            </button>
         </div>
         
         <p style='color: #e74c3c; font-weight: bold;'>⚠️ Mã này sẽ hết hạn sau 5 phút.</p>
@@ -122,5 +143,24 @@ public class EmailService : IEmailService
     </div>
 </body>
 </html>";
+  }
+
+  /// <summary>
+  /// Mask email for security logging
+  /// </summary>
+  private string MaskEmail(string email)
+  {
+    if (string.IsNullOrEmpty(email) || !email.Contains('@'))
+      return "***@***.***";
+
+    var parts = email.Split('@');
+    var localPart = parts[0];
+    var domain = parts[1];
+
+    var maskedLocal = localPart.Length > 2
+        ? localPart.Substring(0, 2) + "***"
+        : "***";
+
+    return $"{maskedLocal}@{domain}";
   }
 }

@@ -1,31 +1,39 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using TechHaven.Presentation.WinUI.ViewModel;
+using Microsoft.UI.Dispatching;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace TechHaven.Presentation.WinUI.Views
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class DashboardPage : Page
     {
+        private readonly DashboardViewModel _vm = new();
+
         public DashboardPage()
         {
             InitializeComponent();
+            this.DataContext = _vm;
+            this.Loaded += DashboardPage_Loaded;
+            MonthlyChartBorder.SizeChanged += MonthlyChartBorder_SizeChanged;
+        }
+
+        private async void DashboardPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= DashboardPage_Loaded;
+            await _vm.LoadAsync();
+
+            // Enqueue geometry update after layout pass to ensure ActualWidth/Height are valid
+            var dq = DispatcherQueue.GetForCurrentThread();
+            dq?.TryEnqueue(() => _vm.UpdateMonthlyRevenueGeometry(MonthlyChartBorder.ActualWidth, MonthlyChartBorder.ActualHeight));
+        }
+
+        private void MonthlyChartBorder_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            _vm.UpdateMonthlyRevenueGeometry(MonthlyChartBorder.ActualWidth, MonthlyChartBorder.ActualHeight);
         }
     }
 }

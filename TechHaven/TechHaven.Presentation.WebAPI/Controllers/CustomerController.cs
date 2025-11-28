@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Customers;
 using TechHaven.Application.Features.Customer.Queries.GetCustomers;
@@ -12,23 +13,27 @@ using TechHaven.Domain.SearchCriteria;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class CustomerController : ControllerBase
+public class CustomerController : BaseApiController
 {
   private readonly IMediator _mediator;
+  private readonly ILogger<CustomerController> _logger;
 
-  public CustomerController(IMediator mediator)
+  public CustomerController(IMediator mediator, ILogger<CustomerController> logger)
   {
     _mediator = mediator;
+    _logger = logger;
   }
 
   [HttpGet]
   [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<CustomerDto>>), StatusCodes.Status200OK)]
-  public async Task<ActionResult<ResponseWrapper<PagingResponse<CustomerDto>>>> GetCustomers(
+  public async Task<IActionResult> GetCustomers(
     [FromQuery] CustomerListQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
+    _logger.LogInformation(
+      "Getting customers with SearchTerm: {SearchTerm}, Page: {PageNumber}/{PageSize}",
+      queryDto.SearchTerm, queryDto.PageNumber, queryDto.PageSize);
+
     // Map CustomerQueryDto -> CustomerSearchCriteria
     var criteria = new CustomerSearchCriteria
     {
@@ -42,12 +47,15 @@ public class CustomerController : ControllerBase
     var query = new GetCustomersQuery(criteria);
 
     var result = await _mediator.Send(query, cancellationToken);
-    return Ok(new ResponseWrapper<PagingResponse<CustomerDto>>
+
+    if (result.IsSuccess)
     {
-      Success = true,
-      Message = "Customers retrieved successfully.",
-      Data = result
-    });
+      _logger.LogInformation(
+        "Retrieved {Count} customers (Total: {TotalCount})",
+        result.Data?.Items.Count, result.Data?.TotalCount);
+    }
+
+    return HandleResult(result);
   }
 
   /// <summary>
@@ -56,29 +64,25 @@ public class CustomerController : ControllerBase
   [HttpGet("{id}")]
   [ProducesResponseType(typeof(ResponseWrapper<CustomerDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ResponseWrapper<CustomerDto>>> GetCustomerById(
+  public async Task<IActionResult> GetCustomerById(
       int id,
       CancellationToken cancellationToken)
   {
-    try
+    _logger.LogInformation("Getting customer with ID: {CustomerId}", id);
+
+    var query = new GetCustomerByIdQuery(id);
+    var result = await _mediator.Send(query, cancellationToken);
+
+    if (result.IsSuccess)
     {
-      var query = new GetCustomerByIdQuery(id);
-      var result = await _mediator.Send(query, cancellationToken);
-      return Ok(new ResponseWrapper<CustomerDto>
-      {
-        Success = true,
-        Message = "Customer retrieved successfully.",
-        Data = result
-      });
+      _logger.LogInformation("Customer found: {CustomerName}", result.Data?.CustomerName);
     }
-    catch (NotFoundException ex)
+    else
     {
-      return NotFound(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = ex.Message
-      });
+      _logger.LogWarning("Customer not found: {CustomerId}", id);
     }
+
+    return HandleResult(result);
   }
 
   /// <summary>
@@ -87,42 +91,46 @@ public class CustomerController : ControllerBase
   [HttpPost]
   [ProducesResponseType(typeof(ResponseWrapper<CustomerDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
-  public async Task<ActionResult<ResponseWrapper<CustomerDto>>> CreateCustomer(
+  public async Task<IActionResult> CreateCustomer(
       [FromBody] CustomerUpsertRequestDto request,
       CancellationToken cancellationToken)
   {
-    try
+    _logger.LogInformation(
+      "Creating customer: {Customer}",
+      request.CustomerName
+    );
+
+    // Map DTO to Command
+    var command = new CreateCustomerCommand
     {
-      // Map DTO to Command
-      var command = new CreateCustomerCommand
-      {
-        CustomerName = request.CustomerName,
-        PhoneNumber = request.PhoneNumber,
-        Email = request.Email,
-        Address = request.Address,
-        Type = request.Type,
-        Note = request.Note,
-      };
-      var result = await _mediator.Send(command, cancellationToken);
-      return CreatedAtAction(
-        nameof(GetCustomerById),
-        new { id = result.CustomerId },
-        new ResponseWrapper<CustomerDto>
-        {
-          Success = true,
-          Message = "Customer created successfully.",
-          Data = result
-        });
-    }
-    catch (Exception ex)
+      CustomerName = request.CustomerName,
+      PhoneNumber = request.PhoneNumber,
+      Email = request.Email,
+      Address = request.Address,
+      Type = request.Type,
+      Note = request.Note,
+    };
+
+    var result = await _mediator.Send(command, cancellationToken);
+    
+    if (result.IsSuccess)
     {
-      return BadRequest(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = "Failed to create Customer.",
-        Errors = new List<string> { ex.Message }
-      });
+      _logger.LogInformation(
+        "Customer created successfully: ID {CustomerId}, Name: {CustomerName}",
+        result.Data?.CustomerId, result.Data?.CustomerName);
     }
+    else
+    {
+      _logger.LogWarning(
+        "Failed to create customer: {CustomerName}. Error: {ErrorMessage}",
+        request.CustomerName, result.ErrorMessage);
+    }
+
+    return HandleResult(
+      result,
+      nameof(GetCustomerById),
+      new { id = result.Data?.CustomerId }
+    );
   }
 
   /// <summary>
@@ -132,40 +140,36 @@ public class CustomerController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<CustomerDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ResponseWrapper<CustomerDto>>> UpdateCustomer(
+  public async Task<IActionResult> UpdateCustomer(
       int id,
       [FromBody] CustomerUpsertRequestDto request,
       CancellationToken cancellationToken)
   {
-    try
-    {
-      // Map DTO to Command with ID from route
-      var command = new UpdateCustomerCommand
-      {
-        CustomerName = request.CustomerName,
-        PhoneNumber = request.PhoneNumber,
-        Email = request.Email,
-        Address = request.Address,
-        Type = request.Type,
-        Note = request.Note,
-      };
+    _logger.LogInformation(
+      "Updating Customer ID: {CustomerId} - New name: {CustomerName}",
+      id, request.CustomerName
+    );
 
-      var result = await _mediator.Send(command, cancellationToken);
-      return Ok(new ResponseWrapper<CustomerDto>
-      {
-        Success = true,
-        Message = "Customer updated successfully.",
-        Data = result
-      });
-    }
-    catch (NotFoundException ex)
+    // Map DTO to Command with ID from route
+    var command = new UpdateCustomerCommand
     {
-      return NotFound(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = ex.Message
-      });
+      CustomerId = id,
+      CustomerName = request.CustomerName,
+      PhoneNumber = request.PhoneNumber,
+      Email = request.Email,
+      Address = request.Address,
+      Type = request.Type,
+      Note = request.Note,
+    };
+
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation("Customer updated successfully: ID {CustomerId}", id);
     }
+
+    return HandleResult(result);
   }
 
   /// <summary>
@@ -174,23 +178,22 @@ public class CustomerController : ControllerBase
   [HttpDelete("{id}")]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status204NoContent)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ResponseWrapper<object>>> DeleteCustomer(
+  public async Task<IActionResult> DeleteCustomer(
       int id,
       CancellationToken cancellationToken)
   {
-    try
+    _logger.LogInformation("Deleting customer ID: {CustomerId}", id);
+    
+    var command = new DeleteCustomerCommand(id);
+    var result = await _mediator.Send(command, cancellationToken);
+    
+    if (result.IsSuccess)
     {
-      var command = new DeleteCustomerCommand(id);
-      await _mediator.Send(command, cancellationToken);
-      return NoContent();
+      _logger.LogInformation("Customer deleted successfully: ID {CustomerId}", id);
     }
-    catch (NotFoundException ex)
-    {
-      return NotFound(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = ex.Message
-      });
-    }
+
+    return result.IsSuccess
+      ? NoContent()
+      : HandleResult(result);
   }
 }

@@ -32,10 +32,10 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<OtpVerifyResponseDto>("Failed to verify OTP");
         }
 
-        public async Task<ResponseWrapper<bool>> ResendOtpAsync(OtpResendRequestDto dto)
+        public async Task<ResponseWrapper<OtpResendResponseDto>> ResendOtpAsync(OtpResendRequestDto dto)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp", dto);
-            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to resend OTP");
+            return await response.EnsureSuccessAndReadWrapperAsync<OtpResendResponseDto>("Failed to resend OTP");
         }
     }
 }

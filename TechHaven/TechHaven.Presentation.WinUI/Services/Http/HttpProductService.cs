@@ -13,16 +13,11 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpProductService : IProductService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "api/products";
+        private const string BaseUrl = "api/Product";
 
         public HttpProductService(HttpClient httpClient)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        }
-
-        public Task<ResponseWrapper<List<ProductDto>>> GetAllProductsAsync()
-        {
-            return _httpClient.GetWrapperFromJsonAsync<List<ProductDto>>(BaseUrl, "Failed to retrieve products");
         }
 
         public Task<ResponseWrapper<ProductDto>> GetProductsByIdAsync(int id)
@@ -30,13 +25,13 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return _httpClient.GetWrapperFromJsonAsync<ProductDto>($"{BaseUrl}/{id}", "Failed to retrieve product");
         }
 
-        public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductCreateUpdateDto dto)
+        public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto)
         {
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to create product");
         }
 
-        public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductCreateUpdateDto dto)
+        public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto)
         {
             var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/{id}", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to update product");
@@ -48,10 +43,18 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete product");
         }
 
-        public async Task<ResponseWrapper<List<ProductDto>>> QueryProductsAsync(ProductQueryDto query)
+        public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
-            return await response.EnsureSuccessAndReadWrapperAsync<List<ProductDto>>("Failed to query products");
+            // Build query string from CustomerListQueryDto
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
         }
+
     }
 }

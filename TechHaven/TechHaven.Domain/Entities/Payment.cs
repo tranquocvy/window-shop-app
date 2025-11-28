@@ -1,6 +1,6 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TechHaven.Domain.Enums;
 
 namespace TechHaven.Domain.Entities;
 
@@ -53,25 +53,4 @@ public class Payment
     /// Gets or sets the order navigation property.
     /// </summary>
     public Order? Order { get; set; }
-}
-
-/// <summary>
-/// Defines the available payment methods.
-/// </summary>
-public enum PaymentMethod
-{
-    /// <summary>
-    /// Cash payment method.
-    /// </summary>
-    Cash = 1,
-
-    /// <summary>
-    /// Bank transfer payment method.
-    /// </summary>
-    BankTransfer = 2,
-
-    /// <summary>
-    /// Credit card payment method.
-    /// </summary>
-    CreditCard = 3
 }

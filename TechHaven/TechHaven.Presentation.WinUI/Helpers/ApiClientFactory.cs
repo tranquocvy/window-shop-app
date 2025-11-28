@@ -29,11 +29,6 @@ namespace TechHaven.Presentation.WinUI.Helpers
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            if (!string.IsNullOrWhiteSpace(TokenStore.AccessToken))
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenStore.AccessToken);
-            }
-
             return client;
         }
 

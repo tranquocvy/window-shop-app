@@ -1,50 +1,60 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using TechHaven.Application.Features.Product.Commands.CreateProduct;
+using TechHaven.Application.Features.Product.Commands.DeleteProduct;
+using TechHaven.Application.Features.Product.Commands.UpdateProduct;
+using TechHaven.Application.Features.Product.Queries.GetProductById;
+using TechHaven.Application.Features.Product.Queries.GetProducts;
+using TechHaven.Domain.SearchCriteria;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
-using TechHaven.Application.Features.Product.Queries.GetProducts;
-using TechHaven.Application.Features.Product.Queries.GetProductById;
-using TechHaven.Application.Features.Product.Commands.CreateProduct;
-using TechHaven.Application.Features.Product.Commands.UpdateProduct;
-using TechHaven.Application.Features.Product.Commands.DeleteProduct;
-using TechHaven.Application.Common.Exceptions;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProductController : ControllerBase
+public class ProductController : BaseApiController
 {
   private readonly IMediator _mediator;
+  private readonly ILogger<ProductController> _logger;
 
-  public ProductController(IMediator mediator)
+  public ProductController(IMediator mediator, ILogger<ProductController> logger)
   {
     _mediator = mediator;
+    _logger = logger;
   }
 
   [HttpGet]
   [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<ProductDto>>), StatusCodes.Status200OK)]
-  public async Task<ActionResult<ResponseWrapper<PagingResponse<ProductDto>>>> GetProducts(
-    [FromQuery] ProductQueryDto queryDto,
+  public async Task<IActionResult> GetProducts(
+    [FromQuery] ProductListQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
-    var query = new GetProductsQuery
+    _logger.LogInformation(
+      "Getting products with SearchTerm: {SearchTerm}, IsDraft: {IsDraft}, Page: {PageNumber}/{PageSize}",
+      queryDto.SearchTerm, queryDto.IsDraft, queryDto.PageNumber, queryDto.PageSize);
+
+    // Map CustomerQueryDto -> CustomerSearchCriteria
+    var criteria = new ProductSearchCriteria
     {
       SearchTerm = queryDto.SearchTerm,
       IsDraft = queryDto.IsDraft,
       PageNumber = queryDto.PageNumber,
       PageSize = queryDto.PageSize,
       SortBy = queryDto.Sorting?.SortBy,
-      SortDescending = queryDto.Sorting?.Desc ?? false
+      SortDescending = queryDto.Sorting?.Desc ?? false,
     };
 
+    var query = new GetProductsQuery(criteria);
     var result = await _mediator.Send(query, cancellationToken);
-    return Ok(new ResponseWrapper<PagingResponse<ProductDto>>
+
+    if (result.IsSuccess)
     {
-      Success = true,
-      Message = "Products retrieved successfully.",
-      Data = result
-    });
+      _logger.LogInformation(
+        "Retrieved {Count} products (Total: {TotalCount})",
+        result.Data?.Items.Count, result.Data?.TotalCount);
+    }
+
+    return HandleResult(result);
   }
 
   /// <summary>
@@ -53,29 +63,25 @@ public class ProductController : ControllerBase
   [HttpGet("{id}")]
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ResponseWrapper<ProductDto>>> GetProductById(
+  public async Task<IActionResult> GetProductById(
       int id,
       CancellationToken cancellationToken)
   {
-    try
+    _logger.LogInformation("Getting product with ID: {ProductId}", id);
+
+    var query = new GetProductByIdQuery(id);
+    var result = await _mediator.Send(query, cancellationToken);
+
+    if (result.IsSuccess)
     {
-      var query = new GetProductByIdQuery(id);
-      var result = await _mediator.Send(query, cancellationToken);
-      return Ok(new ResponseWrapper<ProductDto>
-      {
-        Success = true,
-        Message = "Product retrieved successfully.",
-        Data = result
-      });
+      _logger.LogInformation("Product found: {ProductName}", result.Data?.ProductName);
     }
-    catch (NotFoundException ex)
+    else
     {
-      return NotFound(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = ex.Message
-      });
+      _logger.LogWarning("Product not found: {ProductId}", id);
     }
+
+    return HandleResult(result);
   }
 
   /// <summary>
@@ -84,50 +90,53 @@ public class ProductController : ControllerBase
   [HttpPost]
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
-  public async Task<ActionResult<ResponseWrapper<ProductDto>>> CreateProduct(
-      [FromBody] ProductCreateUpdateDto request,
+  public async Task<IActionResult> CreateProduct(
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
-    try
+    _logger.LogInformation(
+      "Creating product: {ProductName} - Brand: {BrandName}",
+      request.ProductName, request.BrandName
+    );
+    // Map DTO to Command
+    var command = new CreateProductCommand
     {
-      // Map DTO to Command
-      var command = new CreateProductCommand
-      {
-        ProductName = request.ProductName,
-        BrandName = request.BrandName,
-        Color = request.Color,
-        StorageCapacity = request.StorageCapacity,
-        Processor = request.Processor,
-        ScreenSize = request.ScreenSize,
-        BatteryCapacity = request.BatteryCapacity,
-        ImageUrl = request.ImageUrl,
-        ImageGalleryJson = request.ImageGalleryJson,
-        CostPrice = request.CostPrice,
-        SellPrice = request.SellPrice,
-        StockQuantity = request.StockQuantity,
-        Description = request.Description,
-        IsDraft = request.IsDraft
-      };
-      var result = await _mediator.Send(command, cancellationToken);
-      return CreatedAtAction(
-        nameof(GetProductById),
-        new { id = result.ProductId },
-        new ResponseWrapper<ProductDto>
-        {
-          Success = true,
-          Message = "Product created successfully.",
-          Data = result
-        });
-    }
-    catch (Exception ex)
+      ProductName = request.ProductName,
+      BrandName = request.BrandName,
+      Color = request.Color,
+      StorageCapacity = request.StorageCapacity,
+      Processor = request.Processor,
+      ScreenSize = request.ScreenSize,
+      BatteryCapacity = request.BatteryCapacity,
+      ImageUrl = request.ImageUrl,
+      ImageGalleryJson = request.ImageGalleryJson,
+      CostPrice = request.CostPrice,
+      SellPrice = request.SellPrice,
+      StockQuantity = request.StockQuantity,
+      Description = request.Description,
+      IsDraft = request.IsDraft
+    };
+
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
     {
-      return BadRequest(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = "Failed to create product.",
-        Errors = new List<string> { ex.Message }
-      });
+      _logger.LogInformation(
+        "Product created successfully: ID {ProductId}, Name: {ProductName}",
+        result.Data?.ProductId, result.Data?.ProductName);
     }
+    else
+    {
+      _logger.LogWarning(
+        "Failed to create product: {ProductName}. Error: {ErrorMessage}",
+        request.ProductName, result.ErrorMessage);
+    }
+
+    return HandleResult(
+      result,
+      nameof(GetProductById),
+      new { id = result.Data?.ProductId }
+    );
   }
 
   /// <summary>
@@ -137,49 +146,43 @@ public class ProductController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ResponseWrapper<ProductDto>>> UpdateProduct(
+  public async Task<IActionResult> UpdateProduct(
       int id,
-      [FromBody] ProductCreateUpdateDto request,
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
-    try
-    {
-      // Map DTO to Command with ID from route
-      var command = new UpdateProductCommand
-      {
-        ProductId = id,
-        ProductName = request.ProductName,
-        BrandName = request.BrandName,
-        Color = request.Color,
-        StorageCapacity = request.StorageCapacity,
-        Processor = request.Processor,
-        ScreenSize = request.ScreenSize,
-        BatteryCapacity = request.BatteryCapacity,
-        ImageUrl = request.ImageUrl,
-        ImageGalleryJson = request.ImageGalleryJson,
-        CostPrice = request.CostPrice,
-        SellPrice = request.SellPrice,
-        StockQuantity = request.StockQuantity,
-        Description = request.Description,
-        IsDraft = request.IsDraft
-      };
+    _logger.LogInformation(
+      "Updating product ID: {ProductId} - New name: {ProductName}",
+      id, request.ProductName);
 
-      var result = await _mediator.Send(command, cancellationToken);
-      return Ok(new ResponseWrapper<ProductDto>
-      {
-        Success = true,
-        Message = "Product updated successfully.",
-        Data = result
-      });
-    }
-    catch (NotFoundException ex)
+    // Map DTO to Command with ID from route
+    var command = new UpdateProductCommand
     {
-      return NotFound(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = ex.Message
-      });
+      ProductId = id,
+      ProductName = request.ProductName,
+      BrandName = request.BrandName,
+      Color = request.Color,
+      StorageCapacity = request.StorageCapacity,
+      Processor = request.Processor,
+      ScreenSize = request.ScreenSize,
+      BatteryCapacity = request.BatteryCapacity,
+      ImageUrl = request.ImageUrl,
+      ImageGalleryJson = request.ImageGalleryJson,
+      CostPrice = request.CostPrice,
+      SellPrice = request.SellPrice,
+      StockQuantity = request.StockQuantity,
+      Description = request.Description,
+      IsDraft = request.IsDraft
+    };
+
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation("Product updated successfully: ID {ProductId}", id);
     }
+
+    return HandleResult(result);
   }
 
   /// <summary>
@@ -188,23 +191,22 @@ public class ProductController : ControllerBase
   [HttpDelete("{id}")]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status204NoContent)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
-  public async Task<ActionResult<ResponseWrapper<object>>> DeleteProduct(
+  public async Task<IActionResult> DeleteProduct(
       int id,
       CancellationToken cancellationToken)
   {
-    try
+    _logger.LogInformation("Deleting product ID: {ProductId}", id);
+
+    var command = new DeleteProductCommand(id);
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
     {
-      var command = new DeleteProductCommand(id);
-      await _mediator.Send(command, cancellationToken);
-      return NoContent();
+      _logger.LogInformation("Product deleted successfully: ID {ProductId}", id);
     }
-    catch (NotFoundException ex)
-    {
-      return NotFound(new ResponseWrapper<object>
-      {
-        Success = false,
-        Message = ex.Message
-      });
-    }
+
+    return result.IsSuccess
+      ? NoContent()
+      : HandleResult(result);
   }
 }

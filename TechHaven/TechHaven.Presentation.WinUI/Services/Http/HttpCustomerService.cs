@@ -13,16 +13,49 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpCustomerService : ICustomerService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "api/customers";
+        private const string BaseUrl = "api/Customer";
 
         public HttpCustomerService(HttpClient httpClient)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public Task<ResponseWrapper<List<CustomerDto>>> GetAllCustomersAsync()
+        public async Task<ResponseWrapper<PagingResponse<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
         {
-            return _httpClient.GetWrapperFromJsonAsync<List<CustomerDto>>(BaseUrl, "Failed to retrieve customers");
+            // Build query string from CustomerListQueryDto
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+
+            if (query.Type.HasValue)
+                queryParams.Add($"Type={query.Type.Value}");
+
+            if (query.CreatedAt?.StartDate.HasValue == true)
+                queryParams.Add($"CreatedAt.StartDate={query.CreatedAt.StartDate.Value:O}");
+
+            if (query.CreatedAt?.EndDate.HasValue == true)
+                queryParams.Add($"CreatedAt.EndDate={query.CreatedAt.EndDate.Value:O}");
+
+            if (query.Sorting != null)
+            {
+                if (!string.IsNullOrWhiteSpace(query.Sorting.SortBy))
+                    queryParams.Add($"Sorting.SortBy={Uri.EscapeDataString(query.Sorting.SortBy)}");
+
+                queryParams.Add($"Sorting.Desc={query.Sorting.Desc}");
+            }
+
+            if (query.PageNumber > 0)
+                queryParams.Add($"PageNumber={query.PageNumber}");
+
+            // Always include PageSize parameter when provided (>0)
+            if (query.PageSize > 0)
+                queryParams.Add($"PageSize={query.PageSize}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+
+            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<CustomerDto>>(url, "Failed to query customers");
         }
 
         public Task<ResponseWrapper<CustomerDto>> GetCustomerByIdAsync(int id)
@@ -32,6 +65,8 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerUpsertRequestDto customerDto)
         {
+            if (customerDto == null) throw new ArgumentNullException(nameof(customerDto));
+
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, customerDto);
             return await response.EnsureSuccessAndReadWrapperAsync<CustomerDto>("Failed to create customer");
         }
@@ -45,13 +80,20 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         public async Task<ResponseWrapper<bool>> DeleteCustomerAsync(int id)
         {
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/{id}");
-            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete customer");
-        }
 
-        public async Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query)
-        {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
-            return await response.EnsureSuccessAndReadWrapperAsync<List<CustomerDto>>("Failed to query customers");
+            // DELETE returns 204 NoContent on success, so check status code directly
+            if (response.IsSuccessStatusCode)
+            {
+                return new ResponseWrapper<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Message = "Customer deleted successfully"
+                };
+            }
+
+            // If not successful, try to read error response
+            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete customer");
         }
     }
 }

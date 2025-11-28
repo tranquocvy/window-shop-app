@@ -1,0 +1,71 @@
+<!-- ========================================================= -->
+<!-- ==============   TECHHAVEN MIDNIGHT NEON   =============== -->
+<!-- ========================================================= -->
+
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="ms-appx:///Themes/Common.xaml" />
+        <ResourceDictionary Source="ms-appx:///Themes/Accents.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- ========================================================= -->
+    <!-- ========================= COLORS ========================= -->
+    <!-- ========================================================= -->
+
+    <!-- Backgrounds -->
+    <Color x:Key="TH.Color.SurfaceBackground">#FF0A0A0F</Color>
+    <!-- Deep space black -->
+    <Color x:Key="TH.Color.Layer1Background">#FF11111A</Color>
+    <!-- Slightly elevated -->
+    <Color x:Key="TH.Color.CardBackground">#FF161624</Color>
+    <!-- Card dark violet -->
+    <Color x:Key="TH.Color.NavBackground">#FF0D0D16</Color>
+    <!-- Super dark nav -->
+
+    <!-- Borders -->
+    <Color x:Key="TH.Color.Border">#FF222234</Color>
+    <!-- Muted violet border -->
+    <Color x:Key="TH.Color.Divider">#FF303044</Color>
+    <!-- Slightly brighter divider -->
+
+    <!-- Text -->
+    <Color x:Key="TH.Color.TextPrimary">#FFEFF3FF</Color>
+    <!-- Soft neon white -->
+    <Color x:Key="TH.Color.TextSecondary">#FF9EA7C9</Color>
+    <!-- Muted neon gray -->
+    <Color x:Key="TH.Color.TextDisabled">#FF5A607A</Color>
+    <!-- Dimmed neon -->
+
+    <!-- ========================================================= -->
+    <!-- ========================= BRUSHES ======================== -->
+    <!-- ========================================================= -->
+
+    <SolidColorBrush x:Key="TH.SurfaceBackground"
+                     Color="{StaticResource TH.Color.SurfaceBackground}" />
+    <SolidColorBrush x:Key="TH.Layer1Background"
+                     Color="{StaticResource TH.Color.Layer1Background}" />
+    <SolidColorBrush x:Key="TH.CardBackground"
+                     Color="{StaticResource TH.Color.CardBackground}" />
+    <SolidColorBrush x:Key="TH.NavBackground"
+                     Color="{StaticResource TH.Color.NavBackground}" />
+    <SolidColorBrush x:Key="TH.BorderBrush"
+                     Color="{StaticResource TH.Color.Border}" />
+    <SolidColorBrush x:Key="TH.DividerBrush"
+                     Color="{StaticResource TH.Color.Divider}" />
+    <SolidColorBrush x:Key="TH.TextPrimary"
+                     Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="TH.TextSecondary"
+                     Color="{StaticResource TH.Color.TextSecondary}" />
+    <SolidColorBrush x:Key="TH.TextDisabled"
+                     Color="{StaticResource TH.Color.TextDisabled}" />
+
+    <!-- Map common colors -->
+    <SolidColorBrush x:Key="TH.SuccessBrush" Color="#FF00F59C" />
+    <!-- Neon green -->
+    <SolidColorBrush x:Key="TH.DangerBrush" Color="#FFFF3D7F" />
+    <!-- Neon pink -->
+
+</ResourceDictionary>

@@ -8,17 +8,18 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
+                <!-- Theme dictionaries are loaded by ThemeManager at runtime -->
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Keep navigation item sizing/style but do NOT force Foreground here (it overrides theme) -->
             <Style TargetType="NavigationViewItem">
-                <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="MinHeight" Value="60"/>
             </Style>
 
+            <!-- Avoid forcing icon foreground globally -->
             <Style TargetType="FontIcon">
-                <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontSize" Value="16"/>
             </Style>
             <!-- Other app resources here -->

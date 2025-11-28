@@ -1,21 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Presentation.WinUI.Views;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -30,6 +15,10 @@ namespace TechHaven.Presentation.WinUI
     {
         private Window? _window;
 
+
+        // thuộc tính này để gọi cái MainWindow từ các chỗ khác
+        public static Window MainWindow { get; private set; } = null!;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -43,9 +32,39 @@ namespace TechHaven.Presentation.WinUI
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Initialize theme manager and load default theme so windows/pages can register and receive brushes
+            try
+            {
+                ThemeManager.Initialize(ThemeManager.ThemeType.Midnight, loadAccents: true);
+            }
+            catch
+            {
+                // ignore theme init failures
+            }
+
+            // Use mock restore for offline testing
+            TokenPersistence.UseMock = false;
+
+            try
+            {
+                var restored = await TokenPersistence.TryRestoreSessionAsync();
+                if (restored && AppState.IsLoggedIn)
+                {
+                    // open shell directly
+                    var shell = new ShellWindow();
+                    shell.Activate();
+                    return;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
             _window = new MainWindow();
+            MainWindow = _window;
             _window.Activate();
         }
     }
