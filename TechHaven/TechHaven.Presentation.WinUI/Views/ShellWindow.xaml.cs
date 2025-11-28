@@ -8,6 +8,9 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Windowing;
+using WinRT.Interop;
+using System.Drawing;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -22,6 +25,43 @@ namespace TechHaven.Presentation.WinUI.Views
         public ShellWindow()
         {
             this.InitializeComponent();
+
+            // Extend content into title bar so we can use a custom title area
+            try
+            {
+                var hWnd = WindowNative.GetWindowHandle(this);
+                var windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
+                var appWindow = AppWindow.GetFromWindowId(windowId);
+                if (appWindow is not null)
+                {
+                    appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+
+                    // Set system title bar buttons (minimize/maximize/close) colors
+                    try
+                    {
+                        // Use hard transparent for all button background states
+                        var transparent = Colors.Transparent;
+                        appWindow.TitleBar.ButtonBackgroundColor = transparent;
+                        appWindow.TitleBar.ButtonHoverBackgroundColor = transparent;
+                        appWindow.TitleBar.ButtonPressedBackgroundColor = transparent;
+                        appWindow.TitleBar.ButtonInactiveBackgroundColor = transparent;
+
+                        // Keep foreground from theme if available, otherwise use white
+                        Windows.UI.Color foreground = TryGetColorFromResource("TH.TextPrimary", Windows.UI.Color.FromArgb(255, 255, 255, 255)); appWindow.TitleBar.ButtonForegroundColor = foreground;
+                        appWindow.TitleBar.ButtonHoverForegroundColor = foreground;
+                        appWindow.TitleBar.ButtonPressedForegroundColor = foreground;
+                        appWindow.TitleBar.ButtonInactiveForegroundColor = Windows.UI.Color.FromArgb((byte)Math.Min(255, (int)(foreground.A * 0.7)), foreground.R, foreground.G, foreground.B);
+                    }
+                    catch
+                    {
+                        // ignore failures applying titlebar colors
+                    }
+                }
+            }
+            catch
+            {
+                // ignore on platforms where Windowing APIs are not available
+            }
 
             if (Content is FrameworkElement root)
             {
@@ -326,6 +366,25 @@ namespace TechHaven.Presentation.WinUI.Views
             }
 
             return null;
+        }
+
+        private static Windows.UI.Color TryGetColorFromResource(string key, Windows.UI.Color fallback)
+        {
+            try
+            {
+                if (Application.Current?.Resources != null && Application.Current.Resources.ContainsKey(key))
+                {
+                    var res = Application.Current.Resources[key];
+                    if (res is SolidColorBrush scb)
+                    {
+                        return scb.Color;
+                    }
+                    // If resource is a Brush but not SolidColorBrush, try to extract via ToString parse
+                }
+            }
+            catch { }
+
+            return fallback;
         }
     }
 }

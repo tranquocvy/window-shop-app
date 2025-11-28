@@ -17,6 +17,7 @@
     <Grid x:Name="rootGrid" Background="{ThemeResource TH.SurfaceBackground}">
         <NavigationView
             x:Name="navView"
+            OpenPaneLength="220"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Auto"
