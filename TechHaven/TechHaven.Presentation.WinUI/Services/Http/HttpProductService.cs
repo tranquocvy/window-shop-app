@@ -27,9 +27,15 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto)
         {
+
+            // Gửi POST với mapped dto
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
-            return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to create product");
+
+            return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>(
+                "Failed to create product"
+            );
         }
+
 
         public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto)
         {

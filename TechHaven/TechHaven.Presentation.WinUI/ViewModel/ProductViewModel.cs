@@ -7,6 +7,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
@@ -268,7 +269,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
-
             var response = await _productService.CreateProductsAsync(dto);
             if (response.Success)
                 await LoadProductsAsync();

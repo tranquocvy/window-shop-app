@@ -16,7 +16,7 @@ public class ProductUpsertRequest
 
     public int? BatteryCapacity { get; set; }
 
-    public string ImageUrl { get; set; } = "ms-appx:///Assets/avatar.jpg";
+    public string ImageUrl { get; set;}
 
     public string? ImageGalleryJson { get; set; }
 
