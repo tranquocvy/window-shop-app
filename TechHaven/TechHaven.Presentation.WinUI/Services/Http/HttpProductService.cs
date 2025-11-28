@@ -13,7 +13,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpProductService : IProductService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "api/products";
+        private const string BaseUrl = "api/Product";
 
         public HttpProductService(HttpClient httpClient)
         {
@@ -45,11 +45,15 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
+            // Build query string from CustomerListQueryDto
+            var queryParams = new List<string>();
 
-            return await response.EnsureSuccessAndReadWrapperAsync<PagingResponse<ProductDto>>(
-                "Failed to query products"
-            );
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
         }
 
     }

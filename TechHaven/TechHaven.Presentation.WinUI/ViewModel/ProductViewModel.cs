@@ -6,8 +6,10 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Products;
@@ -16,7 +18,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class ProductViewModel : ObservableObject
     {
-        private readonly IProductService _productService = new MockProductService();
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
+        private readonly IProductService _productService = new HttpProductService(SharedHttpClient);
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
 
@@ -52,7 +55,16 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private bool _isUpdatingAll = false;
 
+        public ObservableCollection<string> BrandNameFilter { get; } = new()
+        {
+            "Không",
+            "Iphone",
+            "Samsung",
+            "Nokia"
+        };
 
+        [ObservableProperty]
+        private string _selectedBrandName = "Không";
 
         // ========================
         // Search triggers reload
@@ -60,8 +72,19 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         partial void OnSearchTermChanged(string value)
         {
             PageNumber = 1;
-            _ = LoadProductsAsync();
+
+            // Tạo query trực tiếp
+            var query = new ProductListQueryDto
+            {
+                SearchTerm = value,      // lấy từ value mới gõ
+                PageNumber = PageNumber,
+                PageSize = PageSize
+            };
+
+            // Gọi API
+            _ = LoadProductsAsync(query);
         }
+
 
 
         // ========================
@@ -84,11 +107,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Main load function
         // ========================
         [RelayCommand]
-        private async Task LoadProductsAsync()
+        private async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
             Products.Clear();
 
-            var query = new ProductListQueryDto
+            query ??= new ProductListQueryDto
             {
                 SearchTerm = SearchTerm,
                 PageNumber = PageNumber,
@@ -99,36 +122,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!response.Success || response.Data == null)
                 return;
 
-            var paging = response.Data; // PagingResponse<ProductDto>
+            var paging = response.Data;
 
-            // Add items
             foreach (var product in paging.Items)
             {
-                var itemVM = new ProductItemViewModel(product);
-
-                itemVM.PropertyChanged += (s, e) =>
+                if (!Products.Any(p => p.Product.ProductId == product.ProductId))
                 {
-                    if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
+                    var itemVM = new ProductItemViewModel(product);
+                    itemVM.PropertyChanged += (s, e) =>
                     {
-                        if (_isUpdatingAll) return;
-
-                        _isUpdatingAll = true;
-                        IsAllSelected = Products.All(p => p.IsSelected);
-                        _isUpdatingAll = false;
-                    }
-                };
-
-                Products.Add(itemVM);
+                        if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
+                        {
+                            if (_isUpdatingAll) return;
+                            _isUpdatingAll = true;
+                            IsAllSelected = Products.All(p => p.IsSelected);
+                            _isUpdatingAll = false;
+                        }
+                    };
+                    Products.Add(itemVM);
+                }
             }
 
-            // Update selection
             _isUpdatingAll = true;
             IsAllSelected = Products.All(p => p.IsSelected);
             _isUpdatingAll = false;
 
-            // --- Update pagination using TotalCount (short way) ---
             UpdatePaginationState(paging.TotalCount);
         }
+
 
 
 
