@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using TechHaven.Application.Features.Product.Commands.CreateProduct;
 using TechHaven.Application.Features.Product.Commands.DeleteProduct;
 using TechHaven.Application.Features.Product.Commands.UpdateProduct;
@@ -38,6 +37,10 @@ public class ProductController : BaseApiController
     {
       SearchTerm = queryDto.SearchTerm,
       IsDraft = queryDto.IsDraft,
+      FromPrice = queryDto.FromPrice,
+      ToPrice = queryDto.ToPrice,
+      Brand = queryDto.Brand,
+      Status = (Domain.SearchCriteria.ProductStatus)(queryDto.Status ?? default),
       PageNumber = queryDto.PageNumber,
       PageSize = queryDto.PageSize,
       SortBy = queryDto.Sorting?.SortBy,

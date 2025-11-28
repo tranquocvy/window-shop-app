@@ -10,32 +10,60 @@ namespace TechHaven.Domain.Specifications;
 public class ProductSearchSpecification : BaseSpecification<Product>
 {
   public ProductSearchSpecification(
-    ProductSearchCriteria criteria)
-    : base(BuildCriteria(criteria.SearchTerm, criteria.IsDraft))
+    ProductSearchCriteria criteria, bool hasPaging)
+    : base(BuildCriteria(criteria))
   {
     // Apply sorting
     ApplySortingLogic(criteria.SortBy, criteria.SortDescending);
 
     // Apply paging
-    ApplyPaging((criteria.PageNumber - 1) * criteria.PageSize, criteria.PageSize);
+    // Nếu ko có tham số hasPaging -> tự động paging
+    if (hasPaging)
+    {
+      ApplyPaging((criteria.PageNumber - 1) * criteria.PageSize, criteria.PageSize);
+    }
   }
 
-  public ProductSearchSpecification(string? searchTerm, bool? isDraft)
-    : base(BuildCriteria(searchTerm, isDraft))
-  {
-    // Không làm gì cả, chỉ giữ Criteria từ base
-  }
+  // // Todo: Check lại logic cái này: Hiện chưa filter nếu muốn lấy all
+  // public ProductSearchSpecification(string? searchTerm, bool? isDraft)
+  //   : base(BuildCriteriaSimple(searchTerm, isDraft))
+  // {
+  //   // Không làm gì cả, chỉ giữ Criteria từ base
+  // }
 
-  private static Expression<Func<Product, bool>>? BuildCriteria(string? searchTerm, bool? isDraft)
+  private static Expression<Func<Product, bool>>? BuildCriteria(ProductSearchCriteria criteria)
   {
-    if (string.IsNullOrWhiteSpace(searchTerm) && !isDraft.HasValue)
+    bool hasValidStatus = criteria.Status.HasValue && (int)criteria.Status.Value > 0;
+
+    // Nếu không có filter nào => trả về null (lấy tất cả)
+    if (string.IsNullOrWhiteSpace(criteria.SearchTerm)
+        && !criteria.IsDraft.HasValue
+        && !criteria.FromPrice.HasValue
+        && !criteria.ToPrice.HasValue
+        && string.IsNullOrWhiteSpace(criteria.Brand)
+        && !hasValidStatus)
       return null;
 
     return p =>
-      (!isDraft.HasValue || p.IsDraft == isDraft.Value) && (string.IsNullOrWhiteSpace(searchTerm) ||
-      p.ProductName.Contains(searchTerm) ||
-      p.BrandName.Contains(searchTerm) ||
-      (p.Description != null && p.Description.Contains(searchTerm)));
+      // Filter: IsDraft
+      (!criteria.IsDraft.HasValue || p.IsDraft == criteria.IsDraft.Value) &&
+
+      // Filter: SearchTerm (tên, hãng, mô tả)
+      (string.IsNullOrWhiteSpace(criteria.SearchTerm) ||
+       p.ProductName.ToLower().Contains(criteria.SearchTerm.ToLower()) ||
+       p.BrandName.Contains(criteria.SearchTerm.ToLower())) &&
+
+      // Filter: Khoảng giá (FromPrice -> ToPrice)
+      (!criteria.FromPrice.HasValue || p.SellPrice >= criteria.FromPrice.Value) &&
+      (!criteria.ToPrice.HasValue || p.SellPrice <= criteria.ToPrice.Value) &&
+
+      // Filter: Hãng
+      (string.IsNullOrWhiteSpace(criteria.Brand) || p.BrandName.ToLower() == criteria.Brand.ToLower()) &&
+
+      // Filter: Trạng thái (còn hàng / hết hàng)
+      (!hasValidStatus ||
+       (criteria.Status == ProductStatus.InStock && p.StockQuantity > 0) ||
+       (criteria.Status == ProductStatus.OutOfStock && p.StockQuantity == 0));
   }
 
   private void ApplySortingLogic(string? sortBy, bool sortDescending)
