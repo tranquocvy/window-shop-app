@@ -23,7 +23,7 @@ public class ProductProfile : Profile
         // Map CreateProductCommand -> Product
         CreateMap<CreateProductCommand, Product>()
             .ForMember(dest => dest.ProductId, opt => opt.Ignore())
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.Now))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
         // Map UpdateProductCommand -> Update
