@@ -7,6 +7,7 @@
     xmlns:vm="using:TechHaven.Presentation.WinUI.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
     x:Name="RootPage"
     mc:Ignorable="d"
     Background="White"
@@ -16,6 +17,11 @@
     <Page.DataContext>
         <vm:ProductViewModel/>
     </Page.DataContext>
+
+    <Page.Resources>
+        <converters:UrlToImageConverter x:Key="UrlToImageConverter" />
+    </Page.Resources>
+
 
     <Grid Padding="16" RequestedTheme="Light">
         <Grid.RowDefinitions>
@@ -125,8 +131,9 @@
                         <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" MinWidth="0" Margin="0"/>
 
                         <Border Grid.Column="1" CornerRadius="4" Width="40" Height="40" HorizontalAlignment="Left" Margin="0,0,10,0">
-                            <Image Source="{Binding Product.ImageUrl}" Stretch="UniformToFill"/>
+                            <Image Source="{Binding Product.ImageUrl, Converter={StaticResource UrlToImageConverter}}" Stretch="UniformToFill"/>
                         </Border>
+
 
                         <TextBlock Grid.Column="2" Text="{Binding Product.ProductId}" VerticalAlignment="Center"/>
 
