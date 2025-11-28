@@ -13,72 +13,82 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
+    <!-- Use TH.* theme resources directly -->
+    <Grid x:Name="rootGrid" Background="{ThemeResource TH.SurfaceBackground}">
         <NavigationView
             x:Name="navView"
+            OpenPaneLength="220"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Auto"
             SelectionFollowsFocus="Enabled"
             Loaded="navView_Loaded"
             ItemInvoked="navView_ItemInvoked"
-            Background="#0A2E8C"
-            Foreground="White">
+            Background="{ThemeResource TH.NavBackground}"
+            Foreground="{ThemeResource TH.TextPrimary}">
 
             <!-- Header logo -->
             <NavigationView.PaneHeader>
                 <StackPanel Orientation="Horizontal" 
                 Padding="12,12,0,12" 
                 Margin="0,20,0,0">
-                    <PersonPicture ProfilePicture="ms-appx:///Assets/avatar.jpg" DisplayName="User"/>
+                    <!-- Use an Ellipse filled with an ImageBrush to render a rounded avatar reliably in WinUI -->
+                    <Ellipse Width="40" Height="40">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="ms-appx:///Assets/avatar.jpg" Stretch="UniformToFill" />
+                        </Ellipse.Fill>
+                    </Ellipse>
+
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock 
                             x:Name="currentUserFullNameText" 
                             Text="Loading..." 
                             Style="{ThemeResource BaseTextBlockStyle}"
-                            FontWeight="SemiBold"/>
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TH.TextPrimary}"/>
                         <TextBlock 
                             x:Name="currentUserRoleText" 
                             Text="Loading role..." 
-                            Style="{ThemeResource CaptionTextBlockStyle}"/>
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TH.TextSecondary}"/>
                     </StackPanel>
                 </StackPanel>
             </NavigationView.PaneHeader>
             <!-- Menu items -->
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Dashboard" Tag="dashboard">
+                <NavigationViewItem Content="Dashboard" Tag="dashboard" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE80F;" />
+                        <FontIcon Glyph="&#xE80F;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Products" Tag="product">
+                <NavigationViewItem Content="Products" Tag="product" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE719;" />
+                        <FontIcon Glyph="&#xE719;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Orders" Tag="order">
+                <NavigationViewItem Content="Orders" Tag="order" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE14C;" />
+                        <FontIcon Glyph="&#xE14C;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Customers" Tag="customer">
+                <NavigationViewItem Content="Customers" Tag="customer" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE716;" />
+                        <FontIcon Glyph="&#xE716;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Report" Tag="report">
+                <NavigationViewItem Content="Report" Tag="report" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE9F9;" />
+                        <FontIcon Glyph="&#xE9F9;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Settings" Tag="setting">
+                <NavigationViewItem Content="Settings" Tag="setting" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE713;" />
+                        <FontIcon Glyph="&#xE713;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Log Out" Tag="logout">
+                <NavigationViewItem Content="Log Out" Tag="logout" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE7E8;" />
+                        <FontIcon Glyph="&#xE7E8;" Foreground="{ThemeResource TH.TextPrimary}" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
