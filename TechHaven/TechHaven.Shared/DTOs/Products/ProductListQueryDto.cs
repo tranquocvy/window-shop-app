@@ -9,8 +9,8 @@ public class ProductListQueryDto : PagingRequest
     public bool? IsDraft { get; set; }
 
     // Lọc theo khoảng giá
-    public decimal? FromPrice { get; set; }
-    public decimal? ToPrice { get; set; }
+    public int? FromPrice { get; set; }
+    public int? ToPrice { get; set; }
 
     // Lọc theo hãng
     public string? Brand { get; set; }
@@ -22,7 +22,7 @@ public class ProductListQueryDto : PagingRequest
 }
 
 /// <summary>
-/// Defines the types of customers in the system.
+/// Defines the types of product status in the system.
 /// </summary>
 public enum ProductStatus
 {

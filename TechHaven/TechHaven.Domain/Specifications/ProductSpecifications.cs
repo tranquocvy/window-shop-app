@@ -54,8 +54,8 @@ public class ProductSearchSpecification : BaseSpecification<Product>
        p.BrandName.Contains(criteria.SearchTerm.ToLower())) &&
 
       // Filter: Khoảng giá (FromPrice -> ToPrice)
-      (!criteria.FromPrice.HasValue || p.SellPrice >= criteria.FromPrice.Value) &&
-      (!criteria.ToPrice.HasValue || p.SellPrice <= criteria.ToPrice.Value) &&
+      (!criteria.FromPrice.HasValue || p.SellPrice >= (decimal)criteria.FromPrice.Value) &&
+      (!criteria.ToPrice.HasValue || p.SellPrice <= (decimal)criteria.ToPrice.Value) &&
 
       // Filter: Hãng
       (string.IsNullOrWhiteSpace(criteria.Brand) || p.BrandName.ToLower() == criteria.Brand.ToLower()) &&

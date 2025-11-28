@@ -12,8 +12,8 @@ namespace TechHaven.Domain.SearchCriteria
         public bool? IsDraft { get; set; }
 
         //Lọc theo khoảng giá
-        public decimal? FromPrice { get; set; }
-        public decimal? ToPrice { get; set; }
+        public int? FromPrice { get; set; }
+        public int? ToPrice { get; set; }
 
         //Lọc theo hãng
         public string? Brand { get; set; }
