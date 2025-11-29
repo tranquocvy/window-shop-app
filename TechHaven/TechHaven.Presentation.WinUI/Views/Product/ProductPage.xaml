@@ -85,13 +85,13 @@
 
             </StackPanel>
 
-            <ComboBox Grid.Column="3"
-                    Width="150"
-                    PlaceholderText="Chọn trạng thái"
-                    SelectedItem="{Binding SelectedStatus, Mode=TwoWay}">
-                <ComboBoxItem Content="Còn hàng"/>
-                <ComboBoxItem Content="Hết hàng"/>
-            </ComboBox>
+            <ComboBox ItemsSource="{x:Bind ViewModel.StatusFilter}"
+              Grid.Column="3"
+              SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+              Height="40"
+              PlaceholderText="Chọn trạng thái"/>
+
 
             <Button Grid.Column="4"
                 Content="Thêm Sản Phẩm"

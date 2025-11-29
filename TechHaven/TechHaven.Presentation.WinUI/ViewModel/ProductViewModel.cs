@@ -69,8 +69,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             "Nokia"
         };
 
+        public ObservableCollection<string> StatusFilter { get; } = new()
+        {
+            "Không",
+            "Còn hàng",
+            "Hết hàng"
+        };
+
         [ObservableProperty]
         private string _selectedBrandName = "Không";
+
+        [ObservableProperty]
+        private string _selectedStatus = "Không";
 
         // ========================
         // Helper: Build Query
@@ -87,6 +97,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!string.IsNullOrWhiteSpace(PriceTo) && int.TryParse(PriceTo.Trim(), out var parsedTo))
                 toPrice = parsedTo;
 
+            
+            ProductStatus? statusFilter = SelectedStatus switch
+            {
+                "Còn hàng" => ProductStatus.InStock,
+                "Hết hàng" => ProductStatus.OutOfStock,
+                _ => null
+            };
+
             var query = new ProductListQueryDto
             {
                 SearchTerm = string.IsNullOrWhiteSpace(SearchTerm)
@@ -99,12 +117,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 Brand = SelectedBrandName == "Không" ? null : SelectedBrandName,
 
                 FromPrice = fromPrice,
-                ToPrice = toPrice
-            };
+                ToPrice = toPrice,
 
+                Status = statusFilter
+            };
 
             return query;
         }
+
 
 
 
@@ -136,6 +156,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         partial void OnSelectedBrandNameChanged(string value)
+        {
+            // Reset về trang 1 khi filter thay đổi
+            PageNumber = 1;
+            var query = BuildQuery();
+            _ = LoadProductsAsync(query);
+        }
+
+        partial void OnSelectedStatusChanged(string value)
         {
             // Reset về trang 1 khi filter thay đổi
             PageNumber = 1;
