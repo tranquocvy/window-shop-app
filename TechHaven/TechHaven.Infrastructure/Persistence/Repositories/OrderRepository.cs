@@ -15,7 +15,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     public OrderRepository(AppDbContext context) : base(context)
     {
     }
-    // 1. Hàm Search cho danh sách (Clean & Specification Pattern chuẩn)
+    // 1. Hàm Search cho danh sách 
     public async Task<(IReadOnlyList<Order> Items, int TotalCount)> SearchWithPaginationAsync(
         OrderSearchCriteria criteria,
         CancellationToken cancellationToken)
