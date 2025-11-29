@@ -7,7 +7,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
@@ -82,7 +81,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 Brand = SelectedBrandName == "Không" ? null : SelectedBrandName
             };
-
 
             return query;
         }
@@ -224,27 +222,71 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         private async Task DeleteSelectedAsync()
         {
+            // --- ĐÃ SỬA LỖI CÚ PHÁP TẠI ĐÂY ---
             var selectedItems = Products.Where(p => p.IsSelected).ToList();
             if (!selectedItems.Any())
                 return;
 
-            bool confirm = await DialogHelper.ShowConfirmAsync(
-                    App.MainWindow,
-                    "Xác nhận xóa",
-                    $"Bạn có chắc muốn xóa {selectedItems.Count} sản phẩm đã chọn không?"
-                );
-
-            if (!confirm) return;
-
-            foreach (var item in selectedItems)
+            try
             {
-                var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
-                if (response.Success)
-                    Products.Remove(item);
-            }
+                bool confirm = false;
+                try
+                {
+                    confirm = await DialogHelper.ShowConfirmAsync(
+                        App.MainWindow,
+                        "Xác nhận xóa",
+                        $"Bạn có chắc muốn xóa {selectedItems.Count} sản phẩm đã chọn không?"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Dialog error: {ex}");
+                    // If dialog cannot show, bail out safely
+                    return;
+                }
 
-            // Tải lại danh sách sau khi xóa (dùng BuildQuery mặc định)
-            await LoadProductsAsync();
+                if (!confirm) return;
+
+                foreach (var item in selectedItems)
+                {
+                    try
+                    {
+                        var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+                        if (response?.Success == true)
+                            Products.Remove(item);
+                        else
+                            System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Failed delete id={item.Product.ProductId} Message={response?.Message}");
+                    }
+                    catch (HttpRequestException httpEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] HTTP error deleting id={item.Product.ProductId}: {httpEx}");
+                        // Show a simple error dialog to user
+                        var errorDialog = new ContentDialog
+                        {
+                            Title = "Lỗi mạng",
+                            Content = "Không thể kết nối tới máy chủ để xóa sản phẩm.",
+                            CloseButtonText = "Đóng",
+                            XamlRoot = App.MainWindow?.Content?.XamlRoot
+                        };
+                        await errorDialog.ShowAsync();
+                    }
+                }
+
+                // Reload after deletes to keep paging consistent
+                await LoadProductsAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Unexpected error: {ex}");
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Lỗi",
+                    Content = "Đã có lỗi xảy ra khi xóa sản phẩm.",
+                    CloseButtonText = "Đóng",
+                    XamlRoot = App.MainWindow?.Content?.XamlRoot
+                };
+                await errorDialog.ShowAsync();
+            }
         }
 
         // ========================
@@ -255,31 +297,71 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             if (item == null) return;
 
-            bool confirm = await DialogHelper.ShowConfirmAsync(
-                App.MainWindow,
-                "Xác nhận xóa",
-                $"Bạn có chắc muốn xóa sản phẩm {item.Product.ProductName} không?"
-            );
-
-            if (!confirm) return;
-
-            var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
-            if (response.Success)
+            try
             {
-                Products.Remove(item);
-                // Cập nhật lại phân trang vì số lượng item thay đổi
-                await LoadProductsAsync();
+                bool confirm = false;
+                try
+                {
+                    confirm = await DialogHelper.ShowConfirmAsync(
+                        App.MainWindow,
+                        "Xác nhận xóa",
+                        $"Bạn có chắc muốn xóa sản phẩm {item.Product.ProductName} không?"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Dialog error: {ex}");
+                    return;
+                }
+
+                if (!confirm) return;
+
+                try
+                {
+                    var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+                    if (response?.Success == true)
+                    {
+                        Products.Remove(item);
+                        // Update list/paging after deletion
+                        await LoadProductsAsync();
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Delete failed id={item.Product.ProductId} Message={response?.Message}");
+                        var errorDialog = new ContentDialog
+                        {
+                            Title = "Lỗi",
+                            Content = "Xóa sản phẩm thất bại",
+                            CloseButtonText = "Đóng",
+                            XamlRoot = App.MainWindow?.Content?.XamlRoot
+                        };
+                        await errorDialog.ShowAsync();
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] HTTP error deleting id={item.Product.ProductId}: {httpEx}");
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Lỗi mạng",
+                        Content = "Không thể kết nối tới máy chủ để xóa sản phẩm.",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = App.MainWindow?.Content?.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Unexpected error: {ex}");
                 var errorDialog = new ContentDialog
                 {
-                    XamlRoot = App.MainWindow.Content.XamlRoot, // Fix lỗi XamlRoot nếu cần
                     Title = "Lỗi",
-                    Content = "Xóa sản phẩm thất bại",
-                    CloseButtonText = "Đóng"
+                    Content = "Đã có lỗi xảy ra khi xóa sản phẩm.",
+                    CloseButtonText = "Đóng",
+                    XamlRoot = App.MainWindow?.Content?.XamlRoot
                 };
-                _ = errorDialog.ShowAsync();
+                await errorDialog.ShowAsync();
             }
         }
 

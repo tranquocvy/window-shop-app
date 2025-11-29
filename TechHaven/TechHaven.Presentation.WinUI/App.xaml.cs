@@ -73,6 +73,7 @@ namespace TechHaven.Presentation.WinUI
                 {
                     // open shell directly
                     var shell = new ShellWindow();
+                    MainWindow = shell;
                     shell.Activate();
                     return;
                 }
