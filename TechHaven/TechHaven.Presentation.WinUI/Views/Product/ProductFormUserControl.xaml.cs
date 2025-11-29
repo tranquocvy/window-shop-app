@@ -128,8 +128,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
                 ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
 
-                ImageUrl = finalImageUrl,
-
+                //ImageUrl = finalImageUrl,
+                ImageUrl = "https://cdn2.fptshop.com.vn/unsafe/828x0/filters:format(webp):quality(75)/2022_10_28_638025679601008898_iPhone%2014%20(13).jpg",
                 IsDraft = false
             };
         }
