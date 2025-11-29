@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
@@ -60,7 +59,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             "Không",
             "Iphone",
-            "Samsung",
+            "Apple",
             "Nokia"
         };
 
@@ -68,25 +67,53 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _selectedBrandName = "Không";
 
         // ========================
+        // Helper: Build Query
+        // ========================
+        private ProductListQueryDto BuildQuery()
+        {
+            var query = new ProductListQueryDto
+            {
+                SearchTerm = string.IsNullOrWhiteSpace(SearchTerm)
+                    ? null
+                    : SearchTerm.Trim().ToLower(),
+
+                PageNumber = PageNumber,
+                PageSize = PageSize,
+
+                Brand = SelectedBrandName == "Không" ? null : SelectedBrandName
+            };
+
+
+            return query;
+        }
+
+
+        // ========================
         // Search triggers reload
         // ========================
         partial void OnSearchTermChanged(string value)
         {
+            // Reset về trang 1 khi search thay đổi
             PageNumber = 1;
+            _ = LoadProductsAsync(BuildQuery());
+        }
 
-            // Tạo query trực tiếp
-            var query = new ProductListQueryDto
-            {
-                SearchTerm = value,      // lấy từ value mới gõ
-                PageNumber = PageNumber,
-                PageSize = PageSize
-            };
-
-            // Gọi API
+        partial void OnSelectedBrandNameChanged(string value)
+        {
+            // Reset về trang 1 khi filter thay đổi
+            PageNumber = 1;
+            var query = BuildQuery();
             _ = LoadProductsAsync(query);
         }
 
-
+        // ========================
+        // Page size change
+        // ========================
+        partial void OnPageSizeChanged(int value)
+        {
+            PageNumber = 1;
+            _ = LoadProductsAsync(BuildQuery());
+        }
 
         // ========================
         // Toggle all selection
@@ -101,23 +128,17 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _isUpdatingAll = false;
         }
 
-
-
-
         // ========================
         // Main load function
         // ========================
         [RelayCommand]
         private async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
+            // Nếu không truyền query (null), tự động dùng BuildQuery lấy state hiện tại
+            query ??= BuildQuery();
+
             Products.Clear();
 
-            query ??= new ProductListQueryDto
-            {
-                SearchTerm = SearchTerm,
-                PageNumber = PageNumber,
-                PageSize = PageSize
-            };
 
             var response = await _productService.QueryProductsAsync(query);
             if (!response.Success || response.Data == null)
@@ -127,34 +148,29 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             foreach (var product in paging.Items)
             {
-                if (!Products.Any(p => p.Product.ProductId == product.ProductId))
+                var itemVM = new ProductItemViewModel(product);
+                // Đăng ký sự kiện PropertyChanged cho từng item để update Select All checkbox
+                itemVM.PropertyChanged += (s, e) =>
                 {
-                    var itemVM = new ProductItemViewModel(product);
-                    itemVM.PropertyChanged += (s, e) =>
+                    if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
                     {
-                        if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
-                        {
-                            if (_isUpdatingAll) return;
-                            _isUpdatingAll = true;
-                            IsAllSelected = Products.All(p => p.IsSelected);
-                            _isUpdatingAll = false;
-                        }
-                    };
-                    Products.Add(itemVM);
-                }
+                        if (_isUpdatingAll) return;
+                        _isUpdatingAll = true;
+                        IsAllSelected = Products.All(p => p.IsSelected);
+                        _isUpdatingAll = false;
+                    }
+                };
+
+                Products.Add(itemVM);
             }
 
+            // Cập nhật trạng thái Select All dựa trên list mới load
             _isUpdatingAll = true;
-            IsAllSelected = Products.All(p => p.IsSelected);
+            IsAllSelected = Products.Any() && Products.All(p => p.IsSelected);
             _isUpdatingAll = false;
 
             UpdatePaginationState(paging.TotalCount);
         }
-
-
-
-
-
 
         // ========================
         // Pagination state update
@@ -163,14 +179,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             TotalCount = totalCount;
 
-            // tránh chia cho 0
             TotalPages = PageSize > 0
-                ? (int)System.Math.Ceiling((double)totalCount / PageSize)
+                ? (int)Math.Ceiling((double)totalCount / PageSize)
                 : 1;
 
             if (TotalPages == 0) TotalPages = 1;
 
-            // đảm bảo PageNumber hợp lệ (tránh trường hợp xóa item khiến PageNumber > TotalPages)
+            // Logic kiểm tra trang hiện tại
             if (PageNumber > TotalPages) PageNumber = TotalPages;
             if (PageNumber < 1) PageNumber = 1;
 
@@ -180,8 +195,28 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             PageInfo = $"Trang {PageNumber}/{TotalPages} (Tổng {TotalCount})";
         }
 
+        // ========================
+        // Pagination commands
+        // ========================
+        [RelayCommand]
+        private async Task PreviousPageAsync()
+        {
+            if (PageNumber > 1)
+            {
+                PageNumber--;
+                await LoadProductsAsync(BuildQuery());
+            }
+        }
 
-
+        [RelayCommand]
+        private async Task NextPageAsync()
+        {
+            if (PageNumber < TotalPages)
+            {
+                PageNumber++;
+                await LoadProductsAsync(BuildQuery());
+            }
+        }
 
         // ========================
         // Delete selected
@@ -201,8 +236,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             if (!confirm) return;
 
-
-            // Xóa các sản phẩm đã chọn
             foreach (var item in selectedItems)
             {
                 var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
@@ -210,12 +243,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     Products.Remove(item);
             }
 
-            // Tải lại danh sách sau khi xóa
+            // Tải lại danh sách sau khi xóa (dùng BuildQuery mặc định)
             await LoadProductsAsync();
         }
-
-
-
 
         // ========================
         // Context menu delete
@@ -233,19 +263,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             if (!confirm) return;
 
-
-            if (!confirm)
-                return;
-
             var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
             if (response.Success)
             {
                 Products.Remove(item);
+                // Cập nhật lại phân trang vì số lượng item thay đổi
+                await LoadProductsAsync();
             }
             else
             {
                 var errorDialog = new ContentDialog
                 {
+                    XamlRoot = App.MainWindow.Content.XamlRoot, // Fix lỗi XamlRoot nếu cần
                     Title = "Lỗi",
                     Content = "Xóa sản phẩm thất bại",
                     CloseButtonText = "Đóng"
@@ -254,16 +283,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-
-
-
         // ========================
         // CRUD operations
         // ========================
         public async Task UpdateProductAsync(int id, ProductUpsertRequest dto)
         {
             await _productService.UpdateProductsAsync(id, dto);
-            await LoadProductsAsync();
+            await LoadProductsAsync(); // Dùng query mặc định
         }
 
         public async Task CreateProductAsync(ProductUpsertRequest dto)
@@ -271,43 +297,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (dto == null) return;
             var response = await _productService.CreateProductsAsync(dto);
             if (response.Success)
-                await LoadProductsAsync();
-        }
-
-
-
-        // ========================
-        // Page size change
-        // ========================
-        partial void OnPageSizeChanged(int value)
-        {
-            PageNumber = 1;
-            _ = LoadProductsAsync();
-        }
-
-
-
-        // ========================
-        // Pagination commands
-        // ========================
-        [RelayCommand]
-        private async Task PreviousPageAsync()
-        {
-            if (PageNumber > 1)
-            {
-                PageNumber--;
-                await LoadProductsAsync();
-            }
-        }
-
-        [RelayCommand]
-        private async Task NextPageAsync()
-        {
-            if (PageNumber < TotalPages)
-            {
-                PageNumber++;
-                await LoadProductsAsync();
-            }
+                await LoadProductsAsync(); // Dùng query mặc định
         }
 
         //Kiểm tra phân quyền hiển thị giá nhập
@@ -326,17 +316,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         public bool IsAdmin => CurrentUserRole == "Admin";
-
-
-
-
     }
 
-
-
-
     // ===========================================================
-    // Item ViewModel
+    // Item ViewModel 
     // ===========================================================
     public partial class ProductItemViewModel : ObservableObject
     {
@@ -350,7 +333,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool _isSelected;
 
-        // Thêm thuộc tính ImageUrl
         public string ImageUrl => Product.ImageUrl;
 
         public string StatusText =>
@@ -361,5 +343,4 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 ? new SolidColorBrush(Colors.Green)
                 : new SolidColorBrush(Colors.Red);
     }
-
 }
