@@ -42,6 +42,7 @@
         <Grid Grid.Row="1"
               Margin="0,0,0,12"
               ColumnSpacing="8">
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -63,19 +64,31 @@
                 PlaceholderText="Tiêu chí">
             </ComboBox>
 
-            <ComboBox Grid.Column="2"
-                Width="150"
-                PlaceholderText="Chọn khoảng giá"
-                SelectedItem="{Binding SelectedPriceRange, Mode=TwoWay}">
-                <ComboBoxItem Content="Dưới 5 triệu"/>
-                <ComboBoxItem Content="5 - 10 triệu"/>
-                <ComboBoxItem Content="Trên 10 triệu"/>
-            </ComboBox>
+            <!-- THAY ComboBox thành 2 ô nhập liệu -->
+            <StackPanel Grid.Column="2"
+                Orientation="Horizontal"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Spacing="6">
+
+                <TextBox Width="70"
+                 PlaceholderText="Từ"
+                 InputScope="Number"
+                 Text="{Binding PriceFrom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Text="-" VerticalAlignment="Center"/>
+
+                <TextBox Width="70"
+                 PlaceholderText="Đến"
+                 InputScope="Number"
+                 Text="{Binding PriceTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            </StackPanel>
 
             <ComboBox Grid.Column="3"
-                Width="150"
-                PlaceholderText="Chọn trạng thái"
-                SelectedItem="{Binding SelectedStatus, Mode=TwoWay}">
+                    Width="150"
+                    PlaceholderText="Chọn trạng thái"
+                    SelectedItem="{Binding SelectedStatus, Mode=TwoWay}">
                 <ComboBoxItem Content="Còn hàng"/>
                 <ComboBoxItem Content="Hết hàng"/>
             </ComboBox>
@@ -101,6 +114,7 @@
                 Height="40"
                 Width="220"/>
         </Grid>
+
 
 
         <!-- LIST -->
