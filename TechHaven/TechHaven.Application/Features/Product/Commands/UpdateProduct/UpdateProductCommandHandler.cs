@@ -41,7 +41,7 @@ public class UpdateProductCommandHandler
       }
 
       _mapper.Map(request, product);
-      product.UpdatedAt = DateTime.Now;
+      product.UpdatedAt = DateTime.UtcNow;
 
       await _unitOfWork.Products.UpdateAsync(product);
       await _unitOfWork.SaveChangesAsync();

@@ -8,15 +8,24 @@ public class ProductListQueryDto : PagingRequest
 
     public bool? IsDraft { get; set; }
 
-    //Lọc theo khoảng giá
-    public int? fromPrice { get; set; }
-    public int? toPrice { get; set; }
+    // Lọc theo khoảng giá
+    public int? FromPrice { get; set; }
+    public int? ToPrice { get; set; }
 
-    //Lọc theo hãng
+    // Lọc theo hãng
     public string? Brand { get; set; }
 
-    //Lọc theo trạng thái
-    public string? Status { get; set; }
+    // Lọc theo trạng thái
+    public ProductStatus? Status { get; set; }
 
     public SortingOption? Sorting { get; set; }
+}
+
+/// <summary>
+/// Defines the types of customers in the system.
+/// </summary>
+public enum ProductStatus
+{
+    InStock = 1, // Còn hàng
+    OutOfStock = 2, // Hết hàng
 }

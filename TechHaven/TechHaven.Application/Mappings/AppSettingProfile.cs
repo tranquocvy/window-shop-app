@@ -10,7 +10,7 @@ public class AppSettingProfile : Profile
 	{
 		CreateMap<AppSetting, AppSettingDto>();
 
-		CreateMap<AppSettingCreateUpdateDto, AppSetting>()
+		CreateMap<AppSettingUpsertRequestDto, AppSetting>()
 			.ForMember(dest => dest.AppSettingId, opt => opt.Ignore())
 			.ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 	}

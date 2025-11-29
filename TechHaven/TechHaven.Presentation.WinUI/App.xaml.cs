@@ -1,24 +1,9 @@
 ﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using System.Threading.Tasks;
-
-using TechHaven.Presentation.WinUI.Views;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Themes;
+using TechHaven.Presentation.WinUI.ViewModel;
+using TechHaven.Presentation.WinUI.Views;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -51,6 +36,33 @@ namespace TechHaven.Presentation.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Try to load persisted theme from settings service so the app starts with user's choice
+            ThemeManager.ThemeType initialTheme = ThemeManager.ThemeType.Midnight;
+            try
+            {
+                var vm = new SettingViewModel();
+                await vm.InitializeAsync();
+                if (!string.IsNullOrWhiteSpace(vm.CurrentTheme) &&
+                    Enum.TryParse<ThemeManager.ThemeType>(vm.CurrentTheme, true, out var parsed))
+                {
+                    initialTheme = parsed;
+                }
+            }
+            catch
+            {
+                // ignore and fall back to default
+            }
+
+            // Initialize theme manager with the persisted or fallback theme
+            try
+            {
+                ThemeManager.Initialize(initialTheme, loadAccents: true);
+            }
+            catch
+            {
+                // ignore theme init failures
+            }
+
             // Use mock restore for offline testing
             TokenPersistence.UseMock = false;
 

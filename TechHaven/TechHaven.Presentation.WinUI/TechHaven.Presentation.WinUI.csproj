@@ -81,6 +81,7 @@
     <Content Remove="Assets\RoleToVisibilityConverter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Themes\MidnightTheme.xaml" />
     <None Remove="Views\CustomerPage.xaml" />
     <None Remove="Views\DashboardPage.xaml" />
     <None Remove="Views\OrderPage.xaml" />
@@ -108,7 +109,25 @@
     <Page Remove="Views\SettingsPage.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Themes\Common.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Accents.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\CustomerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\DarkTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\LightTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\HyperVioletTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\MidnightTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <None Update="Views\AddCustomerDialog.xaml">

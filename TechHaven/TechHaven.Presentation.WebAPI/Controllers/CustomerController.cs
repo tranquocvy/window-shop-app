@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Customers;
 using TechHaven.Application.Features.Customer.Queries.GetCustomers;
@@ -15,9 +16,9 @@ namespace TechHaven.Presentation.WebAPI.Controllers;
 public class CustomerController : BaseApiController
 {
   private readonly IMediator _mediator;
-  private readonly ILogger<ProductController> _logger;
+  private readonly ILogger<CustomerController> _logger;
 
-  public CustomerController(IMediator mediator, ILogger<ProductController> logger)
+  public CustomerController(IMediator mediator, ILogger<CustomerController> logger)
   {
     _mediator = mediator;
     _logger = logger;

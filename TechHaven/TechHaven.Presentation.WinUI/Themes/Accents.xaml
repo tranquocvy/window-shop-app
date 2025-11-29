@@ -1,0 +1,25 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Accent (relies on Common colors) -->
+    <SolidColorBrush x:Key="TH.PrimaryBrush" Color="{StaticResource TH.PrimaryColor}" />
+    <SolidColorBrush x:Key="TH.SecondaryBrush" Color="{StaticResource TH.SecondaryColor}" />
+
+    <!-- Example: Accent button -->
+    <Style x:Key="TH.PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource TH.PrimaryBrush}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="{StaticResource TH.Radius.Medium}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
