@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FluentValidation;
 
-namespace TechHaven.Application.Features.Order.Commands.DeleteOrder
+namespace TechHaven.Application.Features.Order.Commands.DeleteOrder;
+
+public class DeleteOrderCommandValidator : AbstractValidator<DeleteOrderCommand>
 {
-    internal class DeleteOrderCommandValidator
+    public DeleteOrderCommandValidator()
     {
+        RuleFor(x => x.OrderId)
+            .GreaterThan(0)
+            .WithMessage("Order ID must be valid.");
     }
 }
