@@ -101,7 +101,6 @@
                 FontWeight="Bold"
                 CornerRadius="5"
                 Height="40"
-                Width="200"
                 Click="AddProduct_Click"/>
 
             <Button Grid.Column="5"
@@ -111,8 +110,7 @@
                 FontWeight="Bold"
                 CornerRadius="5"
                 Command="{Binding DeleteSelectedCommand}"
-                Height="40"
-                Width="220"/>
+                Height="40"/>
         </Grid>
 
 
