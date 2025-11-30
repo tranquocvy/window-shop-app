@@ -22,7 +22,7 @@ public class ProductListQueryDto : PagingRequest
 }
 
 /// <summary>
-/// Defines the types of customers in the system.
+/// Defines the types of product status in the system.
 /// </summary>
 public enum ProductStatus
 {
