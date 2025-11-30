@@ -8,7 +8,192 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid>
+    <Page.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BorderBrush" Value="{StaticResource TH.BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
 
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Foreground" Value="{StaticResource TH.TextPrimary}" />
+        </Style>
+    </Page.Resources>
+
+    <Grid Padding="24" RowSpacing="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" 
+                   Text="Báo Cáo" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   Foreground="{StaticResource TH.TextPrimary}"/>
+
+        <!-- Filters -->
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" 
+                       Text="Từ ngày:" 
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource TH.TextPrimary}"/>
+            <DatePicker Grid.Column="1" 
+                        HorizontalAlignment="Stretch"/>
+
+            <TextBlock Grid.Column="2" 
+                       Text="Đến ngày:" 
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0"
+                       Foreground="{StaticResource TH.TextPrimary}"/>
+            <DatePicker Grid.Column="3" 
+                        HorizontalAlignment="Stretch"/>
+
+            <Button Grid.Column="5"
+                    Content="Tải báo cáo"
+                    Background="{StaticResource TH.PrimaryBrush}"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Padding="24,8"
+                    FontWeight="SemiBold"/>
+        </Grid>
+
+        <!-- Product Sales Chart (Line Chart) -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" 
+                           Text="Sản Phẩm Bán Theo Thời Gian" 
+                           Style="{StaticResource SectionTitle}"/>
+
+                <!-- Product and Label Selector -->
+                <Grid Grid.Row="1" Margin="0,0,0,12" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" 
+                               Text="Product" 
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource TH.TextPrimary}"/>
+                    <ComboBox Grid.Column="1"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Chọn sản phẩm"/>
+
+                    <TextBlock Grid.Column="2" 
+                               Text="Label" 
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0"
+                               Foreground="{StaticResource TH.TextPrimary}"/>
+                    <ComboBox Grid.Column="3"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Year"/>
+                </Grid>
+
+                <!-- Line Chart Area -->
+                <Border Grid.Row="2" 
+                        Background="{StaticResource TH.Layer1Background}"
+                        CornerRadius="12"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        MinHeight="300">
+                    <Grid x:Name="LineChartContainer">
+                        <!-- Chart will be rendered here -->
+                        <TextBlock Text="Biểu đồ đường" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TH.TextSecondary}"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Revenue & Profit Chart (Bar Chart) -->
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" 
+                           Text="Doanh Thu và Lợi Nhuận" 
+                           Style="{StaticResource SectionTitle}"/>
+
+                <!-- Label Selector -->
+                <Grid Grid.Row="1" Margin="0,0,0,12" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" 
+                               Text="Label" 
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource TH.TextPrimary}"/>
+                    <ComboBox Grid.Column="1"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Year"/>
+                </Grid>
+
+                <!-- Bar Chart Area -->
+                <Border Grid.Row="2" 
+                        Background="{StaticResource TH.Layer1Background}"
+                        CornerRadius="12"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        MinHeight="300">
+                    <Grid x:Name="BarChartContainer">
+                        <!-- Chart will be rendered here -->
+                        <TextBlock Text="Biểu đồ cột" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TH.TextSecondary}"/>
+
+                        <!-- Legend -->
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,10,10,0"
+                                    Spacing="20">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Rectangle Width="20" Height="20" Fill="#4472C4" RadiusX="4" RadiusY="4"/>
+                                <TextBlock Text="Doanh Thu" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Rectangle Width="20" Height="20" Fill="#70AD47" RadiusX="4" RadiusY="4"/>
+                                <TextBlock Text="Lợi Nhuận" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </Page>
