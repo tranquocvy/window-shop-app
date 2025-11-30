@@ -61,6 +61,7 @@ namespace TechHaven.Domain.Interfaces
             int ProductId,
             string ProductName,
             string BrandName,
+            string Image_Url,
             int TotalSold,
             decimal TotalRevenue
         )>> GetTopSellingProductsAsync(
