@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="TechHaven.Presentation.WinUI.Views.DashboardPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -226,10 +225,12 @@
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Stretch"/>
 
-                        <Canvas x:Name="MonthlyXAxisCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="28" />
+                        <Canvas x:Name="MonthlyGridCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                        
+                         <Canvas x:Name="MonthlyXAxisCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="36" />
 
-                        <Canvas x:Name="MonthlyHoverCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        </Canvas>
+                         <Canvas x:Name="MonthlyHoverCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                         </Canvas>
                      </Grid>
                  </Border>
             </Grid>

@@ -1,14 +1,13 @@
+using Microsoft.UI;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using TechHaven.Presentation.WinUI.ViewModel;
-using Microsoft.UI.Dispatching;
-using Microsoft.UI.Xaml.Shapes;
-using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 using System;
-using Windows.Foundation;
 using System.Linq;
+using TechHaven.Presentation.WinUI.ViewModel;
+using Windows.Foundation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,6 +39,7 @@ namespace TechHaven.Presentation.WinUI.Views
             dq?.TryEnqueue(() =>
             {
                 _vm.UpdateMonthlyRevenueGeometry(MonthlyChartBorder.ActualWidth, MonthlyChartBorder.ActualHeight);
+                RenderMonthlyGrid();
                 RenderMonthlyXAxis();
             });
         }
@@ -47,6 +47,7 @@ namespace TechHaven.Presentation.WinUI.Views
         private void MonthlyChartBorder_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             _vm.UpdateMonthlyRevenueGeometry(MonthlyChartBorder.ActualWidth, MonthlyChartBorder.ActualHeight);
+            RenderMonthlyGrid();
             RenderMonthlyXAxis();
         }
         private void RenderMonthlyXAxis()
@@ -60,8 +61,8 @@ namespace TechHaven.Presentation.WinUI.Views
             double borderWidth = MonthlyChartBorder.ActualWidth;
             if (double.IsNaN(borderWidth) || borderWidth <= 0) borderWidth = MonthlyChartBorder.RenderSize.Width;
 
-            double leftPadding = 8;
-            double rightPadding = 8;
+            double leftPadding = 62;
+            double rightPadding = 18;
 
             double w = Math.Max(10, borderWidth - leftPadding - rightPadding);
 
@@ -108,6 +109,64 @@ namespace TechHaven.Presentation.WinUI.Views
             }
         }
 
+        private void RenderMonthlyGrid()
+        {
+            if (_vm == null || _vm.MonthlyRevenue == null) return;
+
+            var values = _vm.MonthlyRevenue.Select(x => x.Revenue).ToList();
+            if (values.Count == 0) return;
+
+            decimal min = values.Min();
+            decimal max = values.Max();
+            decimal range = max - min; if (range == 0) range = 1;
+
+            double borderWidth = MonthlyChartBorder.ActualWidth;
+            double borderHeight = MonthlyChartBorder.ActualHeight;
+            if (double.IsNaN(borderWidth) || borderWidth <= 0) borderWidth = MonthlyChartBorder.RenderSize.Width;
+            if (double.IsNaN(borderHeight) || borderHeight <= 0) borderHeight = MonthlyChartBorder.RenderSize.Height;
+
+            double leftPadding = 62; double topPadding = 12; double rightPadding = 18; double bottomPadding = 36;
+            double w = Math.Max(10, borderWidth - leftPadding - rightPadding);
+            double h = Math.Max(10, borderHeight - topPadding - bottomPadding);
+
+            MonthlyGridCanvas.Children.Clear();
+
+            Brush gridBrush = Application.Current.Resources.ContainsKey("TH.BorderBrush") ? (Brush)Application.Current.Resources["TH.BorderBrush"] : new SolidColorBrush(Colors.LightGray);
+            Brush labelBrush = Application.Current.Resources.ContainsKey("TH.TextDisabled") ? (Brush)Application.Current.Resources["TH.TextDisabled"] : new SolidColorBrush(Colors.Gray);
+
+            // 3 horizontal lines at 25%,50%,75% of value range
+            for (int i = 1; i <= 3; i++)
+            {
+                double frac = i / 4.0; // 0.25,0.5,0.75
+                double y = topPadding + (1 - frac) * h;
+
+                var line = new Line
+                {
+                    X1 = leftPadding,
+                    X2 = leftPadding + w,
+                    Y1 = y,
+                    Y2 = y,
+                    Stroke = gridBrush,
+                    StrokeThickness = 1,
+                    Opacity = 0.6
+                };
+                MonthlyGridCanvas.Children.Add(line);
+
+                // label value on left side
+                decimal valueAt = min + (decimal)frac * range;
+                var txt = new TextBlock
+                {
+                    Text = string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C0}", valueAt),
+                    Foreground = labelBrush,
+                    FontSize = 11
+                };
+                txt.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                Canvas.SetLeft(txt, 2);
+                Canvas.SetTop(txt, y - txt.DesiredSize.Height / 2);
+                MonthlyGridCanvas.Children.Add(txt);
+            }
+        }
+
         private void MonthlyChartBorder_PointerMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (_vm == null || _vm.MonthlyRevenue == null || _vm.MonthlyRevenue.Count == 0) return;
@@ -115,8 +174,8 @@ namespace TechHaven.Presentation.WinUI.Views
             var pos = e.GetCurrentPoint(MonthlyChartBorder).Position;
 
             double borderWidth = MonthlyChartBorder.ActualWidth;
-            double leftPadding = 8;
-            double rightPadding = 8;
+            double leftPadding = 62;
+            double rightPadding = 18;
             double w = Math.Max(10, borderWidth - leftPadding - rightPadding);
 
             int n = _vm.MonthlyRevenue.Count;
@@ -130,7 +189,7 @@ namespace TechHaven.Presentation.WinUI.Views
             decimal min = values.Min();
             decimal max = values.Max();
             decimal range = max - min; if (range == 0) range = 1;
-            double topPadding = 8; double bottomPadding = 16; double h = Math.Max(10, MonthlyChartBorder.ActualHeight - topPadding - bottomPadding);
+            double topPadding = 12; double bottomPadding = 36; double h = Math.Max(10, MonthlyChartBorder.ActualHeight - topPadding - bottomPadding);
 
             double px = leftPadding + (n == 1 ? w / 2 : (w * idx) / (n - 1));
             double normalized = (double)((values[idx] - min) / range);
@@ -151,8 +210,29 @@ namespace TechHaven.Presentation.WinUI.Views
                 var tb = _hoverTooltip.Child as TextBlock;
                 if (tb != null) tb.Text = $"{date:dd/MM}: {rev:C0}";
 
+                _hoverTooltip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                double tipW = _hoverTooltip.DesiredSize.Width;
+                double tipH = _hoverTooltip.DesiredSize.Height;
+
                 double tipX = px + 8;
-                double tipY = Math.Max(0, py - 24);
+                double maxX = MonthlyChartBorder.ActualWidth - rightPadding - tipW;
+                if (tipX > maxX)
+                {
+                    tipX = px - 8 - tipW;
+                }
+                if (tipX < leftPadding) tipX = leftPadding;
+
+                double tipY = py - tipH - 8;
+                double minY = topPadding;
+                double maxY = MonthlyChartBorder.ActualHeight - bottomPadding - tipH;
+                if (tipY < minY)
+                {
+                    // try below the point
+                    tipY = py + 8;
+                }
+                if (tipY < minY) tipY = minY;
+                if (tipY > maxY) tipY = maxY;
+
                 Canvas.SetLeft(_hoverTooltip, tipX);
                 Canvas.SetTop(_hoverTooltip, tipY);
             }

@@ -1,24 +1,27 @@
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
-using TechHaven.Shared.DTOs.Common;
-using TechHaven.Shared.DTOs.Dashboard;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI;
-using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Shared.DTOs.Dashboard;
 using Windows.Foundation;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class DashboardViewModel : ObservableObject
     {
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IDashboardService _service;
 
-        public DashboardViewModel() : this(new MockDashboardService()) { }
+        public DashboardViewModel() : this(new HttpDashboardService(SharedHttpClient)) { }
+        //public DashboardViewModel() : this(new MockDashboardService()) { }
 
         public DashboardViewModel(IDashboardService service)
         {
@@ -110,11 +113,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (range == 0) range = 1; // avoid divide by zero
 
             int n = values.Count;
-            // leave some padding
-            double leftPadding = 8;
-            double topPadding = 8;
-            double rightPadding = 8;
-            double bottomPadding = 16;
+            // leave some padding 
+            double leftPadding = 62;
+            double topPadding = 12;
+            double rightPadding = 18;
+            double bottomPadding = 36;
 
             double w = Math.Max(10, width - leftPadding - rightPadding);
             double h = Math.Max(10, height - topPadding - bottomPadding);
