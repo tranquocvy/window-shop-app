@@ -14,6 +14,14 @@ public static class OrderFilterBuilder
     /// </summary>
     public static Expression<Func<Order, bool>> Build(OrderSearchCriteria criteria)
     {
+        // Xử lý Time Component cho ToDate
+        // Nếu có ToDate, ta dịch nó về giây cuối cùng của ngày đó (hoặc so sánh nhỏ hơn ngày hôm sau)
+        DateTime? toDateEndOfDay = criteria.ToDate.HasValue
+            ? criteria.ToDate.Value.Date.AddDays(1).AddTicks(-1) // 23:59:59.9999
+            : null;
+
+        // FromDate thường không cần sửa nếu mặc định là 00:00:00
+
         return x =>
             // Truy cập vào Navigation Property: x.Customer.CustomerName
             (string.IsNullOrEmpty(criteria.CustomerKeyword) ||
@@ -24,7 +32,6 @@ public static class OrderFilterBuilder
             (!criteria.Status.HasValue || x.Status == criteria.Status) &&
 
             (!criteria.FromDate.HasValue || x.OrderDate >= criteria.FromDate) &&
-
             (!criteria.ToDate.HasValue || x.OrderDate <= criteria.ToDate); 
            // &&(!criteria.MinTotalAmount.HasValue || x.TotalAmount >= criteria.MinTotalAmount) 
            // &&(!criteria.MaxTotalAmount.HasValue || x.TotalAmount <= criteria.MaxTotalAmount);
