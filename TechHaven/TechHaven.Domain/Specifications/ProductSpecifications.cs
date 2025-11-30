@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Linq.Expressions;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.SearchCriteria;
@@ -150,6 +151,14 @@ public class LowStockProductsSpecification : BaseSpecification<Product>
       : base(p => p.StockQuantity <= threshold && !p.IsDraft)
   {
     ApplyOrderBy(p => p.StockQuantity);
+  }
+}
+
+public class OutOfStockProductsSpecification : BaseSpecification<Product>
+{
+  public OutOfStockProductsSpecification() : base(p => p.StockQuantity == 0 && !p.IsDraft)
+  {
+    ApplyOrderBy(p => p.ProductName);
   }
 }
 

@@ -66,7 +66,7 @@ public static class DbInitializer
                     UserName = "nphau",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                     RoleId = 1,
-                    IsActive = false,
+                    IsActive = true,
                     HasSeenGuide = false,
                     CreatedAt = DateTime.UtcNow,
                     ActivatedAt = DateTime.UtcNow
@@ -79,7 +79,7 @@ public static class DbInitializer
                     UserName = "nphau_seller",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                     RoleId = 2,
-                    IsActive = false,
+                    IsActive = true,
                     HasSeenGuide = false,
                     CreatedAt = DateTime.UtcNow,
                     ActivatedAt = DateTime.UtcNow
@@ -92,7 +92,7 @@ public static class DbInitializer
                     UserName = "nkvuong",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                     RoleId = 1,
-                    IsActive = false,
+                    IsActive = true,
                     HasSeenGuide = false,
                     CreatedAt = DateTime.UtcNow,
                     ActivatedAt = DateTime.UtcNow
@@ -105,7 +105,7 @@ public static class DbInitializer
                     UserName = "nkvuong_seller",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                     RoleId = 2,
-                    IsActive = false,
+                    IsActive = true,
                     HasSeenGuide = false,
                     CreatedAt = DateTime.UtcNow,
                     ActivatedAt = DateTime.UtcNow
@@ -118,7 +118,7 @@ public static class DbInitializer
                     UserName = "tqvy",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                     RoleId = 1,
-                    IsActive = false,
+                    IsActive = true,
                     HasSeenGuide = false,
                     CreatedAt = DateTime.UtcNow,
                     ActivatedAt = DateTime.UtcNow
@@ -131,7 +131,7 @@ public static class DbInitializer
                     UserName = "tqvy_seller",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: 12),
                     RoleId = 2,
-                    IsActive = false,
+                    IsActive = true,
                     HasSeenGuide = false,
                     CreatedAt = DateTime.UtcNow,
                     ActivatedAt = DateTime.UtcNow

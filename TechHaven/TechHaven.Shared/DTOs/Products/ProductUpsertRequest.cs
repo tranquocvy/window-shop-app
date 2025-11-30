@@ -16,7 +16,7 @@ public class ProductUpsertRequest
 
     public int? BatteryCapacity { get; set; }
 
-    public string ImageUrl { get; set;}
+    public string ImageUrl { get; set;} = string.Empty;
 
     public string? ImageGalleryJson { get; set; }
 
