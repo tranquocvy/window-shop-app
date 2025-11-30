@@ -22,10 +22,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string? _searchKeyword;
 
         [ObservableProperty]
-        private DateTimeOffset? _fromDate = null;  // No default filter - show all orders
+        private DateTimeOffset? _fromDate = DateTimeOffset.Now;  // Default: Hôm nay
 
         [ObservableProperty]
-        private DateTimeOffset? _toDate = null;    // No default filter - show all orders
+        private DateTimeOffset? _toDate = DateTimeOffset.Now;    // Default: Hôm nay
 
         [ObservableProperty]
         private OrderStatusItem? _selectedStatusItem;

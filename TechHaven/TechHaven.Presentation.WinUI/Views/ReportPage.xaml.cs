@@ -23,5 +23,15 @@ namespace TechHaven.Presentation.WinUI.Views
             await ViewModel.LoadProductsCommand.ExecuteAsync(null);
             await ViewModel.LoadReportsCommand.ExecuteAsync(null);
         }
+
+        private void ProductChartTab_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedChartTab = "S?n Ph?m";
+        }
+
+        private void RevenueChartTab_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedChartTab = "Doanh Thu";
+        }
     }
 }

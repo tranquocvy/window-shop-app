@@ -17,6 +17,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         private readonly IReportService _reportService;
 
+        // Tab Options
+        public ObservableCollection<string> ChartTabs { get; } = new()
+        {
+            "S?n Ph?m",
+            "Doanh Thu"
+        };
+
         // Period Type Options
         public ObservableCollection<string> PeriodTypes { get; } = new()
         {
@@ -30,16 +37,19 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public ObservableCollection<ProductSummaryDto> Products { get; } = new();
 
         [ObservableProperty]
+        private string _selectedChartTab = "S?n Ph?m"; // Default: Product chart
+
+        [ObservableProperty]
         private ProductSummaryDto _selectedProduct;
 
         [ObservableProperty]
         private string _selectedPeriodType = "N?m";
 
         [ObservableProperty]
-        private DateTime _startDate = DateTime.Now.AddYears(-1);
+        private DateTimeOffset _startDate = DateTimeOffset.Now; // Default: Hôm nay
 
         [ObservableProperty]
-        private DateTime _endDate = DateTime.Now;
+        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: Hôm nay
 
         // Chart data for display
         public ObservableCollection<ProductSalesDto> ProductSalesData { get; } = new();
@@ -50,6 +60,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         [ObservableProperty]
         private string _errorMessage;
+
+        // Computed properties for visibility
+        public bool IsProductChartVisible => SelectedChartTab == "S?n Ph?m";
+        public bool IsRevenueChartVisible => SelectedChartTab == "Doanh Thu";
 
         public ReportViewModel(IReportService reportService = null)
         {
@@ -99,8 +113,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             {
                 var query = new ReportQueryDto
                 {
-                    StartDate = StartDate,
-                    EndDate = EndDate,
+                    StartDate = StartDate.DateTime,
+                    EndDate = EndDate.DateTime,
                     PeriodType = MapPeriodType(SelectedPeriodType),
                     UserId = null // For now, show all users
                 };
@@ -161,6 +175,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             };
         }
 
+        partial void OnSelectedChartTabChanged(string value)
+        {
+            OnPropertyChanged(nameof(IsProductChartVisible));
+            OnPropertyChanged(nameof(IsRevenueChartVisible));
+            _ = LoadReportsAsync();
+        }
+
         partial void OnSelectedPeriodTypeChanged(string value)
         {
             _ = LoadReportsAsync();
@@ -171,7 +192,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _ = LoadReportsAsync();
         }
 
-        partial void OnStartDateChanged(DateTime value)
+        partial void OnStartDateChanged(DateTimeOffset value)
         {
             if (value > EndDate)
             {
@@ -179,7 +200,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        partial void OnEndDateChanged(DateTime value)
+        partial void OnEndDateChanged(DateTimeOffset value)
         {
             if (value < StartDate)
             {
