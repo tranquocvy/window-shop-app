@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
@@ -13,7 +14,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpProductService : IProductService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "api/products";
+        private const string BaseUrl = "api/Product";
 
         public HttpProductService(HttpClient httpClient)
         {
@@ -27,9 +28,15 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<ProductDto>> CreateProductsAsync(ProductUpsertRequest dto)
         {
+
+            // Gửi POST với mapped dto
             var response = await _httpClient.PostAsJsonAsync(BaseUrl, dto);
-            return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>("Failed to create product");
+
+            return await response.EnsureSuccessAndReadWrapperAsync<ProductDto>(
+                "Failed to create product"
+            );
         }
+
 
         public async Task<ResponseWrapper<ProductDto>> UpdateProductsAsync(int id, ProductUpsertRequest dto)
         {
@@ -45,11 +52,37 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
         public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/query", query);
+            // Build query string from CustomerListQueryDto
+            var queryParams = new List<string>();
 
-            return await response.EnsureSuccessAndReadWrapperAsync<PagingResponse<ProductDto>>(
-                "Failed to query products"
-            );
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+                queryParams.Add($"SearchTerm={Uri.EscapeDataString(query.SearchTerm)}");
+
+            if (query.IsDraft.HasValue)
+                queryParams.Add($"IsDraft={query.IsDraft.Value}");
+
+            if (query.FromPrice.HasValue)
+                queryParams.Add($"FromPrice={query.FromPrice.Value}");
+
+            if (query.ToPrice.HasValue)
+                queryParams.Add($"ToPrice={query.ToPrice.Value}");
+
+            if (!string.IsNullOrWhiteSpace(query.Brand))
+                queryParams.Add($"Brand={Uri.EscapeDataString(query.Brand)}");
+
+            if (query.Status.HasValue)
+                queryParams.Add($"Status={(int)query.Status.Value}");
+
+            if (query.PageNumber > 0)
+                queryParams.Add($"PageNumber={query.PageNumber}");
+
+            if (query.PageSize > 0)
+                queryParams.Add($"PageSize={query.PageSize}");
+
+            string queryString = string.Join("&", queryParams);
+
+            var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
+            return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
         }
 
     }

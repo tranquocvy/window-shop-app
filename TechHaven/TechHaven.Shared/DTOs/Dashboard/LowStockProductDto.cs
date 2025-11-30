@@ -1,4 +1,4 @@
-﻿namespace TechHaven.Shared.DTOs.Dashboard;
+namespace TechHaven.Shared.DTOs.Dashboard;
 
 /// <summary>
 /// DTO cho sản phẩm sắp hết hàng

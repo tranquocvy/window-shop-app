@@ -27,5 +27,20 @@ namespace TechHaven.Domain.Interfaces
             int threshold = 0,
             CancellationToken cancellationToken = default
         );
+
+        /// <summary>
+        /// Get products with out of stock
+        /// </summary>
+        Task<IReadOnlyList<Product>>
+        GetOutOfStockAsync(
+            CancellationToken cancellationToken = default
+        );
+
+        // INTERFACE REPOSITORY FOR DASHBOARD
+
+        /// <summary>
+        /// Đếm tổng số sản phẩm (không tính draft)
+        /// </summary>
+        Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default);
     }
 }

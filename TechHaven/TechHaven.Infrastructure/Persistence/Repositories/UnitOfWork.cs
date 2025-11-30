@@ -1,4 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Infrastructure.Persistence.Repositories;
 
@@ -12,6 +15,8 @@ namespace TechHaven.Infrastructure.Persistence;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<UnitOfWork> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private IDbContextTransaction? _transaction;
     private bool _disposed;
 
@@ -30,9 +35,14 @@ public class UnitOfWork : IUnitOfWork
     /// </summary>
     /// <param name="context">The database context to coordinate.</param>
     /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
-    public UnitOfWork(AppDbContext context)
+    public UnitOfWork(
+        AppDbContext context,
+        ILogger<UnitOfWork> logger,
+        ILoggerFactory loggerFactory)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
     }
 
     #region Repository Properties (Lazy Initialization)
@@ -44,7 +54,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_users == null)
             {
-                _users = new UserRepository(_context);
+                _users = new UserRepository(_context, _loggerFactory);
             }
             return _users;
         }
@@ -57,7 +67,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_roles == null)
             {
-                _roles = new RoleRepository(_context);
+                _roles = new RoleRepository(_context, _loggerFactory);
             }
             return _roles;
         }
@@ -70,7 +80,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_products == null)
             {
-                _products = new ProductRepository(_context);
+                _products = new ProductRepository(_context, _loggerFactory);
             }
             return _products;
         }
@@ -83,7 +93,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_customers == null)
             {
-                _customers = new CustomerRepository(_context);
+                _customers = new CustomerRepository(_context, _loggerFactory);
             }
             return _customers;
         }
@@ -96,7 +106,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_orders == null)
             {
-                _orders = new OrderRepository(_context);
+                _orders = new OrderRepository(_context, _loggerFactory);
             }
             return _orders;
         }
@@ -109,7 +119,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_payments == null)
             {
-                _payments = new PaymentRepository(_context);
+                _payments = new PaymentRepository(_context, _loggerFactory);
             }
             return _payments;
         }
@@ -122,7 +132,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_commissions == null)
             {
-                _commissions = new CommissionRepository(_context);
+                _commissions = new CommissionRepository(_context, _loggerFactory);
             }
             return _commissions;
         }
@@ -135,7 +145,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (_appSettings == null)
             {
-                _appSettings = new AppSettingRepository(_context);
+                _appSettings = new AppSettingRepository(_context, _loggerFactory);
             }
             return _appSettings;
         }
@@ -148,15 +158,51 @@ public class UnitOfWork : IUnitOfWork
     /// <inheritdoc />
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        _logger.LogDebug("Persisting changes to the database");
+
         try
         {
-            return await _context.SaveChangesAsync(cancellationToken);
+            var affected = await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Database changes saved successfully. Rows affected: {RowCount}",
+                affected);
+
+            return affected;
         }
-        catch (Exception)
+        catch (DbUpdateException ex)
         {
-            // Log the exception here if you have a logging framework
-            // _logger.LogError(ex, "Error occurred while saving changes");
-            throw; // Re-throw to let the caller handle it
+            if (ex.InnerException is PostgresException postgresException)
+            {
+                _logger.LogError(
+                    postgresException,
+                    "PostgreSQL error while saving changes. Code: {SqlState}",
+                    postgresException.SqlState);
+            }
+            else
+            {
+                _logger.LogError(ex, "EF Core update exception while saving changes.");
+            }
+
+            throw;
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "Database save operation timed out.");
+            throw;
+        }
+        catch (NpgsqlException ex)
+        {
+            _logger.LogError(
+                ex,
+                "Npgsql connection error while saving changes: {Code}",
+                ex.SqlState);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while saving changes.");
+            throw;
         }
     }
 
@@ -174,7 +220,16 @@ public class UnitOfWork : IUnitOfWork
                 "Please commit or rollback the current transaction before starting a new one.");
         }
 
-        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            _logger.LogInformation("Database transaction started.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to begin database transaction.");
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -191,9 +246,11 @@ public class UnitOfWork : IUnitOfWork
         {
             // Commit the transaction
             await _transaction.CommitAsync(cancellationToken);
+            _logger.LogInformation("Database transaction committed successfully.");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error while committing transaction. Rolling back...");
             // If commit fails, rollback
             await RollbackTransactionAsync(cancellationToken);
             throw;
@@ -219,6 +276,7 @@ public class UnitOfWork : IUnitOfWork
         {
             // Rollback the transaction
             await _transaction.RollbackAsync(cancellationToken);
+            _logger.LogWarning("Database transaction rolled back.");
         }
         finally
         {
@@ -236,6 +294,7 @@ public class UnitOfWork : IUnitOfWork
         {
             await _transaction.DisposeAsync();
             _transaction = null;
+            _logger.LogDebug("Database transaction disposed.");
         }
     }
 

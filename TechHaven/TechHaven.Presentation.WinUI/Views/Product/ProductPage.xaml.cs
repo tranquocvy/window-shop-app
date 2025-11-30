@@ -2,6 +2,7 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views.Controls; 
@@ -66,6 +67,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 // Lấy dữ liệu từ form (đã validate bên trong UserControl)
                 var resultDto = productForm.GetFormData();
 
+
                 if (resultDto == null)
                 {
                     // Validate thất bại (UserControl đã hiện chữ đỏ) -> Giữ Dialog mở
@@ -73,9 +75,12 @@ namespace TechHaven.Presentation.WinUI.Views
                 }
                 else
                 {
+
                     // Dữ liệu OK -> Gọi ViewModel xử lý
                     if (itemForEdit == null)
                     {
+                        
+
                         // Chế độ THÊM
                         await ViewModel.CreateProductAsync(resultDto);
                     }

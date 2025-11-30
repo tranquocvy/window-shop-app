@@ -6,23 +6,32 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class ProductViewModel : ObservableObject
     {
-        private readonly IProductService _productService = new MockProductService();
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
+        private readonly IProductService _productService = new HttpProductService(SharedHttpClient);
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
 
         // Search
         [ObservableProperty]
         private string _searchTerm;
+
+        [ObservableProperty]
+        private string _priceFrom;
+
+        [ObservableProperty]
+        private string _priceTo;
 
         // Pagination
         [ObservableProperty]
@@ -53,16 +62,124 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private bool _isUpdatingAll = false;
 
 
+        public ObservableCollection<string> BrandNameFilter { get; } = new()
+        {
+            "Không",
+            "Iphone",
+            "Apple",
+            "Nokia"
+        };
+
+        public ObservableCollection<string> StatusFilter { get; } = new()
+        {
+            "Không",
+            "Còn hàng",
+            "Hết hàng"
+        };
+
+        [ObservableProperty]
+        private string _selectedBrandName = "Không";
+
+        [ObservableProperty]
+        private string _selectedStatus = "Không";
+
+        // ========================
+        // Helper: Build Query
+        // ========================
+        private ProductListQueryDto BuildQuery()
+        {
+            // Parse price inputs to nullable ints
+            int? fromPrice = null;
+            int? toPrice = null;
+
+            if (!string.IsNullOrWhiteSpace(PriceFrom) && int.TryParse(PriceFrom.Trim(), out var parsedFrom))
+                fromPrice = parsedFrom;
+
+            if (!string.IsNullOrWhiteSpace(PriceTo) && int.TryParse(PriceTo.Trim(), out var parsedTo))
+                toPrice = parsedTo;
+
+            
+            ProductStatus? statusFilter = SelectedStatus switch
+            {
+                "Còn hàng" => ProductStatus.InStock,
+                "Hết hàng" => ProductStatus.OutOfStock,
+                _ => null
+            };
+
+            var query = new ProductListQueryDto
+            {
+                SearchTerm = string.IsNullOrWhiteSpace(SearchTerm)
+                    ? null
+                    : SearchTerm.Trim().ToLower(),
+
+                PageNumber = PageNumber,
+                PageSize = PageSize,
+
+                Brand = SelectedBrandName == "Không" ? null : SelectedBrandName,
+
+                FromPrice = fromPrice,
+                ToPrice = toPrice,
+
+                Status = statusFilter
+            };
+
+            return query;
+        }
+
+
+
 
         // ========================
         // Search triggers reload
         // ========================
         partial void OnSearchTermChanged(string value)
         {
+            // Reset về trang 1 khi search thay đổi
             PageNumber = 1;
-            _ = LoadProductsAsync();
+            _ = LoadProductsAsync(BuildQuery());
         }
 
+        // ========================
+        // Price range changed -> reload
+        // ========================
+        partial void OnPriceFromChanged(string value)
+        {
+            // Reset to first page and call API when price from changes
+            PageNumber = 1;
+            _ = LoadProductsAsync(BuildQuery());
+        }
+
+        partial void OnPriceToChanged(string value)
+        {
+            // Reset to first page and call API when price to changes
+            PageNumber = 1;
+            _ = LoadProductsAsync(BuildQuery());
+        }
+
+        partial void OnSelectedBrandNameChanged(string value)
+        {
+            // Reset về trang 1 khi filter thay đổi
+            PageNumber = 1;
+            var query = BuildQuery();
+            _ = LoadProductsAsync(query);
+        }
+
+        partial void OnSelectedStatusChanged(string value)
+        {
+            // Reset về trang 1 khi filter thay đổi
+            PageNumber = 1;
+            var query = BuildQuery();
+            _ = LoadProductsAsync(query);
+        }
+
+        // ========================
+        // Page size change
+        // ========================
+        partial void OnPageSizeChanged(int value)
+        {
+            PageNumber = 1;
+            _ = LoadProductsAsync(BuildQuery());
+        }
 
         // ========================
         // Toggle all selection
@@ -77,61 +194,57 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _isUpdatingAll = false;
         }
 
-
-
-
         // ========================
         // Main load function
         // ========================
         [RelayCommand]
-        private async Task LoadProductsAsync()
+        private async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
-            Products.Clear();
+            // Nếu không truyền query (null), tự động dùng BuildQuery lấy state hiện tại
+            query ??= BuildQuery();
 
-            var query = new ProductListQueryDto
-            {
-                SearchTerm = SearchTerm,
-                PageNumber = PageNumber,
-                PageSize = PageSize
-            };
+            // ==========================
+            // Hủy event cũ
+            foreach (var item in Products)
+                item.PropertyChanged -= ProductItem_PropertyChanged;
+
+            // Xóa toàn bộ list cũ
+            Products.Clear();
+            // ==========================
 
             var response = await _productService.QueryProductsAsync(query);
             if (!response.Success || response.Data == null)
                 return;
 
-            var paging = response.Data; // PagingResponse<ProductDto>
+            var paging = response.Data;
 
-            // Add items
             foreach (var product in paging.Items)
             {
                 var itemVM = new ProductItemViewModel(product);
-
-                itemVM.PropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
-                    {
-                        if (_isUpdatingAll) return;
-
-                        _isUpdatingAll = true;
-                        IsAllSelected = Products.All(p => p.IsSelected);
-                        _isUpdatingAll = false;
-                    }
-                };
+                // Đăng ký sự kiện PropertyChanged cho từng item để update Select All checkbox
+                itemVM.PropertyChanged += ProductItem_PropertyChanged;
 
                 Products.Add(itemVM);
             }
 
-            // Update selection
+            // Cập nhật trạng thái Select All dựa trên list mới load
             _isUpdatingAll = true;
-            IsAllSelected = Products.All(p => p.IsSelected);
+            IsAllSelected = Products.Any() && Products.All(p => p.IsSelected);
             _isUpdatingAll = false;
 
-            // --- Update pagination using TotalCount (short way) ---
             UpdatePaginationState(paging.TotalCount);
         }
 
-
-
+        private void ProductItem_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ProductItemViewModel.IsSelected))
+            {
+                if (_isUpdatingAll) return;
+                _isUpdatingAll = true;
+                IsAllSelected = Products.All(p => p.IsSelected);
+                _isUpdatingAll = false;
+            }
+        }
 
 
         // ========================
@@ -141,14 +254,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             TotalCount = totalCount;
 
-            // tránh chia cho 0
             TotalPages = PageSize > 0
-                ? (int)System.Math.Ceiling((double)totalCount / PageSize)
+                ? (int)Math.Ceiling((double)totalCount / PageSize)
                 : 1;
 
             if (TotalPages == 0) TotalPages = 1;
 
-            // đảm bảo PageNumber hợp lệ (tránh trường hợp xóa item khiến PageNumber > TotalPages)
+            // Logic kiểm tra trang hiện tại
             if (PageNumber > TotalPages) PageNumber = TotalPages;
             if (PageNumber < 1) PageNumber = 1;
 
@@ -158,8 +270,28 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             PageInfo = $"Trang {PageNumber}/{TotalPages} (Tổng {TotalCount})";
         }
 
+        // ========================
+        // Pagination commands
+        // ========================
+        [RelayCommand]
+        private async Task PreviousPageAsync()
+        {
+            if (PageNumber > 1)
+            {
+                PageNumber--;
+                await LoadProductsAsync(BuildQuery());
+            }
+        }
 
-
+        [RelayCommand]
+        private async Task NextPageAsync()
+        {
+            if (PageNumber < TotalPages)
+            {
+                PageNumber++;
+                await LoadProductsAsync(BuildQuery());
+            }
+        }
 
         // ========================
         // Delete selected
@@ -171,29 +303,67 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!selectedItems.Any())
                 return;
 
-            bool confirm = await DialogHelper.ShowConfirmAsync(
-                    App.MainWindow,
-                    "Xác nhận xóa",
-                    $"Bạn có chắc muốn xóa {selectedItems.Count} sản phẩm đã chọn không?"
-                );
-
-            if (!confirm) return;
-
-
-            // Xóa các sản phẩm đã chọn
-            foreach (var item in selectedItems)
+            try
             {
-                var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
-                if (response.Success)
-                    Products.Remove(item);
+                bool confirm = false;
+                try
+                {
+                    confirm = await DialogHelper.ShowConfirmAsync(
+                        App.MainWindow,
+                        "Xác nhận xóa",
+                        $"Bạn có chắc muốn xóa {selectedItems.Count} sản phẩm đã chọn không?"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Dialog error: {ex}");
+                    // If dialog cannot show, bail out safely
+                    return;
+                }
+
+                if (!confirm) return;
+
+                foreach (var item in selectedItems)
+                {
+                    try
+                    {
+                        var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+                        if (response?.Success == true)
+                            Products.Remove(item);
+                        else
+                            System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Failed delete id={item.Product.ProductId} Message={response?.Message}");
+                    }
+                    catch (HttpRequestException httpEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] HTTP error deleting id={item.Product.ProductId}: {httpEx}");
+                        // Show a simple error dialog to user
+                        var errorDialog = new ContentDialog
+                        {
+                            Title = "Lỗi mạng",
+                            Content = "Không thể kết nối tới máy chủ để xóa sản phẩm.",
+                            CloseButtonText = "Đóng",
+                            XamlRoot = App.MainWindow?.Content?.XamlRoot
+                        };
+                        await errorDialog.ShowAsync();
+                    }
+                }
+
+                // Reload after deletes to keep paging consistent
+                await LoadProductsAsync();
             }
-
-            // Tải lại danh sách sau khi xóa
-            await LoadProductsAsync();
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Unexpected error: {ex}");
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Lỗi",
+                    Content = "Đã có lỗi xảy ra khi xóa sản phẩm.",
+                    CloseButtonText = "Đóng",
+                    XamlRoot = App.MainWindow?.Content?.XamlRoot
+                };
+                await errorDialog.ShowAsync();
+            }
         }
-
-
-
 
         // ========================
         // Context menu delete
@@ -203,37 +373,64 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             if (item == null) return;
 
-            bool confirm = await DialogHelper.ShowConfirmAsync(
-                App.MainWindow,
-                "Xác nhận xóa",
-                $"Bạn có chắc muốn xóa sản phẩm {item.Product.ProductName} không?"
-            );
-
-            if (!confirm) return;
-
-
-            if (!confirm)
-                return;
-
-            var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
-            if (response.Success)
+            try
             {
-                Products.Remove(item);
+                bool confirm = false;
+                try
+                {
+                    confirm = await DialogHelper.ShowConfirmAsync(
+                        App.MainWindow,
+                        "Xác nhận xóa",
+                        $"Bạn có chắc muốn xóa sản phẩm {item.Product.ProductName} không?"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Dialog error: {ex}");
+                    return;
+                }
+
+                if (!confirm) return;
+
+                try
+                {
+                    var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+                    
+             
+                    Products.Remove(item);
+                        
+                    
+                    // chỗ này bỏ if vì "tính năng" đã bàn với leader hihi
+                    // Update list/paging after deletion
+                    await LoadProductsAsync();
+
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] HTTP error deleting id={item.Product.ProductId}: {httpEx}");
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Lỗi mạng",
+                        Content = "Không thể kết nối tới máy chủ để xóa sản phẩm.",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = App.MainWindow?.Content?.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Unexpected error: {ex}");
                 var errorDialog = new ContentDialog
                 {
                     Title = "Lỗi",
-                    Content = "Xóa sản phẩm thất bại",
-                    CloseButtonText = "Đóng"
+                    Content = "Đã có lỗi xảy ra khi xóa sản phẩm.",
+                    CloseButtonText = "Đóng",
+                    XamlRoot = App.MainWindow?.Content?.XamlRoot
                 };
-                _ = errorDialog.ShowAsync();
+                await errorDialog.ShowAsync();
             }
         }
-
-
-
 
         // ========================
         // CRUD operations
@@ -241,56 +438,19 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public async Task UpdateProductAsync(int id, ProductUpsertRequest dto)
         {
             await _productService.UpdateProductsAsync(id, dto);
-            await LoadProductsAsync();
+            await LoadProductsAsync(); // Dùng query mặc định
         }
 
         public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
-
             var response = await _productService.CreateProductsAsync(dto);
             if (response.Success)
-                await LoadProductsAsync();
-        }
-
-
-
-        // ========================
-        // Page size change
-        // ========================
-        partial void OnPageSizeChanged(int value)
-        {
-            PageNumber = 1;
-            _ = LoadProductsAsync();
-        }
-
-
-
-        // ========================
-        // Pagination commands
-        // ========================
-        [RelayCommand]
-        private async Task PreviousPageAsync()
-        {
-            if (PageNumber > 1)
-            {
-                PageNumber--;
-                await LoadProductsAsync();
-            }
-        }
-
-        [RelayCommand]
-        private async Task NextPageAsync()
-        {
-            if (PageNumber < TotalPages)
-            {
-                PageNumber++;
-                await LoadProductsAsync();
-            }
+                await LoadProductsAsync(); // Dùng query mặc định
         }
 
         //Kiểm tra phân quyền hiển thị giá nhập
-        private string _currentUserRole = "Staff";
+        private string _currentUserRole = AppState.CurrentUser?.RoleName ?? "Seller";
 
         public string CurrentUserRole
         {
@@ -305,17 +465,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         public bool IsAdmin => CurrentUserRole == "Admin";
-
-
-
-
     }
 
-
-
-
     // ===========================================================
-    // Item ViewModel
+    // Item ViewModel 
     // ===========================================================
     public partial class ProductItemViewModel : ObservableObject
     {
@@ -329,7 +482,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool _isSelected;
 
-        // Thêm thuộc tính ImageUrl
         public string ImageUrl => Product.ImageUrl;
 
         public string StatusText =>
@@ -340,5 +492,4 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 ? new SolidColorBrush(Colors.Green)
                 : new SolidColorBrush(Colors.Red);
     }
-
 }

@@ -7,6 +7,7 @@
     xmlns:vm="using:TechHaven.Presentation.WinUI.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
     x:Name="RootPage"
     mc:Ignorable="d"
     Background="White"
@@ -16,6 +17,12 @@
     <Page.DataContext>
         <vm:ProductViewModel/>
     </Page.DataContext>
+
+    <Page.Resources>
+        <converters:UrlToImageConverter x:Key="UrlToImageConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </Page.Resources>
+
 
     <Grid Padding="16" RequestedTheme="Light">
         <Grid.RowDefinitions>
@@ -33,36 +40,82 @@
                    Foreground="#0A2E8C"/>
 
         <!-- SEARCH + ADD + DELETE -->
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    Margin="0,0,0,12"
-                    Spacing="8">
+        <Grid Grid.Row="1"
+              Margin="0,0,0,12"
+              ColumnSpacing="8">
 
-            <TextBox
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0"
                 PlaceholderText="Tìm kiếm theo tên, danh mục..."
-                Width="300"
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Button Content="Thêm Sản Phẩm"
-                    Margin="12,0,0,0"
-                    Background="#0D47A1"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    CornerRadius="5"
-                    Height="40"
-                    Width="200"
-                    Click="AddProduct_Click" 
-                    />
+            <ComboBox ItemsSource="{x:Bind ViewModel.BrandNameFilter}"
+                Grid.Column="1"
+                SelectedItem="{x:Bind ViewModel.SelectedBrandName, Mode=TwoWay}"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                PlaceholderText="Tiêu chí">
+            </ComboBox>
 
-            <!--  NÚT XÓA  -->
-            <Button Content="Xóa sản phẩm đã chọn"
-                    Background="Red"
-                    Foreground="White"
-                    CornerRadius="5"
-                    Command="{Binding DeleteSelectedCommand}"
-                    Height="40"
-                    Width="220"/>
-        </StackPanel>
+            <!-- THAY ComboBox thành 2 ô nhập liệu -->
+            <StackPanel Grid.Column="2"
+                Orientation="Horizontal"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Spacing="6">
+
+                <TextBox Width="70"
+                 PlaceholderText="Từ"
+                 InputScope="Number"
+                 Text="{Binding PriceFrom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Text="-" VerticalAlignment="Center"/>
+
+                <TextBox Width="70"
+                 PlaceholderText="Đến"
+                 InputScope="Number"
+                 Text="{Binding PriceTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            </StackPanel>
+
+            <ComboBox ItemsSource="{x:Bind ViewModel.StatusFilter}"
+              Grid.Column="3"
+              SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
+              HorizontalAlignment="Stretch"
+              Height="40"
+              PlaceholderText="Chọn trạng thái"/>
+
+
+            <Button Grid.Column="4"
+                Content="Thêm Sản Phẩm"
+                HorizontalAlignment="Right"
+                Background="#0D47A1"
+                Foreground="White"
+                FontWeight="Bold"
+                CornerRadius="5"
+                Height="40"
+                Click="AddProduct_Click"/>
+
+            <Button Grid.Column="5"
+                Content="Xóa sản phẩm"
+                Background="#D7292A"
+                Foreground="White"
+                FontWeight="Bold"
+                CornerRadius="5"
+                Command="{Binding DeleteSelectedCommand}"
+                Height="40"
+                Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        </Grid>
+
+
 
         <!-- LIST -->
         <ListView Grid.Row="2"
@@ -86,7 +139,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40"/>
                         <ColumnDefinition Width="60"/>
-                        <ColumnDefinition Width="50"/>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1.2*"/>
                         <ColumnDefinition Width="1.2*"/>
@@ -97,15 +149,15 @@
 
                     <CheckBox Grid.Column="0" IsChecked="{Binding IsAllSelected, Mode=TwoWay}" MinWidth="0" Margin="0"/>
                     <TextBlock Grid.Column="1" Text="Ảnh" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="ID" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="3" Text="Tên Sản Phẩm" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="4" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="5" Text="Giá Bán" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="6" Text="SL" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="7" Text="Hãng" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="8" Text="Trạng Thái" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="4" Text="Giá Bán" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="SL" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="6" Text="Hãng" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="7" Text="Trạng Thái" FontWeight="Bold" VerticalAlignment="Center"/>
                 </Grid>
             </ListView.Header>
+
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ProductItemViewModel">
@@ -113,7 +165,6 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40"/>
                             <ColumnDefinition Width="60"/>
-                            <ColumnDefinition Width="50"/>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="1.2*"/>
                             <ColumnDefinition Width="1.2*"/>
@@ -125,35 +176,38 @@
                         <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" MinWidth="0" Margin="0"/>
 
                         <Border Grid.Column="1" CornerRadius="4" Width="40" Height="40" HorizontalAlignment="Left" Margin="0,0,10,0">
-                            <Image Source="{Binding Product.ImageUrl}" Stretch="UniformToFill"/>
+                            <Image Source="{Binding Product.ImageUrl, Converter={StaticResource UrlToImageConverter}}" Stretch="UniformToFill"/>
                         </Border>
 
-                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductId}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold"/>
 
-                        <TextBlock Grid.Column="3" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Product.CostPrice}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="4" Text="{Binding Product.CostPrice}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Product.SellPrice}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="5" Text="{Binding Product.SellPrice}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="6" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="6" Text="{Binding Product.BrandName}" VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="7" Text="{Binding Product.BrandName}" VerticalAlignment="Center"/>
-
-                        <TextBlock Grid.Column="8" Text="{Binding StatusText}" Foreground="{Binding StatusColor}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="7" Text="{Binding StatusText}" Foreground="{Binding StatusColor}" VerticalAlignment="Center"/>
 
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem Text="Xem chi tiết" Click="ViewDetails_Click"/>
-                                <MenuFlyoutItem Text="Xóa sản phẩm"
-                                        Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
-                                        CommandParameter="{Binding}"/>
+                                <MenuFlyoutItem 
+                                    Text="Xóa sản phẩm"
+                                    Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
+                                    CommandParameter="{Binding}"
+                                    Visibility="{Binding DataContext.IsAdmin, ElementName=RootPage, Converter={StaticResource BoolToVisibilityConverter}}"/>
                             </MenuFlyout>
+
+
                         </Grid.ContextFlyout>
 
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
+
         </ListView>
 
 

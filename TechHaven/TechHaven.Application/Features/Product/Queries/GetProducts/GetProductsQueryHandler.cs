@@ -3,7 +3,6 @@ using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Domain.Interfaces;
 using AutoMapper;
-using TechHaven.Domain.SearchCriteria;
 using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Product.Queries.GetProducts;

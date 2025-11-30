@@ -1,6 +1,9 @@
+using System.Linq;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using TechHaven.Application.Common.Exceptions;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Application.Features.Auth.Login;
@@ -16,10 +19,12 @@ namespace TechHaven.Presentation.WebAPI.Controllers;
 public class AuthController : ControllerBase
 {
   private readonly IMediator _mediator;
+  private readonly ILogger<AuthController> _logger;
 
-  public AuthController(IMediator mediator)
+  public AuthController(IMediator mediator, ILogger<AuthController> logger)
   {
     _mediator = mediator;
+    _logger = logger;
   }
 
   /// <summary>
@@ -32,9 +37,16 @@ public class AuthController : ControllerBase
   {
     try
     {
+      _logger.LogInformation("Login attempt for user {UserName}", request.UserName);
+
       var command = new LoginCommand(request.UserName, request.Password);
 
       var result = await _mediator.Send(command);
+
+      _logger.LogInformation(
+        "Login succeeded for {UserName}. OTP session {SessionId}",
+        request.UserName,
+        result.OtpSessionId);
 
       return Ok(new ResponseWrapper<LoginResponseDto>
       {
@@ -43,8 +55,23 @@ public class AuthController : ControllerBase
         Data = result
       });
     }
+    catch (ValidationException vex)
+    {
+      _logger.LogWarning(
+        vex,
+        "Validation failed during login for user {UserName}",
+        request.UserName);
+
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Login failed",
+        Errors = vex.Errors.SelectMany(kvp => kvp.Value).ToList()
+      });
+    }
     catch (Exception ex)
     {
+      _logger.LogError(ex, "Login failed for user {UserName}", request.UserName);
       return BadRequest(new ResponseWrapper<object>
       {
         Success = false,
@@ -64,8 +91,16 @@ public class AuthController : ControllerBase
   {
     try
     {
+      _logger.LogInformation(
+        "OTP verification attempt for session {SessionId}",
+        request.OtpSessionId);
+
       var command = new VerifyOtpCommand(request.OtpSessionId, request.OtpCode);
       var result = await _mediator.Send(command);
+
+      _logger.LogInformation(
+        "OTP verification succeeded for session {SessionId}",
+        request.OtpSessionId);
 
       return Ok(new ResponseWrapper<OtpVerifyResponseDto>
       {
@@ -76,6 +111,11 @@ public class AuthController : ControllerBase
     }
     catch (Exception ex)
     {
+      _logger.LogError(
+        ex,
+        "OTP verification failed for session {SessionId}",
+        request.OtpSessionId);
+
       return BadRequest(new ResponseWrapper<object>
       {
         Success = false,
@@ -96,8 +136,12 @@ public class AuthController : ControllerBase
   {
     try
     {
+      _logger.LogInformation("Refresh token requested");
+
       var command = new RefreshTokenCommand(request.RefreshToken);
       var result = await _mediator.Send(command);
+
+      _logger.LogInformation("Refresh token issued successfully");
 
       return Ok(new ResponseWrapper<RefreshTokenResponseDto>
       {
@@ -108,6 +152,8 @@ public class AuthController : ControllerBase
     }
     catch (Exception ex)
     {
+      _logger.LogError(ex, "Refresh token request failed");
+
       return BadRequest(new ResponseWrapper<object>
       {
         Success = false,
@@ -128,8 +174,16 @@ public class AuthController : ControllerBase
   {
     try
     {
+      _logger.LogInformation(
+        "OTP resend requested for session {SessionId}",
+        request.OtpSessionId);
+
       var command = new ResendOtpCommand(request.OtpSessionId);
       var result = await _mediator.Send(command);
+
+      _logger.LogInformation(
+        "OTP resent successfully for session {SessionId}",
+        request.OtpSessionId);
 
       return Ok(new ResponseWrapper<OtpResendResponseDto>
       {
@@ -140,6 +194,11 @@ public class AuthController : ControllerBase
     }
     catch (Exception ex)
     {
+      _logger.LogError(
+        ex,
+        "Failed to resend OTP for session {SessionId}",
+        request.OtpSessionId);
+
       return BadRequest(new ResponseWrapper<object>
       {
         Success = false,
@@ -159,17 +218,27 @@ public class AuthController : ControllerBase
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status401Unauthorized)]
   public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken)
   {
+    _logger.LogInformation(
+      "Fetching current user profile for principal {User}",
+      User.Identity?.Name ?? "anonymous");
+
     var query = new GetCurrentUserQuery();
     var result = await _mediator.Send(query, cancellationToken);
 
     if (!result.IsSuccess)
     {
+      _logger.LogWarning(
+        "Current user lookup failed: {Reason}",
+        result.ErrorMessage ?? "Unknown");
+
       return Unauthorized(new ResponseWrapper<object>
       {
         Success = false,
         Message = result.ErrorMessage ?? "Unauthorized"
       });
     }
+
+    _logger.LogInformation("Current user lookup succeeded for {User}", result.Data?.UserName);
 
     return Ok(new ResponseWrapper<UserInfoDto>
     {

@@ -2,6 +2,8 @@ using FluentValidation;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Application.Features.Customer.Commands.CreateCustomer;
 
+namespace TechHaven.Application.Features.Customer.Commands.CreateCustomer;
+
 public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCommand>
 {
     public CreateCustomerCommandValidator()

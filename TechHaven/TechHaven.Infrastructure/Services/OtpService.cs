@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using TechHaven.Application.Interfaces;
@@ -9,7 +10,13 @@ public class OtpService : IOtpService
 {
     // Store: SessionId -> (UserId, OtpCode, ExpiryTime)
     private readonly ConcurrentDictionary<string, (int UserId, string OtpCode, DateTime ExpiryTime)> _otpStore = new();
+    private readonly ILogger<OtpService> _logger;
     private const int OtpExpirationMinutes = 5;
+
+    public OtpService(ILogger<OtpService> logger)
+    {
+        _logger = logger;
+    }
 
     public (string OtpSessionId, string OtpCode) GenerateOtp(int userId)
     {
@@ -27,6 +34,12 @@ public class OtpService : IOtpService
         var expiryTime = DateTime.UtcNow.AddMinutes(OtpExpirationMinutes);
         _otpStore[sessionId] = (userId, otpCode, expiryTime);
 
+        _logger.LogInformation(
+            "Generated OTP session {SessionId} for user {UserId}. Expires at {Expiry}",
+            sessionId,
+            userId,
+            expiryTime);
+
         // Clean up expired OTPs
         CleanupExpiredOtps();
 
@@ -37,6 +50,9 @@ public class OtpService : IOtpService
     {
         if (!_otpStore.TryGetValue(otpSessionId, out var storedOtp))
         {
+            _logger.LogWarning(
+                "OTP validation failed. Session not found: {SessionId}",
+                otpSessionId);
             return null; // Session not found
         }
 
@@ -44,21 +60,36 @@ public class OtpService : IOtpService
         if (DateTime.UtcNow > storedOtp.ExpiryTime)
         {
             _otpStore.TryRemove(otpSessionId, out _);
+            _logger.LogWarning(
+                "OTP session expired: {SessionId}",
+                otpSessionId);
             return null;
         }
 
         // Check if OTP code matches
         if (storedOtp.OtpCode != otpCode)
         {
+            _logger.LogWarning(
+                "OTP validation failed. Session: {SessionId}",
+                otpSessionId);
             return null;
         }
+
+        _logger.LogInformation(
+            "OTP validated for session {SessionId}",
+            otpSessionId);
 
         return storedOtp.UserId;
     }
 
     public void InvalidateOtp(string otpSessionId)
     {
-        _otpStore.TryRemove(otpSessionId, out _);
+        if (_otpStore.TryRemove(otpSessionId, out _))
+        {
+            _logger.LogInformation(
+                "OTP session invalidated: {SessionId}",
+                otpSessionId);
+        }
     }
 
     public int? GetUserIdFromSession(string otpSessionId)
@@ -88,7 +119,10 @@ public class OtpService : IOtpService
 
         foreach (var key in expiredKeys)
         {
-            _otpStore.TryRemove(key, out _);
+            if (_otpStore.TryRemove(key, out _))
+            {
+                _logger.LogDebug("Removed expired OTP session {SessionId}", key);
+            }
         }
     }
 }

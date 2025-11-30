@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.Extensions.Logging;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Enums;
 using TechHaven.Domain.Interfaces;
@@ -14,34 +15,43 @@ namespace TechHaven.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class CustomerRepository : GenericRepository<Customer>, ICustomerRepository
 {
-    public CustomerRepository(AppDbContext context) : base(context)
+    public CustomerRepository(AppDbContext context, ILoggerFactory loggerFactory)
+        : base(context, loggerFactory)
     {
     }
 
     public async Task<Customer?> GetByPhoneAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .FirstOrDefaultAsync(c => c.PhoneNumber == phoneNumber, cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetByPhone",
+            () => _dbSet.FirstOrDefaultAsync(c => c.PhoneNumber == phoneNumber, cancellationToken),
+            new { phoneNumber });
     }
 
     public async Task<IReadOnlyList<Customer>> SearchAsync(
         string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbSet.AsQueryable();
+        return await ExecuteOperationAsync(
+            "Search",
+            async () =>
+            {
+                var query = _dbSet.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            var term = searchTerm.ToLower();
-            query = query.Where(c =>
-                c.CustomerName.ToLower().Contains(term) ||
-                c.PhoneNumber.Contains(term) ||
-                (c.Email != null && c.Email.ToLower().Contains(term)));
-        }
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    var term = searchTerm.ToLower();
+                    query = query.Where(c =>
+                        c.CustomerName.ToLower().Contains(term) ||
+                        c.PhoneNumber.Contains(term) ||
+                        (c.Email != null && c.Email.ToLower().Contains(term)));
+                }
 
-        return await query
-            .OrderBy(c => c.CustomerName)
-            .ToListAsync(cancellationToken);
+                return await query
+                    .OrderBy(c => c.CustomerName)
+                    .ToListAsync(cancellationToken);
+            },
+            new { searchTerm });
     }
 
     public async Task<(IReadOnlyList<Customer> Items, int totalCount)> SearchWithPaginationAsync(CustomerSearchCriteria criteria, CancellationToken cancellationToken)
@@ -63,6 +73,12 @@ public class CustomerRepository : GenericRepository<Customer>, ICustomerReposito
         // return (items, totalCount);
 
         // Get customer items with paging
+        _logger.LogInformation(
+            "Searching customers with pagination. Term: {SearchTerm}, Page: {Page}/{Size}",
+            criteria.SearchTerm,
+            criteria.PageNumber,
+            criteria.PageSize);
+
         var spec = new CustomerSearchSpecification(criteria);
         var items = await GetAsync(spec, cancellationToken);
 
@@ -75,25 +91,32 @@ public class CustomerRepository : GenericRepository<Customer>, ICustomerReposito
 
     public async Task<IReadOnlyList<Customer>> GetWithOrdersAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Include(c => c.Orders)
-            .OrderByDescending(c => c.TotalPurchased)
-            .ToListAsync(cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetWithOrders",
+            () => _dbSet
+                .Include(c => c.Orders)
+                .OrderByDescending(c => c.TotalPurchased)
+                .ToListAsync(cancellationToken));
     }
 
     public async Task<Customer?> GetOrdersByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Include(c => c.Orders)
-            .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetOrdersByCustomerId",
+            () => _dbSet
+                .Include(c => c.Orders)
+                .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken),
+            new { customerId });
     }
 
     public async Task<IReadOnlyList<Customer>> GetVipCustomersAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet
-            .Where(c => c.Type == CustomerType.VIP)
-            .OrderByDescending(c => c.TotalPurchased)
-            .ToListAsync(cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetVipCustomers",
+            () => _dbSet
+                .Where(c => c.Type == CustomerType.VIP)
+                .OrderByDescending(c => c.TotalPurchased)
+                .ToListAsync(cancellationToken));
     }
     // private IQueryable<Customer> ApplySorting(IQueryable<Customer> query, string? sortBy, bool sortDescending)
     // {
