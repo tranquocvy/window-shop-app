@@ -15,9 +15,9 @@ public static class OrderFilterBuilder
     public static Expression<Func<Order, bool>> Build(OrderSearchCriteria criteria)
     {
         return x =>
-            (string.IsNullOrEmpty(criteria.SearchTerm) ||
-                x.Notes.Contains(criteria.SearchTerm) ||
-                x.OrderId.ToString().Contains(criteria.SearchTerm)) &&
+            // Truy cập vào Navigation Property: x.Customer.CustomerName
+            (string.IsNullOrEmpty(criteria.CustomerKeyword) ||
+             x.Customer.CustomerName.Contains(criteria.CustomerKeyword)) &&
 
             (!criteria.CustomerId.HasValue || x.CustomerId == criteria.CustomerId) &&
 
@@ -25,10 +25,9 @@ public static class OrderFilterBuilder
 
             (!criteria.FromDate.HasValue || x.OrderDate >= criteria.FromDate) &&
 
-            (!criteria.ToDate.HasValue || x.OrderDate <= criteria.ToDate) &&
-
-            (!criteria.MinTotalAmount.HasValue || x.TotalAmount >= criteria.MinTotalAmount) &&
-            (!criteria.MaxTotalAmount.HasValue || x.TotalAmount <= criteria.MaxTotalAmount);
+            (!criteria.ToDate.HasValue || x.OrderDate <= criteria.ToDate); 
+           // &&(!criteria.MinTotalAmount.HasValue || x.TotalAmount >= criteria.MinTotalAmount) 
+           // &&(!criteria.MaxTotalAmount.HasValue || x.TotalAmount <= criteria.MaxTotalAmount);
     }
 }
 
@@ -63,6 +62,7 @@ public class OrderSearchSpecification : BaseSpecification<Order>
             "date" or "orderdate" => (Expression<Func<Order, object>>)(x => x.OrderDate),
             "status" => (Expression<Func<Order, object>>)(x => x.Status),
             "customer" => (Expression<Func<Order, object>>)(x => x.Customer.CustomerName), // Sort theo tên khách
+            //Default: Sort theo OrderId cũng sẽ đi vào sorting này
             _ => (Expression<Func<Order, object>>)(x => x.OrderDate) // Mặc định sort theo ngày
         };
 
