@@ -61,6 +61,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private bool _isUpdatingAll = false;
 
+
         public ObservableCollection<string> BrandNameFilter { get; } = new()
         {
             "Không",
@@ -395,24 +396,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 {
                     var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
                     
-                    if (response?.Success == true)
-                    {
-                        Products.Remove(item);
-                        // Update list/paging after deletion
-                        await LoadProductsAsync();
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Delete failed id={item.Product.ProductId} Message={response?.Message}");
-                        var errorDialog = new ContentDialog
-                        {
-                            Title = "Lỗi",
-                            Content = "Xóa sản phẩm thất bại",
-                            CloseButtonText = "Đóng",
-                            XamlRoot = App.MainWindow?.Content?.XamlRoot
-                        };
-                        await errorDialog.ShowAsync();
-                    }
+             
+                    Products.Remove(item);
+                        
+                    
+                    // chỗ này bỏ if vì "tính năng" đã bàn với leader hihi
+                    // Update list/paging after deletion
+                    await LoadProductsAsync();
+
                 }
                 catch (HttpRequestException httpEx)
                 {
@@ -459,7 +450,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         //Kiểm tra phân quyền hiển thị giá nhập
-        private string _currentUserRole = "Staff";
+        private string _currentUserRole = AppState.CurrentUser?.RoleName ?? "Seller";
 
         public string CurrentUserRole
         {
