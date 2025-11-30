@@ -9,6 +9,8 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
 using System.Linq;
 using System;
+using System.Collections.Generic;
+using Windows.Foundation;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -41,6 +43,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         [ObservableProperty]
         private Geometry monthlyRevenueGeometry;
+
+        // Spline configuration: tension (0..1) and samples per segment (smoothness)
+        [ObservableProperty]
+        private double splineTension = 1.0; // 0 = linear, 1 = full Catmull-Rom
+
+        [ObservableProperty]
+        private int splineSamplesPerSegment = 12; // number of interpolation steps per segment
 
         public ObservableCollection<LowStockProductDto> LowStockProducts { get; }
 
@@ -111,37 +120,79 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             double h = Math.Max(10, height - topPadding - bottomPadding);
 
             // compute points
-            var points = new System.Collections.Generic.List<System.Numerics.Vector2>(n);
+            var points = new List<Point>(n);
             for (int i = 0; i < n; i++)
             {
                 double x = leftPadding + (n == 1 ? w / 2 : (w * i) / (n - 1));
                 double normalized = (double)((values[i] - min) / range); // 0..1
                 double y = topPadding + (1 - normalized) * h; // invert y
-                points.Add(new System.Numerics.Vector2((float)x, (float)y));
+                points.Add(new Point(x, y));
             }
 
-            // build PathFigure with Bezier smoothing
-            var fig = new PathFigure();
-            fig.IsClosed = false;
-            fig.IsFilled = false;
-            fig.StartPoint = new Windows.Foundation.Point(points[0].X, points[0].Y);
+            // clamp samples
+            int samples = Math.Max(1, splineSamplesPerSegment);
+            double tension = Math.Clamp(splineTension, 0.0, 1.0);
 
-            var segs = new PathSegmentCollection();
-
-            for (int i = 1; i < points.Count; i++)
+            // build PathFigure using Catmull-Rom sampling between points
+            var fig = new PathFigure
             {
-                var p0 = points[i - 1];
-                var p1 = points[i];
+                IsClosed = false,
+                IsFilled = false,
+                StartPoint = points[0]
+            };
 
-                // control points at midpoint x with p0.y and p1.y
-                double cx = (p0.X + p1.X) / 2;
-                var c1 = new BezierSegment();
-                c1.Point1 = new Windows.Foundation.Point(cx, p0.Y);
-                c1.Point2 = new Windows.Foundation.Point(cx, p1.Y);
-                c1.Point3 = new Windows.Foundation.Point(p1.X, p1.Y);
-                segs.Add(c1);
+            var allInterpPoints = new List<Point>();
+
+            if (n == 1)
+            {
+                // single point: nothing to draw
+                MonthlyRevenueGeometry = null;
+                return;
+            }
+            else
+            {
+                // iterate segments between points[i] (P1) and points[i+1] (P2)
+                for (int i = 0; i < n - 1; i++)
+                {
+                    Point p0 = (i - 1) >= 0 ? points[i - 1] : points[i];
+                    Point p1 = points[i];
+                    Point p2 = points[i + 1];
+                    Point p3 = (i + 2) < n ? points[i + 2] : points[i + 1];
+
+                    // generate samples for this segment (exclude t=0 because it's previous point)
+                    for (int s = 1; s <= samples; s++)
+                    {
+                        double t = (double)s / samples;
+
+                        // Catmull-Rom standard basis (with 0.5 tension factor)
+                        // CR point:
+                        double t2 = t * t;
+                        double t3 = t2 * t;
+
+                        double cr_x = 0.5 * ((2 * p1.X) + (-p0.X + p2.X) * t + (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t2 + (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t3);
+                        double cr_y = 0.5 * ((2 * p1.Y) + (-p0.Y + p2.Y) * t + (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t2 + (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t3);
+
+                        // linear interpolation for blending
+                        double lin_x = p1.X + (p2.X - p1.X) * t;
+                        double lin_y = p1.Y + (p2.Y - p1.Y) * t;
+
+                        // blend between linear (0) and CR (1) according to tension property
+                        double blended_x = lin_x * (1 - tension) + cr_x * tension;
+                        double blended_y = lin_y * (1 - tension) + cr_y * tension;
+
+                        allInterpPoints.Add(new Point(blended_x, blended_y));
+                    }
+                }
             }
 
+            // create PolyLineSegment with the interpolated points
+            var poly = new PolyLineSegment();
+            foreach (var p in allInterpPoints)
+            {
+                poly.Points.Add(p);
+            }
+
+            var segs = new PathSegmentCollection { poly };
             fig.Segments = segs;
 
             var figs = new PathFigureCollection { fig };

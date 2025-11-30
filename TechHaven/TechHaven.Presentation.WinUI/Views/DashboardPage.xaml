@@ -213,7 +213,7 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Text="Monthly Revenue" Style="{StaticResource SectionTitle}" />
-                <Border Grid.Row="1" x:Name="MonthlyChartBorder" Background="{StaticResource TH.Layer1Background}" CornerRadius="12" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1" VerticalAlignment="Stretch">
+                <Border Grid.Row="1" x:Name="MonthlyChartBorder" Background="{StaticResource TH.Layer1Background}" CornerRadius="12" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1" VerticalAlignment="Stretch" PointerMoved="MonthlyChartBorder_PointerMoved" PointerExited="MonthlyChartBorder_PointerExited">
                     <Grid>
                         <Path x:Name="MonthlyRevenuePath"
                               Data="{Binding MonthlyRevenueGeometry}"
@@ -225,8 +225,13 @@
                               StrokeEndLineCap="Round"
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Stretch"/>
-                    </Grid>
-                </Border>
+
+                        <Canvas x:Name="MonthlyXAxisCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="28" />
+
+                        <Canvas x:Name="MonthlyHoverCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        </Canvas>
+                     </Grid>
+                 </Border>
             </Grid>
         </Border>
 
@@ -277,6 +282,5 @@
                  </ListView>
              </Grid>
          </Border>
-
     </Grid>
 </Page>
