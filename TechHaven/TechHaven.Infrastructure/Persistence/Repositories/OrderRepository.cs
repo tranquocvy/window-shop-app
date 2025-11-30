@@ -139,7 +139,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
 
     public async Task<Dictionary<DateTime, (decimal Revenue, int OrderCount)>> GetMonthlyRevenueAsync(int year, int month, CancellationToken cancellationToken = default)
     {
-        var startDate = new DateTime(year, month, 1);
+        var startDate = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
         var endDate = startDate.AddMonths(1);
 
         var orders = await ExecuteOperationAsync(
@@ -166,7 +166,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             );
     }
 
-    public async Task<List<(int ProductId, string ProductName, string BrandName, int TotalSold, decimal TotalRevenue)>>
+    public async Task<List<(int ProductId, string ProductName, string? Image_Url, string BrandName, int TotalSold, decimal TotalRevenue)>>
     GetTopSellingProductsAsync(int count = 5, CancellationToken cancellationToken = default)
     {
         // Lấy cả order và order detail để tính TotalSold và TotalRevenue
@@ -180,13 +180,15 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
                 {
                     od.ProductId,
                     od.Product!.ProductName,
-                    od.Product!.BrandName
+                    od.Product!.BrandName,
+                    od.Product.ImageUrl
                 })
                 .Select(g => new
                 {
                     g.Key.ProductId,
                     g.Key.ProductName,
                     g.Key.BrandName,
+                    g.Key.ImageUrl,
                     TotalSold = g.Sum(od => od.Quantity),
                     TotalRevenue = g.Sum(od => od.Quantity * od.UnitPrice)
                 })
@@ -199,6 +201,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             .Select(x => (
                 x.ProductId,
                 x.ProductName,
+                x.ImageUrl,
                 x.BrandName,
                 x.TotalSold,
                 x.TotalRevenue
@@ -207,7 +210,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     }
 
     // Todo: Đang bị lặp code với thằng trên => refactor lại cho đỡ lặp code
-    public async Task<List<(int ProductId, string ProductName, string BrandName, int TotalSold, decimal TotalRevenue)>>
+    public async Task<List<(int ProductId, string ProductName, string? Image_Url, string BrandName, int TotalSold, decimal TotalRevenue)>>
     GetTopSellingProductsAsync(
         DateTime startDate,
         DateTime endDate,
@@ -229,13 +232,15 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
                 {
                     od.ProductId,
                     od.Product!.ProductName,
-                    od.Product!.BrandName
+                    od.Product!.BrandName,
+                    od.Product.ImageUrl
                 })
                 .Select(g => new
                 {
                     g.Key.ProductId,
                     g.Key.ProductName,
                     g.Key.BrandName,
+                    g.Key.ImageUrl,
                     TotalSold = g.Sum(od => od.Quantity),
                     TotalRevenue = g.Sum(od => od.Quantity * od.UnitPrice)
                 })
@@ -248,6 +253,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             .Select(x => (
                 x.ProductId,
                 x.ProductName,
+                x.ImageUrl,
                 x.BrandName,
                 x.TotalSold,
                 x.TotalRevenue

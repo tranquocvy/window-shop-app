@@ -63,8 +63,8 @@ namespace TechHaven.Domain.Interfaces
         Task<List<(
             int ProductId,
             string ProductName,
+            string? Image_Url,
             string BrandName,
-            string Image_Url,
             int TotalSold,
             decimal TotalRevenue
         )>> GetTopSellingProductsAsync(
@@ -99,6 +99,7 @@ namespace TechHaven.Domain.Interfaces
         Task<List<(
             int ProductId,
             string ProductName,
+            string? Image_Url,
             string BrandName,
             int TotalSold,
             decimal TotalRevenue
