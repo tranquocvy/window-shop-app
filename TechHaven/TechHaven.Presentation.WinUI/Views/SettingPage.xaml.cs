@@ -30,36 +30,8 @@ namespace TechHaven.Presentation.WinUI.Views
             ThemeManager.ThemeChanged += OnThemeChanged;
             this.Unloaded += SettingPage_Unloaded;
 
-            // Populate page size options and load persisted settings
-            InitializeAsync();
-        }
-
-        private async void InitializeAsync()
-        {
-            _isInitializing = true;
-
-            // populate combo box options
             pageSizeCombo.ItemsSource = new int[] { 5, 10, 20, 50 };
-
-            // load persisted settings from view model
-            try
-            {
-                await _viewModel.InitializeAsync();
-
-                // set selected page size
-                pageSizeCombo.SelectedItem = _viewModel.PageSize;
-
-                // update theme status if viewmodel provided theme
-                UpdateThemeStatus();
-            }
-            catch
-            {
-                // ignore
-            }
-            finally
-            {
-                _isInitializing = false;
-            }
+            try { pageSizeCombo.SelectedItem = _viewModel.PageSize; } catch { }
         }
 
         private void SettingPage_Unloaded(object? sender, RoutedEventArgs e)
