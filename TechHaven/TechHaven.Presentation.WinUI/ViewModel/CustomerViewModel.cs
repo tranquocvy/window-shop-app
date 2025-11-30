@@ -30,7 +30,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public ObservableCollection<string> SortableProperties { get; } = new()
         {
             "Không",
-            "ID",
+            "Tên",
             "Hạng",
             "Tổng Mua"
         };
@@ -189,7 +189,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             string sortBy = SelectedProperty switch
             {
-                "ID" => "CustomerId",
+                "Tên" => "CustomerName",
                 "Hạng" => "Type",
                 "Tổng Mua" => "TotalPurchased",
                 _ => SelectedProperty
