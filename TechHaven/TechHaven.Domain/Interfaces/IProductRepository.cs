@@ -28,6 +28,14 @@ namespace TechHaven.Domain.Interfaces
             CancellationToken cancellationToken = default
         );
 
+        /// <summary>
+        /// Get products with out of stock
+        /// </summary>
+        Task<IReadOnlyList<Product>>
+        GetOutOfStockAsync(
+            CancellationToken cancellationToken = default
+        );
+
         // INTERFACE REPOSITORY FOR DASHBOARD
 
         /// <summary>
