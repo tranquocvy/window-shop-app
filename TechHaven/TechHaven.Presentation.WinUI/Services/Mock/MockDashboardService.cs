@@ -40,23 +40,31 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                     new RecentOrderDto { OrderId = 1002, CustomerName = "Trần Thị B", OrderDate = DateTime.Now.AddHours(-3), TotalAmount = 4590000m, Status = "Processing" },
                     new RecentOrderDto { OrderId = 1003, CustomerName = "Lê Văn C", OrderDate = DateTime.Now.AddDays(-1), TotalAmount = 2390000m, Status = "Cancelled" }
                 },
-                MonthlyRevenue = Enumerable.Range(1, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
-                    .Select(d => new DailyRevenueDto
+                // Provide exactly 30 points: last 30 days (ending today)
+                MonthlyRevenue = Enumerable.Range(0, 30)
+                    .Select(i =>
                     {
-                        Date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, d),
-                        Revenue = (decimal)(new Random(d).Next(0, 2000000)),
-                        OrderCount = new Random(d).Next(0, 10)
+                        var date = DateTime.Now.Date.AddDays(i - 29); // last 30 days
+                        // deterministic-ish random per date
+                        var seed = date.Day + date.Month * 31 + date.Year;
+                        var rnd = new Random(seed);
+                        return new DailyRevenueDto
+                        {
+                            Date = date,
+                            Revenue = (decimal)rnd.Next(0, 2000000),
+                            OrderCount = rnd.Next(0, 10)
+                        };
                     }).ToList()
-            };
+             };
 
-            var response = new ResponseWrapper<DashboardDto>
-            {
-                Success = true,
-                Message = "Dashboard retrieved successfully",
-                Data = dashboard
-            };
+             var response = new ResponseWrapper<DashboardDto>
+             {
+                 Success = true,
+                 Message = "Dashboard retrieved successfully",
+                 Data = dashboard
+             };
 
-            return Task.FromResult(response);
-        }
-    }
-}
+             return Task.FromResult(response);
+         }
+     }
+ }
