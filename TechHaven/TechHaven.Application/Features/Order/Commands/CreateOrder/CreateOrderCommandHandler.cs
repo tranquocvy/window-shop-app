@@ -47,7 +47,7 @@ public class CreateOrderCommandHandler
             {
                 CustomerId = request.CustomerId,
                 UserId = request.UserId, // Lấy từ Token do Controller truyền vào
-                OrderDate = DateTime.Now,
+                OrderDate = DateTime.UtcNow,
                 Status = OrderStatus.Pending, // Mặc định là Pending
                 Notes = request.Notes,
                 Discount = request.Discount, // Giả sử discount client gửi là hợp lệ (hoặc cần validate thêm logic voucher)
@@ -112,8 +112,6 @@ public class CreateOrderCommandHandler
             // 6. Map kết quả trả về
             var orderResponse = _mapper.Map<OrderDto>(order);
 
-            // Có thể cần map thủ công thêm UserFullName/CustomerName nếu AutoMapper chưa cấu hình include
-            // orderResponse.CustomerName = ... (Tùy logic query của bạn)
             orderResponse.Discount = order.Discount;
 
             return Result<OrderDto>.Success(orderResponse);

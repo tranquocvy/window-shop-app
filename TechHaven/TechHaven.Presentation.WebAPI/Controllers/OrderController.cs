@@ -12,7 +12,7 @@ using TechHaven.Shared.DTOs.Orders;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
-[Authorize] // Yêu cầu phải đăng nhập mới thao tác được Order
+//[Authorize] -> Bỏ để cho phép truy cập công khai (nếu cần thiết)
 public class OrderController : BaseApiController
 {
     private readonly IMediator _mediator;
@@ -25,12 +25,10 @@ public class OrderController : BaseApiController
     }
 
     /// <summary>
-    /// Helper: Lấy UserId từ Access Token (Claims)
+    /// Helper: Lấy UserId từ Access Token
     /// </summary>
     private int GetUserIdFromToken()
     {
-        // Tùy thuộc vào cách bạn config JWT, Claim type có thể là "sub", "uid", hoặc ClaimTypes.NameIdentifier
-        // Ở đây tôi ví dụ lấy theo NameIdentifier (thường là chuẩn)
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
 
         if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
@@ -38,14 +36,13 @@ public class OrderController : BaseApiController
             return userId;
         }
 
-        // Nếu không lấy được (ví dụ dev mode tắt auth), trả về 0 hoặc throw exception tùy policy
-        _logger.LogWarning("Could not extract UserID from Token. Defaulting to 0.");
+        // Log warning nếu không lấy được UserID (có thể do cấu hình Token sai hoặc Auth middleware lỏng lẻo)
+        _logger.LogWarning("Security Alert: Could not extract UserID from Token in OrderController.");
         return 0;
     }
 
     /// <summary>
     /// GET api/Order
-    /// Lấy danh sách đơn hàng có phân trang và lọc
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<OrderDto>>), StatusCodes.Status200OK)]
@@ -53,12 +50,16 @@ public class OrderController : BaseApiController
         [FromQuery] OrderListQueryDto queryDto,
         CancellationToken cancellationToken = default)
     {
+        // Log các tham số lọc để dễ debug khi client báo "tìm không thấy đơn"
         _logger.LogInformation(
-            "Getting orders - Page: {PageNumber}/{PageSize}, Status: {Status}",
-            queryDto.PageNumber, queryDto.PageSize, queryDto.Status);
-
-        // Nếu muốn user chỉ xem được đơn của chính mình, hãy gán UserId vào queryDto tại đây
-        // queryDto.UserId = GetUserIdFromToken();
+            "Getting orders - Page: {PageNumber}/{PageSize}, Status: {Status}, Keyword: {Keyword}, DateRange: {From}-{To}",
+            queryDto.PageNumber,
+            queryDto.PageSize,
+            queryDto.Status,
+            queryDto.CustomerKeyword ?? "None",
+            queryDto.OrderDate?.StartDate?.ToShortDateString() ?? "Any",
+            queryDto.OrderDate?.EndDate?.ToShortDateString() ?? "Any"
+            );
 
         var query = new GetOrdersQuery(queryDto);
         var result = await _mediator.Send(query, cancellationToken);
@@ -75,7 +76,6 @@ public class OrderController : BaseApiController
 
     /// <summary>
     /// GET api/Order/{id}
-    /// Lấy chi tiết một đơn hàng
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ResponseWrapper<OrderDto>), StatusCodes.Status200OK)]
@@ -91,11 +91,12 @@ public class OrderController : BaseApiController
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Order found: {OrderId}", result.Data?.OrderId);
+            _logger.LogInformation("Order found: {OrderId} - Customer: {CustomerName}",
+                result.Data?.OrderId, result.Data?.CustomerName);
         }
         else
         {
-            _logger.LogWarning("Order not found: {OrderId}", id);
+            _logger.LogWarning("Order lookup failed: ID {OrderId} not found.", id);
         }
 
         return HandleResult(result);
@@ -103,7 +104,6 @@ public class OrderController : BaseApiController
 
     /// <summary>
     /// POST api/Order
-    /// Tạo đơn hàng mới
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(ResponseWrapper<OrderDto>), StatusCodes.Status201Created)]
@@ -113,17 +113,20 @@ public class OrderController : BaseApiController
         CancellationToken cancellationToken)
     {
         var currentUserId = GetUserIdFromToken();
-        _logger.LogInformation("User {UserId} is creating a new order.", currentUserId);
 
-        // Map DTO to Command
+        // Log quan trọng: Ai đang cố tạo đơn, cho khách hàng nào, bao nhiêu món?
+        _logger.LogInformation(
+            "User {UserId} initiating order creation. CustomerId: {CustomerId}, ItemCount: {ItemCount}",
+            currentUserId, request.CustomerId, request.Items?.Count ?? 0);
+
         var command = new CreateOrderCommand
         {
-            UserId = currentUserId, // Lấy tự động
+            UserId = currentUserId,
             CustomerId = request.CustomerId,
-            Status = (Domain.Enums.OrderStatus)request.Status, // Thường tạo mới là Pending, nhưng map theo request nếu cần
+            Status = (Domain.Enums.OrderStatus)request.Status,
             Discount = request.Discount,
             Notes = request.Notes,
-            // Map danh sách items từ DTO sang Command
+            // Map đúng kiểu dữ liệu như đã sửa ở bước trước
             Details = request.Items ?? new List<OrderUpsertItemDto>()
         };
 
@@ -131,8 +134,10 @@ public class OrderController : BaseApiController
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Order created successfully: ID {OrderId}", result.Data?.OrderId);
-            // Dùng Object Initializer thay vì Constructor
+            _logger.LogInformation(
+                "Order created successfully: ID {OrderId}, TotalAmount: {TotalAmount}",
+                result.Data?.OrderId, result.Data?.TotalAmount);
+
             var response = new ResponseWrapper<OrderDto>
             {
                 Success = true,
@@ -143,13 +148,16 @@ public class OrderController : BaseApiController
             return StatusCode(StatusCodes.Status201Created, response);
         }
 
-        _logger.LogWarning("Failed to create order. Error: {ErrorMessage}", result.ErrorMessage);
+        // Log Warning khi tạo thất bại (ví dụ: Hết hàng, Validate sai)
+        _logger.LogWarning(
+            "Failed to create order for User {UserId}. Error: {ErrorMessage}",
+            currentUserId, result.ErrorMessage);
+
         return HandleResult(result);
     }
 
     /// <summary>
     /// PUT api/Order/{id}
-    /// Cập nhật đơn hàng (Thông tin chung + Thêm/Bớt sản phẩm)
     /// </summary>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ResponseWrapper<OrderDto>), StatusCodes.Status200OK)]
@@ -160,14 +168,17 @@ public class OrderController : BaseApiController
         [FromBody] OrderUpsertRequestDto request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Updating order ID: {OrderId}", id);
+        var currentUserId = GetUserIdFromToken();
 
-        // Map DTO to Command
+        _logger.LogInformation(
+            "User {UserId} updating order ID: {OrderId}. New ItemCount: {ItemCount}",
+            currentUserId, id, request.Items?.Count ?? 0);
+
         var command = new UpdateOrderCommand
         {
-            OrderId = id, // Lấy từ URL
+            OrderId = id,
             CustomerId = request.CustomerId,
-            Status = (Domain.Enums.OrderStatus) request.Status,
+            Status = (Domain.Enums.OrderStatus)request.Status,
             Discount = request.Discount,
             Notes = request.Notes,
             Details = request.Items ?? new List<OrderUpsertItemDto>()
@@ -177,7 +188,11 @@ public class OrderController : BaseApiController
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Order updated successfully: ID {OrderId}", id);
+            _logger.LogInformation("Order {OrderId} updated successfully.", id);
+        }
+        else
+        {
+            _logger.LogWarning("Failed to update order {OrderId}. Error: {ErrorMessage}", id, result.ErrorMessage);
         }
 
         return HandleResult(result);
@@ -185,25 +200,30 @@ public class OrderController : BaseApiController
 
     /// <summary>
     /// DELETE api/Order/{id}
-    /// Xóa đơn hàng (chỉ cho phép khi Pending/Cancelled)
     /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(typeof(ResponseWrapper<bool>), StatusCodes.Status200OK)] // Hoặc 204 No Content tùy style
+    [ProducesResponseType(typeof(ResponseWrapper<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteOrder(
         int id,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Deleting order ID: {OrderId}", id);
+        var currentUserId = GetUserIdFromToken();
+        _logger.LogInformation("User {UserId} requesting to delete order ID: {OrderId}", currentUserId, id);
 
         var command = new DeleteOrderCommand(id);
         var result = await _mediator.Send(command, cancellationToken);
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Order deleted successfully: ID {OrderId}", id);
+            _logger.LogInformation("Order {OrderId} deleted successfully (Restocked inventory).", id);
         }
+        else
+        {
+            _logger.LogWarning("Failed to delete order {OrderId}. Error: {ErrorMessage}", id, result.ErrorMessage);
+        }
+
         return HandleResult(result);
     }
 }

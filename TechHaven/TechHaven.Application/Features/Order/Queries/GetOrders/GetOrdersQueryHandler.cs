@@ -37,9 +37,16 @@ public class GetOrdersQueryHandler : IQueryHandler<GetOrdersQuery, Result<Paging
             Status = (Domain.Enums.OrderStatus?)input.Status,
             CustomerKeyword = input.CustomerKeyword,
 
-            // Map DateRangeFilter
-            FromDate = input.OrderDate?.StartDate,
-            ToDate = input.OrderDate?.EndDate,
+            
+            // Ép kiểu date sang UTC trước khi đưa vào Criteria
+            FromDate = input.OrderDate?.StartDate.HasValue == true
+                ? DateTime.SpecifyKind(input.OrderDate.StartDate.Value, DateTimeKind.Utc)
+                : null,
+
+            ToDate = input.OrderDate?.EndDate.HasValue == true
+                ? DateTime.SpecifyKind(input.OrderDate.EndDate.Value, DateTimeKind.Utc)
+                : null,
+            // -------------------------------
         };
 
         // 2. Xử lý Sorting
