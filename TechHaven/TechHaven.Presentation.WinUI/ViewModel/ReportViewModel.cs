@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -20,36 +20,46 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Tab Options
         public ObservableCollection<string> ChartTabs { get; } = new()
         {
-            "S?n Ph?m",
+            "Sản Phẩm",
             "Doanh Thu"
         };
 
         // Period Type Options
         public ObservableCollection<string> PeriodTypes { get; } = new()
         {
-            "Ng�y",
-            "Tu?n", 
-            "Th�ng",
-            "N?m"
+            "Ngày",
+            "Tuần", 
+            "Tháng",
+            "Năm"
         };
 
         // Products list for dropdown
         public ObservableCollection<ProductSummaryDto> Products { get; } = new();
 
+        // Years and Months for filtering
+        public ObservableCollection<int> Years { get; } = new();
+        public ObservableCollection<string> Months { get; } = new();
+
         [ObservableProperty]
-        private string _selectedChartTab = "S?n Ph?m"; // Default: Product chart
+        private string _selectedChartTab = "Sản Phẩm"; // Default: Product chart
 
         [ObservableProperty]
         private ProductSummaryDto _selectedProduct;
 
         [ObservableProperty]
-        private string _selectedPeriodType = "N?m";
+        private string _selectedPeriodType = "Năm";
 
         [ObservableProperty]
-        private DateTimeOffset _startDate = DateTimeOffset.Now; // Default: H�m nay
+        private DateTimeOffset _startDate = DateTimeOffset.Now; // Default: Hôm nay
 
         [ObservableProperty]
-        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: H�m nay
+        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: Hôm nay
+
+        [ObservableProperty]
+        private int _selectedYear;
+
+        [ObservableProperty]
+        private string _selectedMonth; // "Tất cả" == all months
 
         // Chart data for display
         public ObservableCollection<ProductSalesDto> ProductSalesData { get; } = new();
@@ -62,13 +72,33 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _errorMessage;
 
         // Computed properties for visibility
-        public bool IsProductChartVisible => SelectedChartTab == "S?n Ph?m";
+        public bool IsProductChartVisible => SelectedChartTab == "Sản Phẩm";
         public bool IsRevenueChartVisible => SelectedChartTab == "Doanh Thu";
 
         public ReportViewModel(IReportService reportService = null)
         {
             _reportService = reportService ?? CreateDefaultReportService();
+            InitializeYearMonth();
             _ = LoadProductsAsync();
+        }
+
+        private void InitializeYearMonth()
+        {
+            var currentYear = DateTime.Now.Year;
+            for (int y = currentYear - 4; y <= currentYear; y++)
+            {
+                Years.Add(y);
+            }
+
+            // "Tất cả" means 'All'
+            Months.Add("Tất cả");
+            for (int m = 1; m <= 12; m++)
+            {
+                Months.Add(m.ToString());
+            }
+
+            SelectedYear = currentYear;
+            SelectedMonth = "Tất cả"; // All months by default
         }
 
         private static IReportService CreateDefaultReportService()
@@ -87,7 +117,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 {
                     Products.Clear();
                     // Add "All Products" option
-                    Products.Add(new ProductSummaryDto { ProductId = 0, ProductName = "T?t c? s?n ph?m" });
+                    Products.Add(new ProductSummaryDto { ProductId = 0, ProductName = "Tất cả sản phẩm" });
                     
                     foreach (var product in products)
                     {
@@ -111,10 +141,32 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             try
             {
+                DateTime queryStart = StartDate.DateTime;
+                DateTime queryEnd = EndDate.DateTime;
+
+                // If year/month selector used, override dates accordingly
+                if (SelectedYear > 0)
+                {
+                    if (!string.IsNullOrWhiteSpace(SelectedMonth) && SelectedMonth != "Tất cả")
+                    {
+                        if (int.TryParse(SelectedMonth, out var month))
+                        {
+                            queryStart = new DateTime(SelectedYear, month, 1);
+                            queryEnd = queryStart.AddMonths(1).AddDays(-1);
+                        }
+                    }
+                    else
+                    {
+                        // whole year
+                        queryStart = new DateTime(SelectedYear, 1, 1);
+                        queryEnd = new DateTime(SelectedYear, 12, 31);
+                    }
+                }
+
                 var query = new ReportQueryDto
                 {
-                    StartDate = StartDate.DateTime,
-                    EndDate = EndDate.DateTime,
+                    StartDate = queryStart,
+                    EndDate = queryEnd,
                     PeriodType = MapPeriodType(SelectedPeriodType),
                     UserId = null // For now, show all users
                 };
@@ -154,7 +206,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"L?i t?i b�o c�o: {ex.Message}";
+                ErrorMessage = $"L?i t?i b�o c�o: {ex.Message}";
                 Debug.WriteLine($"Error loading reports: {ex.Message}");
             }
             finally
@@ -167,9 +219,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             return periodType switch
             {
-                "Ng�y" => ReportPeriodType.Daily,
+                "Ngày" => ReportPeriodType.Daily,
                 "Tu?n" => ReportPeriodType.Weekly,
-                "Th�ng" => ReportPeriodType.Monthly,
+                "Tháng" => ReportPeriodType.Monthly,
                 "N?m" => ReportPeriodType.Yearly,
                 _ => ReportPeriodType.Monthly
             };
