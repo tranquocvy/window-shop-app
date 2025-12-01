@@ -144,5 +144,20 @@ namespace TechHaven.Domain.Interfaces
             DateTime endDate,
             CancellationToken cancellationToken = default
         );
+
+         /// <summary>
+        /// Lấy báo cáo doanh số theo khoảng thời gian
+        /// </summary>
+        Task<List<(
+            string Period,
+            int QuantitySold,
+            decimal Revenue
+        )>> GetProductSalesDataPointAsync(
+            int productId,
+            DateTime startDate,
+            DateTime endDate,
+            ReportPeriodType periodType,
+            CancellationToken cancellationToken = default
+        );
     }
 }

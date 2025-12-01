@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Crypto.Modes;
 using TechHaven.Application.Features.Reports.Queries.GetCommissionReport;
 using TechHaven.Application.Features.Reports.Queries.GetDashboardSummary;
+using TechHaven.Application.Features.Reports.Queries.GetProductsTrend;
 using TechHaven.Application.Features.Reports.Queries.GetSalesReport;
 using TechHaven.Application.Features.Reports.Queries.GetSalesTrend;
 using TechHaven.Application.Features.Reports.Queries.GetTopSellingProducts;
@@ -64,33 +66,33 @@ public class ReportController : BaseApiController
   /// </remarks>
   /// <param name="query">Query parameters</param>
   /// <param name="cancellationToken"></param>
-  [HttpGet("sales")]
-  [ProducesResponseType(typeof(ResponseWrapper<List<SalesReportDto>>), StatusCodes.Status200OK)]
-  public async Task<IActionResult> GetSalesReport(
-      [FromQuery] ReportQueryDto query,
-      CancellationToken cancellationToken)
-  {
-    _logger.LogInformation(
-      "Getting sales report from {StartDate} to {EndDate}, period: {PeriodType}",
-      query.StartDate, query.EndDate, query.PeriodType);
+  // [HttpGet("sales")]
+  // [ProducesResponseType(typeof(ResponseWrapper<List<SalesReportDto>>), StatusCodes.Status200OK)]
+  // public async Task<IActionResult> GetSalesReport(
+  //     [FromQuery] ReportQueryDto query,
+  //     CancellationToken cancellationToken)
+  // {
+  //   _logger.LogInformation(
+  //     "Getting sales report from {StartDate} to {EndDate}, period: {PeriodType}",
+  //     query.StartDate, query.EndDate, query.PeriodType);
 
-    var command = new GetSalesReportQuery(
-      query.StartDate,
-      query.EndDate,
-      query.PeriodType
-    );
+  //   var command = new GetSalesReportQuery(
+  //     query.StartDate,
+  //     query.EndDate,
+  //     query.PeriodType
+  //   );
 
-    var result = await _mediator.Send(command, cancellationToken);
+  //   var result = await _mediator.Send(command, cancellationToken);
 
-    if (result.IsSuccess)
-    {
-      _logger.LogInformation(
-        "Sales report retrieved: {Count} data points",
-        result.Data?.Count ?? 0);
-    }
+  //   if (result.IsSuccess)
+  //   {
+  //     _logger.LogInformation(
+  //       "Sales report retrieved: {Count} data points",
+  //       result.Data?.Count ?? 0);
+  //   }
 
-    return HandleResult(result);
-  }
+  //   return HandleResult(result);
+  // }
 
   // ============================================
   // 3. SALES TREND (for charts)
@@ -130,6 +132,37 @@ public class ReportController : BaseApiController
     return HandleResult(result);
   }
 
+  [HttpGet("products/{id}/trend")]
+  [ProducesResponseType(typeof(ResponseWrapper<ProductSalesTrendDto>), StatusCodes.Status200OK)]
+  public async Task<IActionResult> GetProductSalesTrend(
+    int id, // phải đặt trùng tên với endpoint thì APS.NET mới map được với cái trên
+    [FromQuery] ReportQueryDto query,
+    CancellationToken cancellationToken
+  )
+  {
+    _logger.LogInformation(
+      "Getting product {ProductId} sales trend from {StartDate} to {EndDate}",
+      id, query.StartDate, query.EndDate);
+
+    var command = new GetProductSalesTrendQuery(
+      id,
+      query.StartDate,
+      query.EndDate,
+      query.PeriodType
+    );
+    
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess)
+    {
+      _logger.LogInformation(
+        "Product {ProductId} sales trend retrieved",
+        id);
+    }
+
+    return HandleResult(result);
+  }
+
   // ============================================
   // 4. TOP SELLING PRODUCTS
   // ============================================
@@ -140,30 +173,30 @@ public class ReportController : BaseApiController
   /// <param name="endDate">Ngày kết thúc</param>
   /// <param name="topCount">Số lượng sản phẩm (mặc định 10)</param>
   /// <param name="cancellationToken"></param>
-  [HttpGet("products/top-selling")]
-  [ProducesResponseType(typeof(ResponseWrapper<List<ProductSalesDto>>), StatusCodes.Status200OK)]
-  public async Task<IActionResult> GetTopSellingProducts(
-      [FromQuery] DateTime startDate,
-      [FromQuery] DateTime endDate,
-      [FromQuery] int topCount = 10,
-      CancellationToken cancellationToken = default)
-  {
-    _logger.LogInformation(
-        "Getting top {TopCount} selling products from {StartDate} to {EndDate}",
-        topCount, startDate, endDate);
+  // [HttpGet("products/top-selling")]
+  // [ProducesResponseType(typeof(ResponseWrapper<List<ProductSalesDto>>), StatusCodes.Status200OK)]
+  // public async Task<IActionResult> GetTopSellingProducts(
+  //     [FromQuery] DateTime startDate,
+  //     [FromQuery] DateTime endDate,
+  //     [FromQuery] int topCount = 10,
+  //     CancellationToken cancellationToken = default)
+  // {
+  //   _logger.LogInformation(
+  //       "Getting top {TopCount} selling products from {StartDate} to {EndDate}",
+  //       topCount, startDate, endDate);
 
-    var query = new GetTopSellingProductsQuery(startDate, endDate, topCount);
-    var result = await _mediator.Send(query, cancellationToken);
+  //   var query = new GetTopSellingProductsQuery(startDate, endDate, topCount);
+  //   var result = await _mediator.Send(query, cancellationToken);
 
-    if (result.IsSuccess)
-    {
-      _logger.LogInformation(
-          "Retrieved {Count} top selling products",
-          result.Data?.Count ?? 0);
-    }
+  //   if (result.IsSuccess)
+  //   {
+  //     _logger.LogInformation(
+  //         "Retrieved {Count} top selling products",
+  //         result.Data?.Count ?? 0);
+  //   }
 
-    return HandleResult(result);
-  }
+  //   return HandleResult(result);
+  // }
 
   // ============================================
   // 5. COMMISSION REPORT
