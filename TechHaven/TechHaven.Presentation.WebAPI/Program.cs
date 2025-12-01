@@ -1,9 +1,11 @@
+using Microsoft.Extensions.Logging;
 using TechHaven.Application;
 using TechHaven.Infrastructure;
 using TechHaven.Infrastructure.Data;
 using TechHaven.Infrastructure.Persistence;
 using DotNetEnv;
 using Serilog;
+using TechHaven.Presentation.WebAPI.Middleware;
 
 // ============================================
 // Serilog Configuration Guide
@@ -22,7 +24,8 @@ Env.Load();
 
 // Configure Serilog BEFORE creating builder
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
+    // .MinimumLevel.Information()
+    .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
@@ -43,6 +46,19 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    // Ensure the app uses the same port/url as configured by TECHHAVEN_API_BASEURL when present,
+    // otherwise fall back to the team's default (http://localhost:5207)
+    var explicitUrl = Environment.GetEnvironmentVariable("TECHHAVEN_API_BASEURL") ?? "http://localhost:5207";
+    try
+    {
+        builder.WebHost.UseUrls(explicitUrl);
+        Log.Information("Configured URLs from environment/fallback: {Url}", explicitUrl);
+    }
+    catch (Exception exUrls)
+    {
+        Log.Warning(exUrls, "Failed to call UseUrls with {Url}", explicitUrl);
+    }
+
     // Use Serilog for logging
     builder.Host.UseSerilog();
 
@@ -62,11 +78,16 @@ try
         });
     });
 
+    builder.Services.AddHttpContextAccessor();
+
     // Register Application & Infrastructure layers
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
+
+    // THÊM Global Exception Handler (phải đặt đầu tiên)
+    app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
     // Add request logging middleware
     app.UseSerilogRequestLogging(options =>
@@ -86,7 +107,9 @@ try
         try
         {
             var context = services.GetRequiredService<AppDbContext>();
-            await DbInitializer.SeedAsync(context);
+            var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+            var seedLogger = loggerFactory.CreateLogger("DbInitializer");
+            await DbInitializer.SeedAsync(context, seedLogger);
             Log.Information("Database seeding completed successfully");
         }
         catch (Exception ex)
@@ -110,6 +133,15 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+
+    // Log the server URLs
+    // foreach (var url in app.Urls)
+    // {
+    //     Log.Information("Server is running at {Url}", url);
+    // }
+    // Log the server URLs
+    var urls = builder.WebHost.GetSetting("urls") ?? explicitUrl;
+    Log.Information("Server is running at {Urls}", urls);
 
     Log.Information("TechHaven API started successfully");
     app.Run();
