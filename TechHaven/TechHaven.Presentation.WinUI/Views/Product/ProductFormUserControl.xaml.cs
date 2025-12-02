@@ -32,7 +32,19 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             _originalImageUrl = product.ImageUrl;
 
             ProductNameBox.Text = product.ProductName ?? string.Empty;
-            BrandNameBox.Text = product.BrandName ?? string.Empty;
+            BrandComboBox.SelectedItem = null;
+            if (!string.IsNullOrEmpty(product.BrandName))
+            {
+                // Duyệt qua các item trong ComboBox để tìm item trùng tên
+                foreach (ComboBoxItem item in BrandComboBox.Items)
+                {
+                    if (item.Content?.ToString() == product.BrandName)
+                    {
+                        BrandComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
             DescriptionBox.Text = product.Description ?? string.Empty;
 
             CostPriceBox.Value = product.CostPrice > 0 ? (double)product.CostPrice : double.NaN;
@@ -75,7 +87,11 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             bool isValid = true;
 
             string rawName = ProductNameBox.Text?.Trim();
-            string brandName = BrandNameBox.Text?.Trim();
+            string? brandName = null;
+            if (BrandComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                brandName = selectedItem.Content.ToString();
+            }
             double sellPrice = GetDoubleSafe(SellPriceBox.Value);
             double stockQty = GetDoubleSafe(StockQuantityBox.Value);
 
@@ -113,7 +129,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             return new ProductUpsertRequest
             {
                 ProductName = rawName,
-                BrandName = GetStringOrNull(BrandNameBox.Text),
+                BrandName = brandName,
 
                 CostPrice = IsValidNumber(CostPriceBox.Value) ? (decimal)CostPriceBox.Value : 0m,
                 SellPrice = (decimal)sellPrice,
@@ -141,6 +157,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private void ClearErrors()
         {
             ProductNameErrorText.Visibility = Visibility.Collapsed;
+            BrandNameErrorText.Visibility = Visibility.Collapsed;
             SellPriceErrorText.Visibility = Visibility.Collapsed;
             StockQuantityErrorText.Visibility = Visibility.Collapsed;
         }
@@ -149,6 +166,14 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         {
             if (sender == ProductNameBox)
                 ProductNameErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnBrandSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (BrandComboBox.SelectedItem != null)
+            {
+                BrandNameErrorText.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void OnNumberChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
