@@ -62,7 +62,7 @@
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="0.7*"/>
                 <ColumnDefinition Width="0.7*"/>
-                <ColumnDefinition Width="1.3*"/>
+                <ColumnDefinition Width="2.5*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Search Box -->
@@ -115,23 +115,9 @@
                 Height="40"
                 HorizontalAlignment="Stretch"/>
 
-            <!-- Clear Button -->
-            <Button 
-                Grid.Column="5"
-                Content="Xóa"
-                Command="{Binding ClearFilterCommand}"
-                Background="{StaticResource TH.CardBackground}"
-                Foreground="{StaticResource TH.TextPrimary}"
-                BorderBrush="{StaticResource TH.BorderBrush}"
-                BorderThickness="1"
-                FontWeight="SemiBold"
-                CornerRadius="8"
-                Height="40"
-                HorizontalAlignment="Stretch"/>
-
             <!-- Create Order Button -->
             <Button
-                Grid.Column="6"
+                Grid.Column="7"
                 Click="CreateOrder_Click"
                 Background="{StaticResource TH.PrimaryBrush}"
                 Foreground="White"
@@ -172,21 +158,19 @@
                       Padding="12,8"
                       CornerRadius="8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.8*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="1.2*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="20*"/>
+                        <ColumnDefinition Width="20*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="1" Text="Ngày Đặt" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="2" Text="Khách Hàng" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="3" Text="Trạng Thái" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="4" Text="Sản Phẩm" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="5" Text="Tổng Tiền" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="6" Text="Ghi Chú" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="0" Text="Ngày Đặt" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="1" Text="Khách Hàng" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="2" Text="Trạng Thái" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="3" Text="Sản Phẩm" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="4" Text="Tổng Tiền" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="5" Text="Ghi Chú" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
                 </Grid>
 
                 <ListView
@@ -197,38 +181,31 @@
                     IsItemClickEnabled="True"
                     ItemClick="OrdersList_ItemClick"
                     Padding="0"
+                    HorizontalContentAlignment="Stretch"
                     ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
 
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="vm:OrderItemViewModel">
-                            <Grid Padding="12,8">
+                            <Grid HorizontalAlignment="Stretch" Margin="0" Padding="12,8">
+                                <!-- Use same star ratios as header -->
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="0.5*"/>
-                                    <ColumnDefinition Width="1.5*"/>
-                                    <ColumnDefinition Width="1.5*"/>
-                                    <ColumnDefinition Width="1*"/>
-                                    <ColumnDefinition Width="1.5*"/>
-                                    <ColumnDefinition Width="1*"/>
-                                    <ColumnDefinition Width="1.5*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="20*"/>
+                                    <ColumnDefinition Width="20*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Order ID -->
-                                <TextBlock Grid.Column="0" 
-                                           Text="{x:Bind Order.OrderId}" 
-                                           TextAlignment="Left"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextPrimary}"/>
-
                                 <!-- Order Date -->
-                                <TextBlock Grid.Column="1" 
+                                <TextBlock Grid.Column="0" 
                                            Text="{x:Bind OrderDateDisplay}" 
                                            TextAlignment="Left"
                                            VerticalAlignment="Center"
                                            Foreground="{StaticResource TH.TextPrimary}"/>
 
                                 <!-- Customer Name -->
-                                <TextBlock Grid.Column="2" 
+                                <TextBlock Grid.Column="1" 
                                            Text="{x:Bind CustomerDisplay}" 
                                            TextAlignment="Left"
                                            TextTrimming="CharacterEllipsis"
@@ -237,7 +214,7 @@
                                            Foreground="{StaticResource TH.TextPrimary}"/>
 
                                 <!-- Status Badge -->
-                                <Border Grid.Column="3"
+                                <Border Grid.Column="2"
                                         CornerRadius="12"
                                         Padding="10,4"
                                         HorizontalAlignment="Center"
@@ -248,31 +225,34 @@
                                     <TextBlock Text="{x:Bind StatusDisplay}"
                                                Foreground="White"
                                                FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
                                                FontWeight="SemiBold"/>
                                 </Border>
 
                                 <!-- Products Count -->
-                                <TextBlock Grid.Column="4" 
+                                <TextBlock Grid.Column="3" 
                                            Text="{x:Bind ProductsCountDisplay}" 
                                            TextAlignment="Left"
                                            VerticalAlignment="Center"
                                            Foreground="{StaticResource TH.TextSecondary}"/>
 
                                 <!-- Total Amount -->
-                                <TextBlock Grid.Column="5" 
+                                <TextBlock Grid.Column="4" 
                                            Text="{x:Bind TotalAmountDisplay}" 
                                            FontWeight="Bold"
-                                           TextAlignment="Right"
+                                           TextAlignment="Left"
                                            VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextPrimary}"/>
+                                           Foreground="{StaticResource TH.TextPrimary}" />
 
                                 <!-- Notes -->
-                                <TextBlock Grid.Column="6" 
+                                <TextBlock Grid.Column="5" 
                                            Text="{x:Bind Order.Notes}" 
                                            TextAlignment="Left"
                                            TextTrimming="CharacterEllipsis"
                                            VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextSecondary}"/>
+                                           Foreground="{StaticResource TH.TextSecondary}"
+                                           MinWidth="120"/>
 
                                 <!-- Context Menu -->
                                 <Grid.ContextFlyout>
@@ -289,6 +269,14 @@
                                             Click="UpdateStatus_Click">
                                             <MenuFlyoutItem.Icon>
                                                 <FontIcon Glyph="&#xE70F;"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem
+                                            Text="In Đơn Hàng"
+                                            Click="PrintOrder_Click">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE8A7;"/>
                                             </MenuFlyoutItem.Icon>
                                         </MenuFlyoutItem>
                                         <MenuFlyoutSeparator/>
