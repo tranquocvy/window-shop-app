@@ -40,68 +40,68 @@
                    Margin="0,0,0,12"
                    Foreground="#0A2E8C"/>
 
-        <!-- SEARCH + ADD + DELETE -->
         <Grid Grid.Row="1"
-              Margin="0,0,0,12"
-              ColumnSpacing="8">
+      Margin="0,0,0,12"
+      ColumnSpacing="8">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="0"
+            <TextBox Grid.Column="0" Grid.ColumnSpan="3"
                 PlaceholderText="Tìm kiếm theo tên, danh mục..."
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <ComboBox ItemsSource="{x:Bind ViewModel.BrandNameFilter}"
-                Grid.Column="1"
+            <ComboBox Grid.Column="3"
+                ItemsSource="{x:Bind ViewModel.BrandNameFilter}"
                 SelectedItem="{x:Bind ViewModel.SelectedBrandName, Mode=TwoWay}"
                 HorizontalAlignment="Stretch"
                 Height="40"
-                PlaceholderText="Tiêu chí">
-            </ComboBox>
+                PlaceholderText="Hãng"/>
 
-            <ComboBox Grid.Column="2"
-              ItemsSource="{x:Bind ViewModel.PriceRangeOptions}"
-              SelectedItem="{x:Bind ViewModel.SelectedPriceRange, Mode=TwoWay}"
-              PlaceholderText="Khoảng giá"
-              HorizontalAlignment="Stretch"
-              Height="40"/> 
+            <ComboBox Grid.Column="4"
+                  ItemsSource="{x:Bind ViewModel.PriceRangeOptions}"
+                  SelectedItem="{x:Bind ViewModel.SelectedPriceRange, Mode=TwoWay}"
+                  PlaceholderText="Khoảng giá"
+                  HorizontalAlignment="Stretch"
+                  Height="40"/>
 
-
-            <ComboBox ItemsSource="{x:Bind ViewModel.StatusFilter}"
-              Grid.Column="3"
-              SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
-              HorizontalAlignment="Stretch"
-              Height="40"
-              PlaceholderText="Chọn trạng thái"/>
+            <ComboBox Grid.Column="5" 
+                  ItemsSource="{x:Bind ViewModel.StatusFilter}"
+                  SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
+                  HorizontalAlignment="Stretch"
+                  Height="40"
+                  PlaceholderText="Trạng thái"/>
 
 
-            <Button Grid.Column="4"
-                Content="Thêm Sản Phẩm"
-                HorizontalAlignment="Right"
-                Background="#0D47A1"
-                Foreground="White"
-                FontWeight="Bold"
-                CornerRadius="5"
-                Height="40"
-                Click="AddProduct_Click"/>
+            <StackPanel Grid.Column="6" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
+                <Button Content="Thêm"
+                    Background="#0D47A1"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    CornerRadius="5"
+                    Height="40"
+                    Click="AddProduct_Click"/>
 
-            <Button Grid.Column="5"
-                Content="Xóa sản phẩm"
-                Background="#D7292A"
-                Foreground="White"
-                FontWeight="Bold"
-                CornerRadius="5"
-                Command="{Binding DeleteSelectedCommand}"
-                Height="40"
-                Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <Button Content="Xóa"
+                    Background="#D7292A"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    CornerRadius="5"
+                    Height="40"
+                    Command="{Binding DeleteSelectedCommand}"
+                    Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </StackPanel>
         </Grid>
+
 
 
 
