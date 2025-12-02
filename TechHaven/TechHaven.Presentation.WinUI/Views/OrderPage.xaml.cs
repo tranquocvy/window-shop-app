@@ -17,6 +17,8 @@ using TechHaven.Presentation.WinUI.Views.Controls;
 using TechHaven.Shared.DTOs.Orders;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Mock;
+using TechHaven.Shared.DTOs.Products;
+using TechHaven.Shared.DTOs.Customers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -53,7 +55,7 @@ namespace TechHaven.Presentation.WinUI.Views
             {
                 var details = item.Order.Details ?? new List<OrderDetailDto>();
                 var itemsText = string.Join("\n", details.Select(d => 
-                    $"- {d.ProductName} (ID: {d.ProductId}): {d.Quantity} � {d.UnitPrice:N0} ? = {d.SubTotal:N0} ?"));
+                    $"- {d.ProductName} (ID: {d.ProductId}): {d.Quantity} × {d.UnitPrice:N0} ? = {d.SubTotal:N0} ?"));
 
                 var dialog = new ContentDialog
                 {
@@ -192,102 +194,212 @@ namespace TechHaven.Presentation.WinUI.Views
         }
 
         /// <summary>
-        /// Show dialog to create new order
+        /// Show dialog to create new order with full cart UI (multiple products)
         /// </summary>
         private async void CreateOrder_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
-            // Simple create form
-            var customerIdBox = new TextBox { PlaceholderText = "Customer ID (optional)", Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
-            var productIdBox = new TextBox { PlaceholderText = "Product ID", Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
-            var quantityBox = new TextBox { PlaceholderText = "Quantity", Text = "1", Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
-            var priceBox = new TextBox { PlaceholderText = "Unit Price", Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
+            TechHaven.Shared.DTOs.Customers.CustomerDto? selectedCustomer = null;
+            var cart = new List<(TechHaven.Shared.DTOs.Products.ProductDto Product, int Quantity, decimal UnitPrice)>();
+
+            bool openCustomerSelectorRequested = false;
+            bool openProductSelectorRequested = false;
+
+            // UI elements
+            var selectCustomerBtn = new Button { Content = "Chọn khách hàng (Walk-in nếu bỏ trống)", HorizontalAlignment = HorizontalAlignment.Stretch };
+            var addProductBtn = new Button { Content = "Thêm sản phẩm", HorizontalAlignment = HorizontalAlignment.Stretch };
+            var cartPanel = new StackPanel { Spacing = 8 };
+            var subtotalText = new TextBlock { Text = "Subtotal: 0 ₫", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
             var discountBox = new TextBox { PlaceholderText = "Discount", Text = "0", Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
-            var notesBox = new TextBox
+            var totalText = new TextBlock { Text = "Total: 0 ₫", FontWeight = Microsoft.UI.Text.FontWeights.Bold };
+            var notesBox = new TextBox { PlaceholderText = "Notes (optional)", AcceptsReturn = true, TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap, Height = 80 };
+
+            // Helper to recalc totals and refresh cart UI
+            void RefreshCartUI()
             {
-                PlaceholderText = "Notes (optional)",
-                AcceptsReturn = true,
-                TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap,
-                Height = 60,
-                Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0)
-            };
+                cartPanel.Children.Clear();
+                decimal subtotal = 0;
+                foreach (var item in cart)
+                {
+                    var grid = new Grid { ColumnDefinitions = {
+                        new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                        new ColumnDefinition { Width = new GridLength(80) },
+                        new ColumnDefinition { Width = new GridLength(100) },
+                        new ColumnDefinition { Width = new GridLength(40) }
+                    }, Margin = new Microsoft.UI.Xaml.Thickness(0,4,0,4) };
+
+                    var nameBlock = new StackPanel { Orientation = Orientation.Vertical };
+                    nameBlock.Children.Add(new TextBlock { Text = item.Product.ProductName, TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                    nameBlock.Children.Add(new TextBlock { Text = item.Product.BrandName, FontSize = 12, Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TH.TextSecondary"], TextWrapping = TextWrapping.Wrap });
+
+                    Grid.SetColumn(nameBlock, 0);
+
+                    var qtyBox = new TextBox { Text = item.Quantity.ToString(), HorizontalAlignment = HorizontalAlignment.Right, Width = 60 };
+                    Grid.SetColumn(qtyBox, 1);
+
+                    var priceBox = new TextBox { Text = item.UnitPrice.ToString("N0"), HorizontalAlignment = HorizontalAlignment.Right, Width = 90, IsReadOnly = true };
+                    Grid.SetColumn(priceBox, 2);
+
+                    var removeBtn = new Button { Content = "X", Width = 36, HorizontalAlignment = HorizontalAlignment.Right };
+                    Grid.SetColumn(removeBtn, 3);
+
+                    // Capture reference to product for handler via index
+                    var prod = item.Product;
+
+                    // Handlers
+                    qtyBox.TextChanged += (_, _) =>
+                    {
+                        if (int.TryParse(qtyBox.Text, out var q) && q > 0)
+                        {
+                            var idx = cart.FindIndex(ci => ci.Product.ProductId == prod.ProductId);
+                            if (idx >= 0)
+                            {
+                                var cur = cart[idx];
+                                cart[idx] = (cur.Product, q, cur.UnitPrice);
+                                RefreshCartUI();
+                            }
+                        }
+                    };
+
+                    // Price is read-only per requirements; do not allow editing
+
+                    removeBtn.Click += (_, _) =>
+                    {
+                        var idx = cart.FindIndex(ci => ci.Product.ProductId == prod.ProductId);
+                        if (idx >= 0)
+                        {
+                            cart.RemoveAt(idx);
+                            RefreshCartUI();
+                        }
+                    };
+
+                    grid.Children.Add(nameBlock);
+                    grid.Children.Add(qtyBox);
+                    grid.Children.Add(priceBox);
+                    grid.Children.Add(removeBtn);
+
+                    cartPanel.Children.Add(grid);
+
+                    subtotal += item.Quantity * item.UnitPrice;
+                }
+
+                subtotalText.Text = $"Subtotal: {subtotal:N0} ₫";
+
+                if (!decimal.TryParse(discountBox.Text, out var discount) || discount < 0)
+                    discount = 0;
+
+                var total = Math.Max(0, subtotal - discount);
+                totalText.Text = $"Total: {total:N0} ₫";
+            }
 
             var panel = new StackPanel { Spacing = 8 };
-            panel.Children.Add(new TextBlock { Text = "Customer ID:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            panel.Children.Add(customerIdBox);
-            panel.Children.Add(new TextBlock { Text = "Product ID:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            panel.Children.Add(productIdBox);
-            panel.Children.Add(new TextBlock { Text = "Quantity:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            panel.Children.Add(quantityBox);
-            panel.Children.Add(new TextBlock { Text = "Unit Price:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            panel.Children.Add(priceBox);
+            panel.Children.Add(new TextBlock { Text = "Customer:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            panel.Children.Add(selectCustomerBtn);
+            panel.Children.Add(new TextBlock { Text = "Products:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            panel.Children.Add(addProductBtn);
+            panel.Children.Add(cartPanel);
+            panel.Children.Add(subtotalText);
             panel.Children.Add(new TextBlock { Text = "Discount:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
             panel.Children.Add(discountBox);
+            panel.Children.Add(totalText);
             panel.Children.Add(new TextBlock { Text = "Notes:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
             panel.Children.Add(notesBox);
 
             var dialog = new ContentDialog
             {
                 Title = "Create New Order",
-                Content = new ScrollViewer { Content = panel, MaxHeight = 500 },
+                Content = new ScrollViewer { Content = panel, MaxHeight = 600 },
                 PrimaryButtonText = "Create",
                 CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Primary,
                 XamlRoot = this.Content.XamlRoot
             };
 
-            var result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Primary)
+            // Now attach handlers that can hide the parent dialog to avoid nested dialogs
+            addProductBtn.Click += (_, _) =>
             {
-                // Validate and create
-                if (!int.TryParse(productIdBox.Text, out var productId) || productId <= 0)
+                openProductSelectorRequested = true;
+                try { dialog.Hide(); } catch { }
+            };
+
+            selectCustomerBtn.Click += (_, _) =>
+            {
+                openCustomerSelectorRequested = true;
+                try { dialog.Hide(); } catch { }
+            };
+
+            // Show dialog loop to allow opening selectors without nesting
+            while (true)
+            {
+                // Show and await
+                var showTask = dialog.ShowAsync();
+                var result = await showTask;
+
+                if (openCustomerSelectorRequested)
                 {
-                    await ShowErrorDialog("Validation Error", "Product ID must be a valid number greater than 0.");
-                    return;
+                    openCustomerSelectorRequested = false;
+                    var c = await ShowCustomerSelectorAsync();
+                    selectedCustomer = c;
+                    selectCustomerBtn.Content = c == null ? "Walk-in / None" : $"{c.CustomerName} - {c.PhoneNumber}";
+                    RefreshCartUI();
+                    continue; // reopen parent dialog
                 }
 
-                if (!int.TryParse(quantityBox.Text, out var quantity) || quantity <= 0)
+                if (openProductSelectorRequested)
                 {
-                    await ShowErrorDialog("Validation Error", "Quantity must be a valid number greater than 0.");
-                    return;
-                }
-
-                if (!decimal.TryParse(priceBox.Text, out var price) || price < 0)
-                {
-                    await ShowErrorDialog("Validation Error", "Unit price must be a valid non-negative number.");
-                    return;
-                }
-
-                if (!decimal.TryParse(discountBox.Text, out var discount) || discount < 0)
-                {
-                    discount = 0;
-                }
-
-                int? customerId = null;
-                if (!string.IsNullOrWhiteSpace(customerIdBox.Text))
-                {
-                    if (int.TryParse(customerIdBox.Text, out var custId))
-                        customerId = custId;
-                }
-
-                var createDto = new OrderUpsertRequestDto
-                {
-                    CustomerId = customerId,
-                    Discount = discount,
-                    Notes = string.IsNullOrWhiteSpace(notesBox.Text) ? null : notesBox.Text.Trim(),
-                    Items = new List<OrderUpsertItemDto>
+                    openProductSelectorRequested = false;
+                    var p = await ShowProductSelectorAsync();
+                    if (p != null)
                     {
-                        new OrderUpsertItemDto
+                        // Add to cart or increment quantity
+                        var idx = cart.FindIndex(ci => ci.Product.ProductId == p.ProductId);
+                        if (idx >= 0)
                         {
-                            ProductId = productId,
-                            Quantity = quantity,
-                            UnitPrice = price
+                            var cur = cart[idx];
+                            cart[idx] = (cur.Product, cur.Quantity + 1, cur.UnitPrice);
+                        }
+                        else
+                        {
+                            cart.Add((p, 1, p.SellPrice));
                         }
                     }
-                };
+                    RefreshCartUI();
+                    continue;
+                }
 
-                // Call create and reload
-                await ViewModel.CreateOrderCommand.ExecuteAsync(createDto);
-                await ViewModel.LoadOrdersCommand.ExecuteAsync(null);
+                // If user clicked Create
+                if (result == ContentDialogResult.Primary)
+                {
+                    if (!cart.Any())
+                    {
+                        await ShowErrorDialog("Validation Error", "Please add at least one product to the order.");
+                        return;
+                    }
+
+                    // parse discount
+                    if (!decimal.TryParse(discountBox.Text, out var discount) || discount < 0)
+                        discount = 0;
+
+                    // build DTO
+                    var items = cart.Select(ci => new OrderUpsertItemDto
+                    {
+                        ProductId = ci.Product.ProductId,
+                        Quantity = ci.Quantity,
+                        UnitPrice = ci.UnitPrice
+                    }).ToList();
+
+                    var createDto = new OrderUpsertRequestDto
+                    {
+                        CustomerId = selectedCustomer?.CustomerId,
+                        Discount = discount,
+                        Notes = string.IsNullOrWhiteSpace(notesBox.Text) ? null : notesBox.Text.Trim(),
+                        Items = items
+                    };
+
+                    await ViewModel.CreateOrderCommand.ExecuteAsync(createDto);
+                    await ViewModel.LoadOrdersCommand.ExecuteAsync(null);
+                }
+
+                break;
             }
         }
 
@@ -361,6 +473,174 @@ namespace TechHaven.Presentation.WinUI.Views
                     await ViewModel.PrintOrderCommand.ExecuteAsync(item);
                 }
             }
+        }
+
+        // Show a modal customer selector that reuses CustomerViewModel (calls API)
+        private async System.Threading.Tasks.Task<TechHaven.Shared.DTOs.Customers.CustomerDto?> ShowCustomerSelectorAsync()
+        {
+            var vm = new CustomerViewModel();
+            await vm.EnsureInitialLoadAsync();
+
+            var searchBox = new TextBox { PlaceholderText = "Tìm kiếm khách hàng (tên, số điện thoại)", Margin = new Microsoft.UI.Xaml.Thickness(0,0,0,8) };
+
+            var list = new ListView
+            {
+                ItemsSource = vm.Customers,
+                IsItemClickEnabled = true,
+                SelectionMode = ListViewSelectionMode.Single,
+                MaxHeight = 360
+            };
+
+            // Use predefined DataTemplate in XAML resources for customer items
+            if (this.Resources.ContainsKey("CustomerItemTemplate") && this.Resources["CustomerItemTemplate"] is DataTemplate tpl)
+            {
+                list.ItemTemplate = tpl;
+            }
+
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<TechHaven.Shared.DTOs.Customers.CustomerDto?>();
+
+            // Build panel first
+            var panel = new StackPanel { Spacing = 8 };
+            panel.Children.Add(searchBox);
+            panel.Children.Add(list);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Chọn khách hàng",
+                Content = new ScrollViewer { Content = panel, MaxHeight = 480 },
+                CloseButtonText = "Hủy",
+                PrimaryButtonText = "Chọn",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            // Item click should set result and close dialog
+            list.ItemClick += (s, e) =>
+            {
+                if (e.ClickedItem is TechHaven.Shared.DTOs.Customers.CustomerDto c)
+                {
+                    // Close dialog first to avoid async reentrancy issues then set result
+                    try
+                    {
+                        dialog.Hide();
+                    }
+                    catch { }
+                    tcs.TrySetResult(c);
+                }
+            };
+
+            // When user presses primary but no selection via click, use selected item
+            dialog.PrimaryButtonClick += (s, e) =>
+            {
+                if (list.SelectedItem is TechHaven.Shared.DTOs.Customers.CustomerDto c)
+                {
+                    tcs.TrySetResult(c);
+                }
+                else
+                {
+                    tcs.TrySetResult(null);
+                }
+            };
+
+            // If user cancels or dialog closed without selection, return null
+            dialog.Closed += (s, e) =>
+            {
+                if (!tcs.Task.IsCompleted)
+                    tcs.TrySetResult(null);
+            };
+
+            searchBox.TextChanged += (s, e) =>
+            {
+                vm.SearchTerm = searchBox.Text;
+            };
+
+            // Keep dialog responsive by hooking vm collection to UI; ensure initial load already done
+            panel.DataContext = vm;
+
+            // Show dialog and wait for selection via TaskCompletionSource
+            var showTask = dialog.ShowAsync();
+            var result = await tcs.Task;
+
+            // Ensure ShowAsync completes (dialog closed)
+            try { await showTask; } catch { }
+
+            return result;
+        }
+
+        // Show a modal product selector that reuses ProductViewModel (calls API)
+        private async System.Threading.Tasks.Task<TechHaven.Shared.DTOs.Products.ProductDto?> ShowProductSelectorAsync()
+        {
+            var vm = new ProductViewModel();
+            // Use generated command to load products
+            await vm.LoadProductsCommand.ExecuteAsync(null);
+
+            var searchBox = new TextBox { PlaceholderText = "Tìm kiếm sản phẩm (tên)", Margin = new Microsoft.UI.Xaml.Thickness(0,0,0,8) };
+
+            var list = new ListView
+            {
+                ItemsSource = vm.Products,
+                IsItemClickEnabled = true,
+                SelectionMode = ListViewSelectionMode.Single,
+                MaxHeight = 400
+            };
+
+            // Use predefined DataTemplate in XAML resources for product items
+            if (this.Resources.ContainsKey("ProductItemTemplate") && this.Resources["ProductItemTemplate"] is DataTemplate tpl)
+            {
+                list.ItemTemplate = tpl;
+            }
+
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<TechHaven.Shared.DTOs.Products.ProductDto?>();
+
+            // Build panel
+            var panel = new StackPanel { Spacing = 8 };
+            panel.Children.Add(searchBox);
+            panel.Children.Add(list);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Chọn sản phẩm",
+                Content = new ScrollViewer { Content = panel, MaxHeight = 520 },
+                CloseButtonText = "Hủy",
+                PrimaryButtonText = "Chọn",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            list.ItemClick += (s, e) =>
+            {
+                if (e.ClickedItem is TechHaven.Presentation.WinUI.ViewModel.ProductItemViewModel vmItem)
+                {
+                    try { dialog.Hide(); } catch { }
+                    tcs.TrySetResult(vmItem.Product);
+                }
+            };
+
+            dialog.PrimaryButtonClick += (s, e) =>
+            {
+                if (list.SelectedItem is TechHaven.Presentation.WinUI.ViewModel.ProductItemViewModel vmItem)
+                    tcs.TrySetResult(vmItem.Product);
+                else
+                    tcs.TrySetResult(null);
+            };
+
+            dialog.Closed += (s, e) =>
+            {
+                if (!tcs.Task.IsCompleted)
+                    tcs.TrySetResult(null);
+            };
+
+            searchBox.TextChanged += (s, e) =>
+            {
+                vm.SearchTerm = searchBox.Text;
+            };
+
+            panel.DataContext = vm;
+
+            var showTask = dialog.ShowAsync();
+            var result = await tcs.Task;
+            try { await showTask; } catch { }
+            return result;
         }
     }
 }
