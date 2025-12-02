@@ -58,6 +58,12 @@ namespace TechHaven.Presentation.WinUI.Views
 
                         // Listen for theme changes so titlebar buttons update immediately
                         ThemeManager.ThemeChanged += ThemeManager_ThemeChanged_ForTitlebar;
+                        
+                        // Unsubscribe when window closes to avoid memory leaks and crashes on re-login
+                        this.Closed += (s, e) => 
+                        {
+                            ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged_ForTitlebar;
+                        };
                     }
                     catch
                     {

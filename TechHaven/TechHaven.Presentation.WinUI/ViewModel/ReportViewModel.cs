@@ -59,7 +59,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private int _selectedYear;
 
         [ObservableProperty]
-        private string _selectedMonth; // "Tất cả" == all months
+        private string _selectedMonth = "Tất cả"; // default to 'all'
 
         // Chart data for display
         public ObservableCollection<ProductSalesDto> ProductSalesData { get; } = new();
@@ -71,6 +71,36 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private string _errorMessage;
 
+        // Role flags (admin vs seller) - explicit properties to avoid source-gen timing issues
+        private bool _isAdmin;
+        public bool IsAdmin
+        {
+            get => _isAdmin;
+            set => SetProperty(ref _isAdmin, value);
+        }
+
+        private bool _isSeller;
+        public bool IsSeller
+        {
+            get => _isSeller;
+            set => SetProperty(ref _isSeller, value);
+        }
+
+        // Seller-only metrics
+        private int _sellerOrderCount;
+        public int SellerOrderCount
+        {
+            get => _sellerOrderCount;
+            set => SetProperty(ref _sellerOrderCount, value);
+        }
+
+        private decimal _sellerCommission;
+        public decimal SellerCommission
+        {
+            get => _sellerCommission;
+            set => SetProperty(ref _sellerCommission, value);
+        }
+
         // Computed properties for visibility
         public bool IsProductChartVisible => SelectedChartTab == "Sản Phẩm";
         public bool IsRevenueChartVisible => SelectedChartTab == "Doanh Thu";
@@ -79,6 +109,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             _reportService = reportService ?? CreateDefaultReportService();
             InitializeYearMonth();
+
+            // determine role from AppState.CurrentUser.RoleName
+            var role = AppState.CurrentUser?.RoleName ?? string.Empty;
+            IsAdmin = role.Equals("Admin", StringComparison.OrdinalIgnoreCase) || role.Equals("Administrator", StringComparison.OrdinalIgnoreCase);
+            IsSeller = role.Equals("Seller", StringComparison.OrdinalIgnoreCase) || role.Equals("Vendor", StringComparison.OrdinalIgnoreCase);
+
             _ = LoadProductsAsync();
         }
 
@@ -168,12 +204,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     StartDate = queryStart,
                     EndDate = queryEnd,
                     PeriodType = MapPeriodType(SelectedPeriodType),
-                    UserId = null // For now, show all users
+                    UserId = null // For now, keep null; backend should respect user context
                 };
 
                 // Load both reports
                 var productSalesTask = _reportService.GetProductSalesReportAsync(query);
                 var revenueTask = _reportService.GetRevenueReportAsync(query);
+
+                // fallback to proper calls
+                if (productSalesTask == null)
+                    productSalesTask = _reportService.GetProductSalesReportAsync(query);
+                if (revenueTask == null)
+                    revenueTask = _reportService.GetRevenueReportAsync(query);
 
                 await Task.WhenAll(productSalesTask, revenueTask);
 
@@ -202,11 +244,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     {
                         RevenueData.Add(item);
                     }
+
+                    // if seller, compute simple metrics
+                    if (IsSeller)
+                    {
+                        SellerOrderCount = revenueData.Sum(r => r.TotalOrders);
+                        SellerCommission = Math.Round(revenueData.Sum(r => r.TotalRevenue) * 0.10m, 2);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"L?i t?i b�o c�o: {ex.Message}";
+                ErrorMessage = $"Lỗi tới báo cáo: {ex.Message}";
                 Debug.WriteLine($"Error loading reports: {ex.Message}");
             }
             finally
@@ -220,9 +269,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             return periodType switch
             {
                 "Ngày" => ReportPeriodType.Daily,
-                "Tu?n" => ReportPeriodType.Weekly,
+                "Tuần" => ReportPeriodType.Weekly,
                 "Tháng" => ReportPeriodType.Monthly,
-                "N?m" => ReportPeriodType.Yearly,
+                "Năm" => ReportPeriodType.Yearly,
                 _ => ReportPeriodType.Monthly
             };
         }

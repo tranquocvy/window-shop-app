@@ -12,6 +12,7 @@
     <Page.Resources>
         <converters:TabButtonBackgroundConverter x:Key="TabButtonBackgroundConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:CurrencyConverter x:Key="CurrencyConverter" />
         
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
@@ -44,8 +45,54 @@
                    FontWeight="Bold" 
                    Foreground="{StaticResource TH.TextPrimary}"/>
 
-        <!-- Filters: Date range, Year, Month, Search -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+        <!-- Seller summary cards (visible only to sellers) -->
+        <Grid Grid.Row="1" Visibility="{x:Bind ViewModel.IsSeller, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="48" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="{x:Bind ViewModel.SellerOrderCount, Mode=OneWay}" FontSize="42" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+
+                    <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0">
+                        <TextBlock Text="Số đơn bán được" FontSize="20" Foreground="{StaticResource TH.TextSecondary}" />
+                        <TextBlock Text="Số đơn trong khoảng lọc" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" />
+                    </StackPanel>
+
+                    <FontIcon Grid.Column="2" Glyph="&#xE7BF;" Foreground="{StaticResource TH.TextSecondary}" FontSize="40" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="48" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="{x:Bind ViewModel.SellerCommission, Mode=OneWay, Converter={StaticResource CurrencyConverter}}" FontSize="32" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis" />
+
+                    <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0">
+                        <TextBlock Text="Tiền hoa hồng" FontSize="20" Foreground="{StaticResource TH.TextSecondary}" />
+                        <TextBlock Text="Hoa hồng theo doanh thu" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" />
+                    </StackPanel>
+
+                    <FontIcon Grid.Column="2" Glyph="&#xE8C7;" Foreground="{StaticResource TH.TextSecondary}" FontSize="40" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Filters: Date range, Year, Month, Search (visible only to admin) -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <!-- Compact filter row similar to Orders page -->
             <Grid ColumnSpacing="8" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
@@ -98,13 +145,13 @@
             </Grid>
         </Border>
 
-        <!-- Chart Type Tabs -->
-        <Grid Grid.Row="2">
+        <!-- Chart Type Tabs (visible only to admin) -->
+        <Grid Grid.Row="2" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -140,8 +187,8 @@
                       PlaceholderText="Chọn sản phẩm"/>
         </Grid>
 
-        <!-- Chart Area (conditional) -->
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}">
+        <!-- Chart Area (conditional, admin only) -->
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
