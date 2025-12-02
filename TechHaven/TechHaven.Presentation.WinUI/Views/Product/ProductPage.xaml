@@ -65,26 +65,13 @@
                 PlaceholderText="Tiêu chí">
             </ComboBox>
 
-            <!-- THAY ComboBox thành 2 ô nhập liệu -->
-            <StackPanel Grid.Column="2"
-                Orientation="Horizontal"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Spacing="6">
+            <ComboBox Grid.Column="2"
+              ItemsSource="{x:Bind ViewModel.PriceRangeOptions}"
+              SelectedItem="{x:Bind ViewModel.SelectedPriceRange, Mode=TwoWay}"
+              PlaceholderText="Khoảng giá"
+              HorizontalAlignment="Stretch"
+              Height="40"/> 
 
-                <TextBox Width="70"
-                 PlaceholderText="Từ"
-                 InputScope="Number"
-                 Text="{Binding PriceFrom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Text="-" VerticalAlignment="Center"/>
-
-                <TextBox Width="70"
-                 PlaceholderText="Đến"
-                 InputScope="Number"
-                 Text="{Binding PriceTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-            </StackPanel>
 
             <ComboBox ItemsSource="{x:Bind ViewModel.StatusFilter}"
               Grid.Column="3"

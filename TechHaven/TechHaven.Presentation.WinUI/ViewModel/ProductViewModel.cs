@@ -28,10 +28,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _searchTerm;
 
         [ObservableProperty]
-        private string _priceFrom;
+        private int? _priceFrom;
 
         [ObservableProperty]
-        private string _priceTo;
+        private int? _priceTo;
 
         // Pagination
         [ObservableProperty]
@@ -61,6 +61,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private bool _isUpdatingAll = false;
 
+        [ObservableProperty]
+        private string _selectedPriceRange;
+
+
 
         public ObservableCollection<string> BrandNameFilter { get; } = new()
         {
@@ -77,28 +81,28 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             "Hết hàng"
         };
 
+        public ObservableCollection<string> PriceRangeOptions { get; } = new()
+        {
+            "Tất cả",
+            "Dưới 5 triệu",
+            "Từ 5 đến 10 triệu",
+            "Trên 10 triệu"
+        };
+
+
+
         [ObservableProperty]
         private string _selectedBrandName = "Không";
 
         [ObservableProperty]
         private string _selectedStatus = "Không";
 
+
         // ========================
         // Helper: Build Query
         // ========================
         private ProductListQueryDto BuildQuery()
         {
-            // Parse price inputs to nullable ints
-            int? fromPrice = null;
-            int? toPrice = null;
-
-            if (!string.IsNullOrWhiteSpace(PriceFrom) && int.TryParse(PriceFrom.Trim(), out var parsedFrom))
-                fromPrice = parsedFrom;
-
-            if (!string.IsNullOrWhiteSpace(PriceTo) && int.TryParse(PriceTo.Trim(), out var parsedTo))
-                toPrice = parsedTo;
-
-            
             ProductStatus? statusFilter = SelectedStatus switch
             {
                 "Còn hàng" => ProductStatus.InStock,
@@ -106,25 +110,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 _ => null
             };
 
-            var query = new ProductListQueryDto
+            return new ProductListQueryDto
             {
-                SearchTerm = string.IsNullOrWhiteSpace(SearchTerm)
-                    ? null
-                    : SearchTerm.Trim().ToLower(),
-
+                SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim().ToLower(),
                 PageNumber = PageNumber,
                 PageSize = PageSize,
-
                 Brand = SelectedBrandName == "Không" ? null : SelectedBrandName,
 
-                FromPrice = fromPrice,
-                ToPrice = toPrice,
+                FromPrice = PriceFrom,
+                ToPrice = PriceTo,
 
                 Status = statusFilter
             };
-
-            return query;
         }
+
 
 
 
@@ -142,19 +141,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // ========================
         // Price range changed -> reload
         // ========================
-        partial void OnPriceFromChanged(string value)
-        {
-            // Reset to first page and call API when price from changes
-            PageNumber = 1;
-            _ = LoadProductsAsync(BuildQuery());
-        }
 
-        partial void OnPriceToChanged(string value)
-        {
-            // Reset to first page and call API when price to changes
-            PageNumber = 1;
-            _ = LoadProductsAsync(BuildQuery());
-        }
 
         partial void OnSelectedBrandNameChanged(string value)
         {
@@ -193,6 +180,38 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 item.IsSelected = value;
             _isUpdatingAll = false;
         }
+
+        partial void OnSelectedPriceRangeChanged(string value)
+        {
+            switch (value)
+            {
+                case "Dưới 5 triệu":
+                    PriceFrom = 0;
+                    PriceTo = 5000000;
+                    break;
+
+                case "Từ 5 đến 10 triệu":
+                    PriceFrom = 5000000;
+                    PriceTo = 10000000;
+                    break;
+
+                case "Trên 10 triệu":
+                    PriceFrom = 10000000;
+                    PriceTo = null;
+                    break;
+
+                default: // "Tất cả mức giá"
+                    PriceFrom = null;
+                    PriceTo = null;
+                    break;
+            }
+
+            PageNumber = 1;
+            _ = LoadProductsAsync(BuildQuery());
+        }
+
+
+
 
         // ========================
         // Main load function
@@ -466,6 +485,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public bool IsAdmin => CurrentUserRole == "Admin";
     }
+
+
 
     // ===========================================================
     // Item ViewModel 
