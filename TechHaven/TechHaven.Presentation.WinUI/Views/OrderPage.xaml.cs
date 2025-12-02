@@ -15,6 +15,8 @@ using Windows.Foundation.Collections;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views.Controls;
 using TechHaven.Shared.DTOs.Orders;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Mock;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -345,6 +347,95 @@ namespace TechHaven.Presentation.WinUI.Views
                 XamlRoot = this.Content.XamlRoot
             };
             await dialog.ShowAsync();
+        }
+
+        private async void PrintOrder_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is OrderItemViewModel item)
+            {
+                try
+                {
+                    var pdfService = new TechHaven.Presentation.WinUI.Services.Mock.MockOrderPdfService();
+
+                    byte[] bytes;
+                    try
+                    {
+                        bytes = await pdfService.GenerateOrderPdfAsync(item.Order);
+                    }
+                    catch (Exception genEx)
+                    {
+                        // Write generation exception to debug file and open it
+                        var genDetails = genEx.ToString();
+                        var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
+                        var dbgPath = Path.Combine(Path.GetTempPath(), $"order_export_debug_{ts}.txt");
+                        var dbgContent = $"PDF generation exception:\n{genDetails}";
+                        await File.WriteAllTextAsync(dbgPath, dbgContent).ConfigureAwait(false);
+                        System.Diagnostics.Debug.WriteLine(dbgContent);
+                        FileSaveHelper.OpenFile(dbgPath);
+                        return;
+                    }
+
+                    if (bytes == null || bytes.Length == 0)
+                    {
+                        var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
+                        var dbgPath = Path.Combine(Path.GetTempPath(), $"order_export_debug_{ts}.txt");
+                        var dbgContent = "PDF generation returned empty content.";
+                        await File.WriteAllTextAsync(dbgPath, dbgContent).ConfigureAwait(false);
+                        System.Diagnostics.Debug.WriteLine(dbgContent);
+                        FileSaveHelper.OpenFile(dbgPath);
+                        return;
+                    }
+
+                    bool looksLikePdf = bytes.Length >= 5 && bytes[0] == (byte)'%' && bytes[1] == (byte)'P' && bytes[2] == (byte)'D' && bytes[3] == (byte)'F' && bytes[4] == (byte)'-';
+
+                    var fileName = $"Order_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                    var path = await TechHaven.Presentation.WinUI.Helpers.FileSaveHelper.SavePdfToDownloadsAsync(bytes, fileName);
+
+                    if (!looksLikePdf)
+                    {
+                        var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
+                        var diagPath = Path.Combine(Path.GetTempPath(), $"order_raw_{ts}.bin");
+                        await File.WriteAllBytesAsync(diagPath, bytes).ConfigureAwait(false);
+
+                        var headerPreview = System.Text.Encoding.UTF8.GetString(bytes.Take(Math.Min(128, bytes.Length)).ToArray());
+                        var headerHex = BitConverter.ToString(bytes.Take(Math.Min(64, bytes.Length)).ToArray());
+
+                        var dbgPath = Path.Combine(Path.GetTempPath(), $"order_export_debug_{ts}.txt");
+                        var dbgContent = $"Generated file saved to: {path}\nDiagnostic raw file saved to: {diagPath}\n\nHeader (text preview):\n{headerPreview}\n\nHeader (hex 1st64 bytes): {headerHex}\n";
+
+                        await File.WriteAllTextAsync(dbgPath, dbgContent).ConfigureAwait(false);
+                        System.Diagnostics.Debug.WriteLine(dbgContent);
+                        FileSaveHelper.OpenFile(dbgPath);
+
+                        return;
+                    }
+
+                    TechHaven.Presentation.WinUI.Helpers.FileSaveHelper.OpenFile(path);
+
+                    var success = new ContentDialog
+                    {
+                        Title = "Exported",
+                        Content = $"PDF generated and saved to:\n{path}",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+
+                    await success.ShowAsync();
+                }
+                catch (Exception ex)
+                {
+                    // Write full exception including inner exceptions to debug file and open it
+                    var details = ex.ToString();
+                    if (string.IsNullOrWhiteSpace(details) && ex.InnerException != null)
+                        details = ex.Message + "\nInner: " + ex.InnerException.ToString();
+                    if (string.IsNullOrWhiteSpace(details)) details = "No exception detail available.";
+
+                    var dbgPath = Path.Combine(Path.GetTempPath(), $"order_error_debug_{DateTime.Now:yyyyMMddHHmmss}.txt");
+                    await File.WriteAllTextAsync(dbgPath, details).ConfigureAwait(false);
+                    System.Diagnostics.Debug.WriteLine(details);
+                    FileSaveHelper.OpenFile(dbgPath);
+                }
+            }
         }
     }
 }
