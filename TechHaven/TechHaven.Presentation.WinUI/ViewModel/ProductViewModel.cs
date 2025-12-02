@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -123,8 +124,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 Status = statusFilter
             };
         }
-
-
 
 
 

@@ -21,6 +21,7 @@
     <Page.Resources>
         <converters:UrlToImageConverter x:Key="UrlToImageConverter" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:PriceFormatConverter x:Key="PriceFormatConverter"/>
     </Page.Resources>
 
 
@@ -168,9 +169,15 @@
 
                         <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold"/>
 
-                        <TextBlock Grid.Column="3" Text="{Binding Product.CostPrice}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3"
+                           Text="{Binding Product.CostPrice, Converter={StaticResource PriceFormatConverter}}"
+                           VerticalAlignment="Center"/>
 
-                        <TextBlock Grid.Column="4" Text="{Binding Product.SellPrice}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="4"
+                           Text="{Binding Product.SellPrice, Converter={StaticResource PriceFormatConverter}}"
+                           VerticalAlignment="Center"/>     
+    
+
 
                         <TextBlock Grid.Column="5" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center"/>
 
