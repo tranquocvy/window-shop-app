@@ -40,5 +40,10 @@ namespace TechHaven.Presentation.WinUI.Views
                 ViewModel.SelectedChartTab = ViewModel.ChartTabs[1];
             }
         }
+
+        private void CommissionTab_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedChartTab = "Hoa H?ng";
+        }
     }
 }

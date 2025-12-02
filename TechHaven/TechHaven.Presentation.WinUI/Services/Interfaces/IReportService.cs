@@ -20,11 +20,16 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         /// Get list of products for dropdown
         /// </summary>
         Task<List<ProductSummaryDto>> GetProductsAsync();
+
+        /// <summary>
+        /// Get commission report grouped by user (admin only)
+        /// </summary>
+        Task<List<CommissionReportDto>> GetCommissionReportAsync(ReportQueryDto query);
     }
 
     public class ProductSummaryDto
     {
         public int ProductId { get; set; }
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
     }
 }

@@ -21,7 +21,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public ObservableCollection<string> ChartTabs { get; } = new()
         {
             "Sản Phẩm",
-            "Doanh Thu"
+            "Doanh Thu",
+            // Note: "Hoa Hồng" tab is only visible to full admins via IsFullAdmin
         };
 
         // Period Type Options
@@ -35,6 +36,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         // Products list for dropdown
         public ObservableCollection<ProductSummaryDto> Products { get; } = new();
+
+        // Commission report data (admin only)
+        public ObservableCollection<CommissionReportDto> CommissionData { get; } = new();
 
         // Years and Months for filtering
         public ObservableCollection<int> Years { get; } = new();
@@ -71,12 +75,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private string _errorMessage;
 
-        // Role flags (admin vs seller) - explicit properties to avoid source-gen timing issues
-        private bool _isAdmin;
+        // Role flags
+        private bool _isAdmin; // indicates admin-like UI (both admin and seller see most report UI)
         public bool IsAdmin
         {
             get => _isAdmin;
             set => SetProperty(ref _isAdmin, value);
+        }
+
+        // Full admin (real admin) - can see commission tab
+        private bool _isFullAdmin;
+        public bool IsFullAdmin
+        {
+            get => _isFullAdmin;
+            set => SetProperty(ref _isFullAdmin, value);
         }
 
         private bool _isSeller;
@@ -104,6 +116,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Computed properties for visibility
         public bool IsProductChartVisible => SelectedChartTab == "Sản Phẩm";
         public bool IsRevenueChartVisible => SelectedChartTab == "Doanh Thu";
+        public bool IsCommissionVisible => SelectedChartTab == "Hoa Hồng" && IsFullAdmin;
+
+        // Summary metrics
+        [ObservableProperty]
+        private decimal _totalRevenue;
+
+        [ObservableProperty]
+        private decimal _totalProfit;
+
+        [ObservableProperty]
+        private string _revenueGrowthText = string.Empty;
+
+        [ObservableProperty]
+        private decimal _totalCommission;
 
         public ReportViewModel(IReportService reportService = null)
         {
@@ -112,8 +138,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             // determine role from AppState.CurrentUser.RoleName
             var role = AppState.CurrentUser?.RoleName ?? string.Empty;
-            IsAdmin = role.Equals("Admin", StringComparison.OrdinalIgnoreCase) || role.Equals("Administrator", StringComparison.OrdinalIgnoreCase);
+
             IsSeller = role.Equals("Seller", StringComparison.OrdinalIgnoreCase) || role.Equals("Vendor", StringComparison.OrdinalIgnoreCase);
+            IsFullAdmin = role.Equals("Admin", StringComparison.OrdinalIgnoreCase) || role.Equals("Administrator", StringComparison.OrdinalIgnoreCase);
+
+            // IsAdmin kept true for both sellers and admins so both can see main report UI
+            IsAdmin = IsSeller || IsFullAdmin;
 
             _ = LoadProductsAsync();
         }
@@ -207,6 +237,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     UserId = null // For now, keep null; backend should respect user context
                 };
 
+                // If commission tab selected and user is full admin, load commission data
+                if (IsCommissionVisible)
+                {
+                    await LoadCommissionAsync(query);
+                    return;
+                }
+
                 // Load both reports
                 var productSalesTask = _reportService.GetProductSalesReportAsync(query);
                 var revenueTask = _reportService.GetRevenueReportAsync(query);
@@ -245,6 +282,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                         RevenueData.Add(item);
                     }
 
+                    // compute summary values
+                    TotalRevenue = revenueData.Sum(r => r.TotalRevenue);
+                    TotalProfit = revenueData.Sum(r => r.Profit);
+
+                    // placeholder growth calculation: set to 0.0% if not available
+                    RevenueGrowthText = "[^ 0.0% Growth]";
+
                     // if seller, compute simple metrics
                     if (IsSeller)
                     {
@@ -264,6 +308,28 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
+        [RelayCommand]
+        private async Task LoadCommissionAsync(ReportQueryDto query)
+        {
+            try
+            {
+                var data = await _reportService.GetCommissionReportAsync(query);
+                CommissionData.Clear();
+                foreach (var item in data)
+                {
+                    CommissionData.Add(item);
+                }
+
+                // compute total commission to pay
+                TotalCommission = CommissionData.Sum(c => c.CommissionAmount);
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading commission report: {ex.Message}");
+            }
+        }
+
         private ReportPeriodType MapPeriodType(string periodType)
         {
             return periodType switch
@@ -280,6 +346,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             OnPropertyChanged(nameof(IsProductChartVisible));
             OnPropertyChanged(nameof(IsRevenueChartVisible));
+            OnPropertyChanged(nameof(IsCommissionVisible));
             _ = LoadReportsAsync();
         }
 
