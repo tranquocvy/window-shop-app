@@ -39,7 +39,7 @@ public class DeleteOrderCommandHandler : ICommandHandler<DeleteOrderCommand, Res
 
             // 3. Hoàn trả tồn kho (Restock Inventory)
             // Vì GetWithDetailsAsync đã Include("OrderDetails.Product"), nên product đã được tracking
-            foreach (var item in order.OrderDetails)
+            foreach (var item in order.OrderDetails!)
             {
                 // Kiểm tra null safety cho chắc chắn (dù logic DB đã ràng buộc)
                 if (item.Product != null)

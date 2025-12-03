@@ -53,7 +53,7 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
 
             // A. XÓA item cũ không còn trong danh sách mới
             // Những item đang có trong DB nhưng không có trong request -> Xóa
-            var itemsToDelete = order.OrderDetails // can not be null
+            var itemsToDelete = order.OrderDetails! // can not be null
                 .Where(x => !incomingProductIds.Contains(x.ProductId))
                 .ToList();
 
@@ -67,7 +67,7 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
                 }
 
                 // Xóa khỏi danh sách liên kết
-                order.OrderDetails.Remove(item);
+                order.OrderDetails!.Remove(item);
             }
 
             // B. CẬP NHẬT hoặc THÊM MỚI
@@ -75,7 +75,7 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
 
             foreach (var incomingItem in request.Details)
             {
-                var existingItem = order.OrderDetails
+                var existingItem = order.OrderDetails!
                     .FirstOrDefault(x => x.ProductId == incomingItem.ProductId);
 
                 var product = await _unitOfWork.Products.GetByIdAsync(incomingItem.ProductId);
@@ -126,7 +126,7 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
                         Quantity = incomingItem.Quantity,
                         UnitPrice = product.SellPrice
                     };
-                    order.OrderDetails.Add(newDetail);
+                    order.OrderDetails!.Add(newDetail);
 
                     calculatedSubTotal += newDetail.Quantity * newDetail.UnitPrice;
                 }
