@@ -55,9 +55,8 @@ public class GetDashboardSummaryQueryHandler
       }).ToList();
 
       var topSellers = await _unitOfWork.Orders.GetCommissionReportAsync(
-        startOfMonth,
-        today,
-        null,
+        today.Year,
+        today.Month,
         cancellationToken
       );
 

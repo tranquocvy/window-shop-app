@@ -5,7 +5,6 @@ using TechHaven.Shared.DTOs.Reports;
 namespace TechHaven.Application.Features.Reports.Queries.GetCommissionReport;
 
 public record GetCommissionReportQuery(
-  DateTime StartDate,
-  DateTime EndDate,
-  int? UserId = null
+  int Month,
+  int Year
 ) : IQuery<Result<List<CommissionReportDto>>>;

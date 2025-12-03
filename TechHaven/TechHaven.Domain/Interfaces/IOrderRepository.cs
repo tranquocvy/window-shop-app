@@ -122,9 +122,8 @@ namespace TechHaven.Domain.Interfaces
             decimal CommissionAmount,
             int TotalOrders
         )>> GetCommissionReportAsync(
-            DateTime startDate,
-            DateTime endDate,
-            int? userId = null,
+            int month,
+            int year,
             CancellationToken cancellationToken = default
         );
 
@@ -144,6 +143,21 @@ namespace TechHaven.Domain.Interfaces
         Task<Dictionary<OrderStatus, int>> GetOrderStatusCountsAsync(
             DateTime startDate,
             DateTime endDate,
+            CancellationToken cancellationToken = default
+        );
+
+         /// <summary>
+        /// Lấy báo cáo doanh số theo khoảng thời gian
+        /// </summary>
+        Task<List<(
+            string Period,
+            int QuantitySold,
+            decimal Revenue
+        )>> GetProductSalesDataPointAsync(
+            int productId,
+            DateTime startDate,
+            DateTime endDate,
+            ReportPeriodType periodType,
             CancellationToken cancellationToken = default
         );
     }

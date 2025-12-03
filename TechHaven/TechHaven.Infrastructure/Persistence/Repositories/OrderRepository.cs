@@ -6,6 +6,7 @@ using TechHaven.Domain.Enums;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
 using TechHaven.Domain.Specifications;
+using TechHaven.Shared.DTOs.Dashboard;
 using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Infrastructure.Persistence.Repositories;
@@ -308,6 +309,75 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         return groupedData;
     }
 
+    public async Task<List<(string Period, int QuantitySold, decimal Revenue)>> GetProductSalesDataPointAsync
+    (
+        int productId,
+        DateTime startDate,
+        DateTime endDate,
+        ReportPeriodType periodType,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var spec = new OrdersByProductAndDateRangeSpecification(productId, startDate, endDate);
+
+        _logger.LogInformation
+        (
+            "Searching orders by product id {@ProductId} and date range from {@StartDate} to {@EndDate}",
+            productId, startDate, endDate
+        );
+
+        var items = await GetAsync(spec, cancellationToken);
+            
+        var groupedData = periodType switch
+        {
+            ReportPeriodType.Daily => items
+                .GroupBy(o => o.OrderDate)
+                .Select(g => (
+                    Period: g.Key.ToString("yyyy-MM-dd"),
+                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
+                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
+                )),
+            ReportPeriodType.Monthly => items
+                .GroupBy(o => new
+                {
+                    o.OrderDate.Year,
+                    o.OrderDate.Month,
+                })
+                .Select(g => (
+                    Period: $"{g.Key.Year}-W{g.Key.Month:D2}",
+                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
+                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
+                )),
+            ReportPeriodType.Weekly => items
+                .GroupBy(o => new
+                {
+                    Year = o.OrderDate.Year,
+                    Week = GetWeekOfYear(o.OrderDate),
+                })
+                .Select(g => (
+                    Period: $"{g.Key.Year}-W{g.Key.Week:D2}",
+                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
+                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
+                )),
+            ReportPeriodType.Yearly => items
+                .GroupBy(o => o.OrderDate)
+                .Select(g => (
+                    Period: g.Key.ToString("yyyy-MM-dd"),
+                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
+                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
+                )),
+            _ => items
+                .GroupBy(o => o.OrderDate)
+                .Select(g => (
+                    Period: g.Key.ToString("yyyy-MM-dd"),
+                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
+                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
+                )),
+        };
+
+        return groupedData.ToList();
+    }
+
     private List<(string Period, int TotalOrders, decimal TotalRevenue, decimal TotalCost, decimal Profit, decimal ProfitMargin)>
     GroupByDay(List<Order> orders)
     {
@@ -398,11 +468,10 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     }
 
     public async Task<List<(int UserId, string UserFullName, string RoleName, decimal TotalSales, decimal CommissionRate, decimal CommissionAmount, int TotalOrders)>>
-    GetCommissionReportAsync(DateTime startDate, DateTime endDate, int? userId = null, CancellationToken cancellationToken = default)
+    GetCommissionReportAsync(int month, int year, CancellationToken cancellationToken = default)
     {
-        // Ensure dates are in UTC
-        var startUtc = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
-        var endUtc = DateTime.SpecifyKind(endDate.Date.AddDays(1), DateTimeKind.Utc);
+        var startUtc = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var endUtc = startUtc.AddMonths(1);
 
         var query = _context.Orders
             .Include(o => o.User)
@@ -410,11 +479,6 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             .Where(o => o.OrderDate >= startUtc && o.OrderDate < endUtc)
             .Where(o => o.Status == OrderStatus.Completed)
             .AsQueryable();
-
-        if (userId.HasValue)
-        {
-            query = query.Where(o => o.UserId == userId.Value);
-        }
 
         var data = await query
             .GroupBy(o => new
@@ -453,7 +517,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     {
         var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
-        
+
         // Ensure UTC kind
         var todayUtc = DateTime.SpecifyKind(today, DateTimeKind.Utc);
         var tomorrowUtc = DateTime.SpecifyKind(tomorrow, DateTimeKind.Utc);
@@ -497,16 +561,16 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
                 .GroupBy(o => o.Status)
                 .Select(g => new
                 {
-                  Status = g.Key,
-                  Count = g.Count()
+                    Status = g.Key,
+                    Count = g.Count()
                 }).ToListAsync(cancellationToken),
-            new {startDate, endDate}
+            new { startDate, endDate }
         );
 
         // Ensure all statuses are represented
         var allStatuses = Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>();
         var result = allStatuses.ToDictionary(status => status, status => 0);
-        
+
         foreach (var order in orders)
         {
             result[order.Status] = order.Count;

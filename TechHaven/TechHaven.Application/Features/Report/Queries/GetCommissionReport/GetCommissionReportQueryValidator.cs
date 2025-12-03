@@ -6,15 +6,12 @@ public class GetTopSellingProductsValidator : AbstractValidator<GetCommissionRep
 {
   public GetTopSellingProductsValidator()
   {
-    RuleFor(x => x.StartDate)
-      .NotEmpty().WithMessage("Start date is required")
-      .LessThanOrEqualTo(x => x.EndDate).WithMessage("Start date must be before or equal to end date");
+    RuleFor(x => x.Month)
+    .NotEmpty().WithMessage("Month is required")
+    .InclusiveBetween(1, 12).WithMessage("Month must be between 1 and 12");
 
-    RuleFor(x => x.EndDate)
-      .NotEmpty().WithMessage("End date is required")
-      .GreaterThanOrEqualTo(x => x.StartDate).WithMessage("End date must be after or equal to start date");
-    
-    RuleFor(x => x.UserId)
-      .GreaterThan(0).WithMessage("Customer ID is required.");
+    RuleFor(x => x.Year)
+    .NotEmpty().WithMessage("Year is required")
+    .InclusiveBetween(2000, DateTime.Now.Year).WithMessage($"Year must be between 2000 and {DateTime.Now.Year}");   
   }
 }

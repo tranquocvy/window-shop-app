@@ -25,7 +25,7 @@ public class GetDashboardQueryHandler : IQueryHandler<GetDashboardQuery, Result<
       var totalProducts = await _unitOfWork.Products
           .GetTotalProductCountAsync(cancellationToken);
 
-      // 2. Top 5 sản phẩm sắp hết hàng (stock < 5)
+      // 2. Top 5 sản phẩm sắp hết hàng (stock <= 5)
       var lowStockSpec = new LowStockProductsSpecification(threshold: 5);
       var lowStockProducts = await _unitOfWork.Products
           .GetAsync(lowStockSpec, cancellationToken);
