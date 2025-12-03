@@ -285,7 +285,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             CanGoPrevious = PageNumber > 1;
             CanGoNext = PageNumber < TotalPages;
 
-            PageInfo = $"Trang {PageNumber}/{TotalPages} (Tổng {TotalCount})";
+            PageInfo = $"Trang {PageNumber}/{TotalPages}";
         }
 
         // ========================
