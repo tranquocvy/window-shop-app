@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using TechHaven.Domain.Entities;
@@ -15,7 +15,7 @@ namespace TechHaven.Domain.Interfaces
     public interface IOrderRepository : IGenericRepository<Order>
     {
         Task<(IReadOnlyList<Order> Items, int TotalCount)>
-        SearchOrdersAsync(
+        SearchWithPaginationAsync( //Đã sửa ở đây để trùng với tên hàm và đúng ngữ cảnh hơn trong Repository
             OrderSearchCriteria criteria,
             CancellationToken cancellationToken = default
         );

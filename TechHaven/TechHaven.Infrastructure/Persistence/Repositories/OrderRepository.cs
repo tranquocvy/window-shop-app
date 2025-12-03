@@ -82,7 +82,6 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             });
     }
 
-    //TODO: Cần kiểm tra _dbSet có đúng là _context.Orders không?
     public async Task<Order?> GetWithDetailsAsync(int orderId, CancellationToken cancellationToken = default)
     {
         return await ExecuteOperationAsync(
