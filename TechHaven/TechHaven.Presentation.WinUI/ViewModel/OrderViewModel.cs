@@ -5,19 +5,22 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Helpers; // OrderPdfService moved here
-using TechHaven.Presentation.WinUI.Services.Mock; // for MockOrderService
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Orders;
 using Windows.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using System.Net.Http;
+using TechHaven.Presentation.WinUI.Services.Http;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class OrderViewModel : ObservableObject
     {
-        private readonly IOrderService _orderService = new MockOrderService();
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
+        private readonly IOrderService _orderService = new HttpOrderService(SharedHttpClient);
         private readonly IOrderPdfService _orderPdfService;
 
         public ObservableCollection<OrderItemViewModel> Orders { get; } = new();
@@ -267,23 +270,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        // New public update method matching IOrderService.UpdateOrderAsync
-        public async Task UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
+        public async Task<ResponseWrapper<OrderDto>?> UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
         {
-            if (dto == null) return;
+            if (dto == null) return null;
 
             try
             {
                 var response = await _orderService.UpdateOrderAsync(orderId, dto);
-                if (response.Success)
-                {
-                    // Optionally refresh orders
-                }
+                return response;
             }
             catch (Exception)
             {
-                // swallow for now
+                return null;
             }
+        }
+
+        public async Task<OrderDto?> GetOrderByIdAsync(int orderId)
+        {
+            try
+            {
+                var resp = await _orderService.GetOrderByIdAsync(orderId);
+                if (resp != null && resp.Success && resp.Data != null)
+                    return resp.Data;
+            }
+            catch
+            {
+                // ignore
+            }
+            return null;
         }
 
         [RelayCommand]
@@ -354,8 +368,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             get
             {
                 var count = Order.Details?.Count ?? 0;
-                var totalQty = Order.Details?.Sum(d => d.Quantity) ?? 0;
-                return $"{count} items ({totalQty} qty)";
+                return $"{count} items";
             }
         }
     }
