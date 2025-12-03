@@ -62,6 +62,17 @@ public class GlobalExceptionHandlerMiddleware
         _logger.LogWarning("Not found: {Message}", notFoundException.Message);
         break;
 
+      case BadHttpRequestException badRequest:
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        response.Message = "Bad request";
+        response.Errors = new List<string> { badRequest.Message };
+        break;
+
+      case InvalidOperationException invalidOp when context.Response.StatusCode == StatusCodes.Status400BadRequest:
+        response.Message = "Validation failed";
+        response.Errors = new List<string> { invalidOp.Message };
+        break;
+
       default:
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
         response.Message = "An error occurred while processing your request";

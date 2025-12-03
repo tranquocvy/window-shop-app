@@ -1,3 +1,5 @@
+using System.Reflection.Metadata;
+using ClosedXML.Excel;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Crypto.Modes;
@@ -103,7 +105,7 @@ public class ReportController : BaseApiController
   /// <remarks>
   /// Trả về data points + tổng hợp + % tăng trưởng so với kỳ trước
   /// </remarks>
-  [HttpGet("sales/trend")]
+  [HttpGet("sales")]
   [ProducesResponseType(typeof(ResponseWrapper<SalesTrendDto>), StatusCodes.Status200OK)]
   public async Task<IActionResult> GetSalesTrend(
       [FromQuery] ReportQueryDto query,
@@ -132,7 +134,7 @@ public class ReportController : BaseApiController
     return HandleResult(result);
   }
 
-  [HttpGet("products/{id}/trend")]
+  [HttpGet("products/{id}")]
   [ProducesResponseType(typeof(ResponseWrapper<ProductSalesTrendDto>), StatusCodes.Status200OK)]
   public async Task<IActionResult> GetProductSalesTrend(
     int id, // phải đặt trùng tên với endpoint thì APS.NET mới map được với cái trên
@@ -150,7 +152,7 @@ public class ReportController : BaseApiController
       query.EndDate,
       query.PeriodType
     );
-    
+
     var result = await _mediator.Send(command, cancellationToken);
 
     if (result.IsSuccess)
@@ -162,41 +164,6 @@ public class ReportController : BaseApiController
 
     return HandleResult(result);
   }
-
-  // ============================================
-  // 4. TOP SELLING PRODUCTS
-  // ============================================
-  /// <summary>
-  /// Top sản phẩm bán chạy nhất
-  /// </summary>
-  /// <param name="startDate">Ngày bắt đầu</param>
-  /// <param name="endDate">Ngày kết thúc</param>
-  /// <param name="topCount">Số lượng sản phẩm (mặc định 10)</param>
-  /// <param name="cancellationToken"></param>
-  // [HttpGet("products/top-selling")]
-  // [ProducesResponseType(typeof(ResponseWrapper<List<ProductSalesDto>>), StatusCodes.Status200OK)]
-  // public async Task<IActionResult> GetTopSellingProducts(
-  //     [FromQuery] DateTime startDate,
-  //     [FromQuery] DateTime endDate,
-  //     [FromQuery] int topCount = 10,
-  //     CancellationToken cancellationToken = default)
-  // {
-  //   _logger.LogInformation(
-  //       "Getting top {TopCount} selling products from {StartDate} to {EndDate}",
-  //       topCount, startDate, endDate);
-
-  //   var query = new GetTopSellingProductsQuery(startDate, endDate, topCount);
-  //   var result = await _mediator.Send(query, cancellationToken);
-
-  //   if (result.IsSuccess)
-  //   {
-  //     _logger.LogInformation(
-  //         "Retrieved {Count} top selling products",
-  //         result.Data?.Count ?? 0);
-  //   }
-
-  //   return HandleResult(result);
-  // }
 
   // ============================================
   // 5. COMMISSION REPORT
@@ -215,16 +182,14 @@ public class ReportController : BaseApiController
   [HttpGet("commission")]
   [ProducesResponseType(typeof(ResponseWrapper<List<CommissionReportDto>>), StatusCodes.Status200OK)]
   public async Task<IActionResult> GetCommissionReport(
-      [FromQuery] DateTime startDate,
-      [FromQuery] DateTime endDate,
-      [FromQuery] int? userId = null,
+      [FromQuery] CommissionQueryDto request,
       CancellationToken cancellationToken = default)
   {
     _logger.LogInformation(
-        "Getting commission report from {StartDate} to {EndDate}, UserId: {UserId}",
-        startDate, endDate, userId?.ToString() ?? "All");
+        "Getting commissions report for month {Month}, year {Year}",
+        request.Month, request.Year);
 
-    var query = new GetCommissionReportQuery(startDate, endDate, userId);
+    var query = new GetCommissionReportQuery(request.Month, request.Year);
     var result = await _mediator.Send(query, cancellationToken);
 
     if (result.IsSuccess)
@@ -239,25 +204,201 @@ public class ReportController : BaseApiController
     return HandleResult(result);
   }
 
-  // // ============================================
-  // // 6. EXPORT REPORT (Optional - for future)
-  // // ============================================
-  // /// <summary>
-  // /// Export báo cáo ra Excel/PDF (TODO: implement later)
-  // /// </summary>
-  // [HttpPost("export")]
-  // [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-  // public async Task<IActionResult> ExportReport(
-  //     [FromBody] ReportQueryDto query,
-  //     [FromQuery] string format = "excel") // excel or pdf
-  // {
-  //   _logger.LogInformation("Exporting report to {Format}", format);
+  // ============================================
+  // 6. EXPORT REPORT FOR SALES
+  // ============================================
+  /// <summary>
+  /// Export báo cáo ra Excel
+  /// </summary>
+  [HttpPost("export/sales")]
+  [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+  public async Task<IActionResult> ExportSalesReport(
+      [FromBody] ReportQueryDto query,
+      CancellationToken cancellationToken)
+  {
+    _logger.LogInformation("Exporting sales report to Excel");
 
-  //   // TODO: Implement export logic
-  //   return BadRequest(new ResponseWrapper<object>
-  //   {
-  //     Success = false,
-  //     Message = "Export feature not implemented yet"
-  //   });
-  // }
+    // 1. Lấy dữ liệu
+    var command = new GetSalesReportQuery(
+      query.StartDate,
+      query.EndDate,
+      query.PeriodType
+    );
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (!result.IsSuccess)
+    {
+      return HandleResult(result);
+    }
+
+    // 2. Tạo Excel file
+    using var workbook = new XLWorkbook();
+    var worksheet = workbook.Worksheets.Add("Sales Report");
+
+    // Header
+    worksheet.Cell(1, 1).Value = "Period";
+    worksheet.Cell(1, 2).Value = "Total Orders";
+    worksheet.Cell(1, 3).Value = "Revenue";
+    worksheet.Cell(1, 4).Value = "Cost";
+    worksheet.Cell(1, 5).Value = "Profit";
+    worksheet.Cell(1, 6).Value = "Profit Margin (%)";
+
+    // Data
+    int row = 2;
+    foreach (var item in result.Data!)
+    {
+      worksheet.Cell(row, 1).Value = item.Period;
+      worksheet.Cell(row, 2).Value = item.TotalOrders;
+      worksheet.Cell(row, 3).Value = item.TotalRevenue;
+      worksheet.Cell(row, 4).Value = item.TotalCost;
+      worksheet.Cell(row, 5).Value = item.Profit;
+      worksheet.Cell(row, 6).Value = item.ProfitMargin;
+      row++;
+    }
+
+    // Auto-fit columns
+    worksheet.Columns().AdjustToContents();
+
+    // 3. Return file
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+    var content = stream.ToArray();
+
+    return File(
+      content,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      $"SalesReport_{DateTime.Now:yyyyMMdd}.xlsx"
+    );
+  }
+
+  // ============================================
+  // 7. EXPORT REPORT FOR PRODUCTS
+  // ============================================
+  /// <summary>
+  /// Export báo cáo ra Excel
+  /// </summary>
+  [HttpPost("export/products/{id}")]
+  [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+  public async Task<IActionResult> ExportProductSalesReport(
+    int id,
+    [FromBody] ReportQueryDto query,
+    CancellationToken cancellationToken)
+  {
+    _logger.LogInformation("Exporting product sales report to Excel");
+
+    // 1. Lấy dữ liệu
+    var command = new GetProductSalesTrendQuery(
+      id,
+      query.StartDate,
+      query.EndDate,
+      query.PeriodType
+    );
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (!result.IsSuccess)
+    {
+      return HandleResult(result);
+    }
+
+    // 2. Tạo Excel file
+    using var workbook = new XLWorkbook();
+    var worksheet = workbook.Worksheets.Add("Product Sales Report");
+
+    // Header
+    worksheet.Cell(1, 1).Value = "Period";
+    worksheet.Cell(1, 2).Value = "Quantity Sold";
+    worksheet.Cell(1, 3).Value = "Revenue";
+
+    // Data
+    int row = 2;
+    foreach (var item in result.Data!.DataPoints) // Assuming 'DataPoints' is the collection property in ProductSalesTrendDto
+    {
+      worksheet.Cell(row, 1).Value = item.Period;
+      worksheet.Cell(row, 2).Value = item.QuantitySold;
+      worksheet.Cell(row, 3).Value = item.Revenue;
+      row++;
+    }
+
+    // Auto-fit columns
+    worksheet.Columns().AdjustToContents();
+
+    // 3. Return file
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+    var content = stream.ToArray();
+
+    return File(
+      content,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      $"ProductSalesReport_ID-{result.Data.ProductId}_{DateTime.Now:yyyyMMdd}.xlsx"
+    );
+  }
+
+  // ============================================
+  // 7. EXPORT REPORT FOR PRODUCTS
+  // ============================================
+  /// <summary>
+  /// Export báo cáo ra Excel
+  /// </summary>
+  [HttpPost("export/commission")]
+  [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+  public async Task<IActionResult> ExportCommissionReport(
+    [FromBody] CommissionQueryDto query,
+    CancellationToken cancellationToken)
+  {
+    _logger.LogInformation("Exporting commission report to Excel");
+
+    // 1. Lấy dữ liệu
+    var command = new GetCommissionReportQuery(
+      query.Month,
+      query.Year
+    );
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (!result.IsSuccess)
+    {
+      return HandleResult(result);
+    }
+
+    // 2. Tạo Excel file
+    using var workbook = new XLWorkbook();
+    var worksheet = workbook.Worksheets.Add("Commission Report");
+
+    // Header
+    worksheet.Cell(1, 1).Value = "No";
+    worksheet.Cell(1, 2).Value = "UserFullName";
+    worksheet.Cell(1, 3).Value = "RoleName";
+    worksheet.Cell(1, 4).Value = "TotalSales";
+    worksheet.Cell(1, 5).Value = "CommissionRate";
+    worksheet.Cell(1, 6).Value = "CommissionAmount";
+    worksheet.Cell(1, 7).Value = "TotalOrders";
+
+    // Data
+    int row = 2;
+    foreach (var item in result.Data!)
+    {
+      worksheet.Cell(row, 1).Value = row - 1;
+      worksheet.Cell(row, 2).Value = item.UserFullName;
+      worksheet.Cell(row, 3).Value = item.RoleName;
+      worksheet.Cell(row, 4).Value = item.TotalSales;
+      worksheet.Cell(row, 5).Value = item.CommissionRate;
+      worksheet.Cell(row, 6).Value = item.CommissionAmount;
+      worksheet.Cell(row, 7).Value = item.TotalOrders;
+      row++;
+    }
+
+    // Auto-fit columns
+    worksheet.Columns().AdjustToContents();
+
+    // 3. Return file
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+    var content = stream.ToArray();
+
+    return File(
+      content,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      $"Commission_{DateTime.Now:yyyyMMdd}.xlsx"
+    );
+  }
 }

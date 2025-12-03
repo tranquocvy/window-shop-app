@@ -22,9 +22,8 @@ public class GetCommissionReportQueryHandler
     try
     {
       var report = await _orderRepository.GetCommissionReportAsync(
-        request.StartDate,
-        request.EndDate,
-        request.UserId,
+        request.Month,
+        request.Year,
         cancellationToken
       );
 

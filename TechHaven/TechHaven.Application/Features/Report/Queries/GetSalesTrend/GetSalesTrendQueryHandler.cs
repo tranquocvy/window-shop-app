@@ -88,12 +88,12 @@ public class GetSalesTrendQueryHandler : IQueryHandler<GetSalesTrendQuery, Resul
   private decimal CalculateGrowth(decimal previousValue, decimal currentValue)
   {
     if (previousValue == 0) return currentValue > 0 ? 100 : 0;
-    return Math.Round(((currentValue - previousValue) / previousValue) * 100, 2);
+    return Math.Round((currentValue - previousValue) / previousValue * 100, 2);
   }
 
   private decimal CalculateProfitMargin(decimal revenue, decimal cost)
   {
     if (revenue == 0) return 0;
-    return Math.Round(((revenue - cost) / revenue) * 100, 2);
+    return Math.Round((revenue - cost) / revenue * 100, 2);
   }
 }

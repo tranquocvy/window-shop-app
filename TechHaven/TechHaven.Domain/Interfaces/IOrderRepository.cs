@@ -120,9 +120,8 @@ namespace TechHaven.Domain.Interfaces
             decimal CommissionAmount,
             int TotalOrders
         )>> GetCommissionReportAsync(
-            DateTime startDate,
-            DateTime endDate,
-            int? userId = null,
+            int month,
+            int year,
             CancellationToken cancellationToken = default
         );
 

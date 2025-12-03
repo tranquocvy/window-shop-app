@@ -6,6 +6,8 @@ using TechHaven.Infrastructure.Persistence;
 using DotNetEnv;
 using Serilog;
 using TechHaven.Presentation.WebAPI.Middleware;
+using TechHaven.Shared.DTOs.Common;
+using Microsoft.AspNetCore.Mvc;
 
 // ============================================
 // Serilog Configuration Guide
@@ -66,7 +68,28 @@ try
     builder.Configuration.AddEnvironmentVariables();
 
     // Add services to the container
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            // Customize validation error response
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(e => e.Value?.Errors.Count > 0)
+                    .SelectMany(e => e.Value!.Errors.Select(x =>
+                        $"{e.Key}: {x.ErrorMessage}"))
+                    .ToList();
+
+                var response = new ResponseWrapper<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = errors
+                };
+
+                return new BadRequestObjectResult(response);
+            };
+        });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {

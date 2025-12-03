@@ -33,7 +33,6 @@ public class GetProductSalesTrendQueryHandler : IQueryHandler<GetProductSalesTre
 
       var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId);
 
-
       var dataPointsDto = dataPoints.Select(d => new ProductSalesDataPointDto
       {
         Period = d.Period,

@@ -444,11 +444,10 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     }
 
     public async Task<List<(int UserId, string UserFullName, string RoleName, decimal TotalSales, decimal CommissionRate, decimal CommissionAmount, int TotalOrders)>>
-    GetCommissionReportAsync(DateTime startDate, DateTime endDate, int? userId = null, CancellationToken cancellationToken = default)
+    GetCommissionReportAsync(int month, int year, CancellationToken cancellationToken = default)
     {
-        // Ensure dates are in UTC
-        var startUtc = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
-        var endUtc = DateTime.SpecifyKind(endDate.Date.AddDays(1), DateTimeKind.Utc);
+        var startUtc = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var endUtc = startUtc.AddMonths(1);
 
         var query = _context.Orders
             .Include(o => o.User)
@@ -456,11 +455,6 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             .Where(o => o.OrderDate >= startUtc && o.OrderDate < endUtc)
             .Where(o => o.Status == OrderStatus.Completed)
             .AsQueryable();
-
-        if (userId.HasValue)
-        {
-            query = query.Where(o => o.UserId == userId.Value);
-        }
 
         var data = await query
             .GroupBy(o => new
