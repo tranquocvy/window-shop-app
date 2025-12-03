@@ -9,12 +9,18 @@
     mc:Ignorable="d"
     Title="ShellWindow">
 
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
-
-    <!-- Use TH.* theme resources directly -->
     <Grid x:Name="rootGrid" Background="{ThemeResource TH.SurfaceBackground}">
+        <Grid.Resources>
+            <Style TargetType="IconElement">
+                <Setter Property="Foreground" Value="{ThemeResource TH.TextPrimary}" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="NavToggleButtonStyle">
+                <Setter Property="Foreground" Value="{ThemeResource TH.TextPrimary}" />
+                <Setter Property="Background" Value="{ThemeResource TH.NavBackground}" />
+            </Style>
+        </Grid.Resources>
+
         <NavigationView
             x:Name="navView"
             OpenPaneLength="220"
@@ -30,9 +36,8 @@
             <!-- Header logo -->
             <NavigationView.PaneHeader>
                 <StackPanel Orientation="Horizontal" 
-                Padding="12,12,0,12" 
-                Margin="0,20,0,0">
-                    <!-- Use an Ellipse filled with an ImageBrush to render a rounded avatar reliably in WinUI -->
+                            Padding="12,12,0,12" 
+                            Margin="0,20,0,0">
                     <Ellipse Width="40" Height="40">
                         <Ellipse.Fill>
                             <ImageBrush ImageSource="ms-appx:///Assets/avatar.jpg" Stretch="UniformToFill" />
@@ -54,41 +59,48 @@
                     </StackPanel>
                 </StackPanel>
             </NavigationView.PaneHeader>
+
             <!-- Menu items -->
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Dashboard" Tag="dashboard" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE80F;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
                 <NavigationViewItem Content="Products" Tag="product" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE719;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE719;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
                 <NavigationViewItem Content="Orders" Tag="order" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE14C;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE14C;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
                 <NavigationViewItem Content="Customers" Tag="customer" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE716;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE716;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
                 <NavigationViewItem Content="Report" Tag="report" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE9F9;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE9F9;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
                 <NavigationViewItem Content="Settings" Tag="setting" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE713;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE713;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
                 <NavigationViewItem Content="Log Out" Tag="logout" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE7E8;" Foreground="{ThemeResource TH.TextPrimary}" />
+                        <FontIcon Glyph="&#xE7E8;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>

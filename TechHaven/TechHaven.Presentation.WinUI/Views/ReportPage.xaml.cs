@@ -1,31 +1,49 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
+using TechHaven.Presentation.WinUI.ViewModel;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace TechHaven.Presentation.WinUI.Views
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class ReportPage : Page
     {
+        public ReportViewModel ViewModel { get; }
+
         public ReportPage()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+            ViewModel = new ReportViewModel();
+            this.DataContext = ViewModel;
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            // Load initial data when page is navigated to
+            await ViewModel.LoadProductsCommand.ExecuteAsync(null);
+            await ViewModel.LoadReportsCommand.ExecuteAsync(null);
+        }
+
+        private void ProductChartTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.ChartTabs.Any())
+            {
+                ViewModel.SelectedChartTab = ViewModel.ChartTabs.First();
+            }
+        }
+
+        private void RevenueChartTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.ChartTabs.Count > 1)
+            {
+                ViewModel.SelectedChartTab = ViewModel.ChartTabs[1];
+            }
+        }
+
+        private void CommissionTab_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedChartTab = "Hoa H?ng";
         }
     }
 }

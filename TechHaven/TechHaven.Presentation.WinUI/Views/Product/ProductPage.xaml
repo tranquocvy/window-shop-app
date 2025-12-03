@@ -20,6 +20,7 @@
 
     <Page.Resources>
         <converters:UrlToImageConverter x:Key="UrlToImageConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
 
 
@@ -110,7 +111,8 @@
                 FontWeight="Bold"
                 CornerRadius="5"
                 Command="{Binding DeleteSelectedCommand}"
-                Height="40"/>
+                Height="40"
+                Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
         </Grid>
 
 
@@ -192,10 +194,14 @@
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem Text="Xem chi tiết" Click="ViewDetails_Click"/>
-                                <MenuFlyoutItem Text="Xóa sản phẩm"
+                                <MenuFlyoutItem 
+                                    Text="Xóa sản phẩm"
                                     Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
-                                    CommandParameter="{Binding}"/>
+                                    CommandParameter="{Binding}"
+                                    Visibility="{Binding DataContext.IsAdmin, ElementName=RootPage, Converter={StaticResource BoolToVisibilityConverter}}"/>
                             </MenuFlyout>
+
+
                         </Grid.ContextFlyout>
 
                     </Grid>

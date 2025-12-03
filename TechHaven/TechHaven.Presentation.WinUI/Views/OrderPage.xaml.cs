@@ -15,6 +15,8 @@ using Windows.Foundation.Collections;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views.Controls;
 using TechHaven.Shared.DTOs.Orders;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Mock;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -31,6 +33,9 @@ namespace TechHaven.Presentation.WinUI.Views
         public OrderPage()
         {
             InitializeComponent();
+
+            // Use production PDF service (will include StoreLogo.png if present in output)
+            DataContext = new OrderViewModel(new TechHaven.Presentation.WinUI.Helpers.OrderPdfService());
         }
 
         private async void OrdersList_ItemClick(object sender, ItemClickEventArgs e)
@@ -52,7 +57,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 var dialog = new ContentDialog
                 {
-                    Title = $"Order Details #{item.Order.OrderId}",
+                    Title = $"Order Details",
                     Content = new ScrollViewer
                     {
                         Content = new TextBlock
@@ -111,7 +116,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 var dialog = new ContentDialog
                 {
-                    Title = $"Update Status - Order #{item.Order.OrderId}",
+                    Title = $"Update Status - Order",
                     Content = panel,
                     PrimaryButtonText = "Update",
                     CloseButtonText = "Cancel",
@@ -142,7 +147,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 var confirmDialog = new ContentDialog
                 {
                     Title = "Confirm Delete",
-                    Content = $"Are you sure you want to delete order #{item.Order.OrderId}?\n\n" +
+                    Content = $"Are you sure you want to delete this order?\n\n" +
                              $"Customer: {item.CustomerDisplay}\n" +
                              $"Total: {item.TotalAmountDisplay}",
                     PrimaryButtonText = "Delete",
@@ -309,7 +314,7 @@ namespace TechHaven.Presentation.WinUI.Views
             };
 
             var panel = new StackPanel { Spacing = 8 };
-            panel.Children.Add(new TextBlock { Text = $"Order #{item.Order.OrderId}", FontSize = 18, FontWeight = Microsoft.UI.Text.FontWeights.Bold });
+            panel.Children.Add(new TextBlock { Text = $"Order", FontSize = 18, FontWeight = Microsoft.UI.Text.FontWeights.Bold });
             panel.Children.Add(new TextBlock { Text = $"Customer: {item.CustomerDisplay}" });
             panel.Children.Add(new TextBlock { Text = $"Current Total: {item.TotalAmountDisplay}" });
             panel.Children.Add(new TextBlock { Text = "Discount:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Microsoft.UI.Xaml.Thickness(0, 8, 0, 0) });
@@ -345,6 +350,17 @@ namespace TechHaven.Presentation.WinUI.Views
                 XamlRoot = this.Content.XamlRoot
             };
             await dialog.ShowAsync();
+        }
+
+        private async void PrintOrder_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is OrderItemViewModel item)
+            {
+                if (ViewModel?.PrintOrderCommand != null && ViewModel.PrintOrderCommand.CanExecute(item))
+                {
+                    await ViewModel.PrintOrderCommand.ExecuteAsync(item);
+                }
+            }
         }
     }
 }

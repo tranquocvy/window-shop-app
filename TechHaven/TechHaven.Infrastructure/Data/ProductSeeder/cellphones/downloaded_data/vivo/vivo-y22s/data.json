@@ -1,0 +1,13 @@
+{
+    "ProductName": "vivo Y22S 8GB 128GB",
+    "BrandName": "Vivo",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "Qualcomm Snapdragon 680",
+    "ScreenSize": 6.55,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "vivo-y22s_main.jpg",
+    "ImageGalleryJson": "[\"vivo-y22s_gallery_1.jpg\", \"vivo-y22s_gallery_2.jpg\"]",
+    "SellPrice": 0,
+    "Description": "Tần số quét 90 Hz, Độ sáng tối đa: 530 nits, Cảm ứng điện dung đa điểm"
+}

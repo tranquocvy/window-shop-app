@@ -36,6 +36,7 @@ public class GetDashboardQueryHandler : IQueryHandler<GetDashboardQuery, Result<
           {
             ProductId = p.ProductId,
             ProductName = p.ProductName,
+            Image_Url = p.ImageUrl ?? string.Empty,
             BrandName = p.BrandName,
             StockQuantity = p.StockQuantity,
             SellPrice = p.SellPrice
@@ -51,6 +52,7 @@ public class GetDashboardQueryHandler : IQueryHandler<GetDashboardQuery, Result<
           {
             ProductId = x.ProductId,
             ProductName = x.ProductName,
+            Image_Url = x.Image_Url ?? string.Empty,
             BrandName = x.BrandName,
             TotalSold = x.TotalSold,
             TotalRevenue = x.TotalRevenue
@@ -81,7 +83,7 @@ public class GetDashboardQueryHandler : IQueryHandler<GetDashboardQuery, Result<
           .ToList();
 
       // 7. Doanh thu theo ngày trong tháng hiện tại
-      var now = DateTime.Now;
+      var now = DateTime.UtcNow;
       var monthlyRevenue = await _unitOfWork.Orders
           .GetMonthlyRevenueAsync(now.Year, now.Month, cancellationToken);
 

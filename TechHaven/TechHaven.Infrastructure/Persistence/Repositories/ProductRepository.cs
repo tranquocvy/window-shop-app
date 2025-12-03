@@ -29,6 +29,10 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
             "Searching products with criteria {@Criteria}",
             criteria);
 
+        _logger.LogInformation(
+            "Searching products with criteria {@Criteria}",
+            criteria);
+
         var items = await GetAsync(spec, cancellationToken);
 
         // Count total (không paging)

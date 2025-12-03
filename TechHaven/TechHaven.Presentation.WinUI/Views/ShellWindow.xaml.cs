@@ -58,6 +58,12 @@ namespace TechHaven.Presentation.WinUI.Views
 
                         // Listen for theme changes so titlebar buttons update immediately
                         ThemeManager.ThemeChanged += ThemeManager_ThemeChanged_ForTitlebar;
+                        
+                        // Unsubscribe when window closes to avoid memory leaks and crashes on re-login
+                        this.Closed += (s, e) => 
+                        {
+                            ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged_ForTitlebar;
+                        };
                     }
                     catch
                     {
@@ -72,7 +78,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
             if (Content is FrameworkElement root)
             {
-                ThemeManager.ApplyTo(root);
+                ThemeManager.RegisterRoot(root);
             }
 
             if (AppState.CurrentUser != null)
@@ -179,110 +185,51 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private void UpdateNavToggleBrush()
         {
-            Brush? toggleBrush = null;
             try
             {
-                if (Application.Current?.Resources != null && Application.Current.Resources.ContainsKey("TH.TextPrimary"))
+                // Ensure NavigationView itself uses theme resource (set in XAML)
+                // Find the toggle button in the nav view template
+                string[] possibleNames = new[] { "TogglePaneButton", "PaneToggleButton", "TogglePaneToggleButton" };
+
+                Button? toggleButton = null;
+                foreach (var name in possibleNames)
                 {
-                    toggleBrush = Application.Current.Resources["TH.TextPrimary"] as Brush;
+                    toggleButton = FindDescendant<Button>(navView, name);
+                    if (toggleButton != null) break;
                 }
-                else
+
+                if (toggleButton == null)
                 {
-                    // search merged dictionaries recursively
-                    var res = FindResourceInMergedDictionaries("TH.TextPrimary");
-                    if (res is Brush b) toggleBrush = b;
+                    toggleButton = FindDescendant<Button>(navView);
+                }
+
+                if (toggleButton != null)
+                {
+                    try { toggleButton.ApplyTemplate(); } catch { }
+
+                    try
+                    {
+                        ClearVisualStateStoryboardsRecursively(toggleButton);
+                    }
+                    catch { }
+
+                    try
+                    {
+                        toggleButton.ClearValue(Control.ForegroundProperty);
+                        toggleButton.ClearValue(Control.BackgroundProperty);
+
+                        var fontIcon = FindDescendant<FontIcon>(toggleButton);
+                        var symbolIcon = FindDescendant<SymbolIcon>(toggleButton);
+                        var pathIcon = FindDescendant<PathIcon>(toggleButton);
+
+                        if (fontIcon != null) fontIcon.ClearValue(IconElement.ForegroundProperty);
+                        if (symbolIcon != null) symbolIcon.ClearValue(IconElement.ForegroundProperty);
+                        if (pathIcon != null) pathIcon.ClearValue(IconElement.ForegroundProperty);
+                    }
+                    catch { }
                 }
             }
             catch { }
-
-            // fallback: use system black if resource not found
-            if (toggleBrush == null)
-            {
-                toggleBrush = new SolidColorBrush(Colors.Black);
-            }
-
-            // common names used by NavigationView templates
-            string[] possibleNames = new[] { "TogglePaneButton", "PaneToggleButton", "TogglePaneToggleButton" };
-
-            Button? toggleButton = null;
-            foreach (var name in possibleNames)
-            {
-                toggleButton = FindDescendant<Button>(navView, name);
-                if (toggleButton != null) break;
-            }
-
-            // If not found by name, try to find first Button descendant (fallback)
-            if (toggleButton == null)
-            {
-                toggleButton = FindDescendant<Button>(navView);
-            }
-
-            if (toggleButton != null)
-            {
-                // Ensure template is applied
-                try { toggleButton.ApplyTemplate(); } catch { }
-
-                // Recursively clear VisualState storyboards to prevent template animations from changing Foreground/Background
-                try
-                {
-                    ClearVisualStateStoryboardsRecursively(toggleButton);
-                }
-                catch { }
-
-                // Now set the Foreground/Background explicitly and attach callbacks so it stays
-                toggleButton.Foreground = toggleBrush;
-                toggleButton.Background = new SolidColorBrush(Colors.Transparent);
-
-                var fontIcon = FindDescendant<FontIcon>(toggleButton);
-                var symbolIcon = FindDescendant<SymbolIcon>(toggleButton);
-                var pathIcon = FindDescendant<PathIcon>(toggleButton);
-
-                if (fontIcon != null) fontIcon.Foreground = toggleBrush;
-                if (symbolIcon != null) symbolIcon.Foreground = toggleBrush;
-                if (pathIcon != null) pathIcon.Foreground = toggleBrush;
-
-                // Reapply brush if template later modifies it
-                bool suppress = false;
-                toggleButton.RegisterPropertyChangedCallback(Control.ForegroundProperty, (dep, dp) =>
-                {
-                    if (suppress) return;
-                    try
-                    {
-                        var ctrl = dep as Control;
-                        if (ctrl != null && ctrl.Foreground != toggleBrush)
-                        {
-                            suppress = true;
-                            ctrl.Foreground = toggleBrush;
-                            suppress = false;
-                        }
-                    }
-                    catch { }
-                });
-
-                void RegisterIconCallback(IconElement icon)
-                {
-                    bool suppressIcon = false;
-                    icon.RegisterPropertyChangedCallback(IconElement.ForegroundProperty, (dep, dp) =>
-                    {
-                        if (suppressIcon) return;
-                        try
-                        {
-                            var ie = dep as IconElement;
-                            if (ie != null && ie.Foreground != toggleBrush)
-                            {
-                                suppressIcon = true;
-                                ie.Foreground = toggleBrush;
-                                suppressIcon = false;
-                            }
-                        }
-                        catch { }
-                    });
-                }
-
-                if (fontIcon != null) RegisterIconCallback(fontIcon);
-                if (symbolIcon != null) RegisterIconCallback(symbolIcon);
-                if (pathIcon != null) RegisterIconCallback(pathIcon);
-            }
         }
 
         // Recursively clears Storyboard on VisualStates in the subtree

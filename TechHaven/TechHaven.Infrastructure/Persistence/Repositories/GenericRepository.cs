@@ -66,8 +66,8 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     // }
 
     public async Task<IReadOnlyList<TEntity>> GetAsync(
-        ISpecification<TEntity> specification,
-        CancellationToken cancellationToken = default)
+       ISpecification<TEntity> specification,
+       CancellationToken cancellationToken = default)
     {
         return await ExecuteOperationAsync(
             "GetWithSpecification",

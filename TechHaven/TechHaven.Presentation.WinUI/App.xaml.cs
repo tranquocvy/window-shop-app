@@ -5,6 +5,9 @@ using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views;
 
+// QuestPDF license types
+using QuestPDF;
+
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -36,6 +39,16 @@ namespace TechHaven.Presentation.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Configure QuestPDF license to Community for non-production use
+            try
+            {
+                QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            }
+            catch
+            {
+                // ignore license assignment failures
+            }
+
             // Try to load persisted theme from settings service so the app starts with user's choice
             ThemeManager.ThemeType initialTheme = ThemeManager.ThemeType.Midnight;
             try
