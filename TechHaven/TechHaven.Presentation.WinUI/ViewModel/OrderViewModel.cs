@@ -368,8 +368,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             get
             {
                 var count = Order.Details?.Count ?? 0;
-                var totalQty = Order.Details?.Sum(d => d.Quantity) ?? 0;
-                return $"{count} items ({totalQty} qty)";
+                return $"{count} items";
             }
         }
     }

@@ -95,7 +95,7 @@
             <!-- Search Box -->
             <TextBox
                 Grid.Column="0"
-                PlaceholderText="Tìm kiếm theo ID, khách hàng, sản phẩm..."
+                PlaceholderText="Tìm kiếm theo khách hàng"
                 VerticalContentAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Height="40"
