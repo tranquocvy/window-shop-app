@@ -12,6 +12,7 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Shared.DTOs.Common;
 using System.Collections.Generic;
+using System;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -30,33 +31,37 @@ namespace TechHaven.Presentation.WinUI.Views
             _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        private async void ExportReport_Click(object sender, RoutedEventArgs e)
         {
-            base.OnNavigatedTo(e);
-            // Load initial data when page is navigated to
-            await ViewModel.LoadProductsCommand.ExecuteAsync(null);
+            // Placeholder: call LoadReportsAsync to ensure data is current, then export logic
             await ViewModel.LoadReportsCommand.ExecuteAsync(null);
-        }
 
-        private void ProductChartTab_Click(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel.ChartTabs.Any())
+            // TODO: implement export (PDF/Excel) using existing services
+            var dialog = new ContentDialog
             {
-                ViewModel.SelectedChartTab = ViewModel.ChartTabs.First();
-            }
-        }
+                Title = "Xuất báo cáo",
+                Content = "Chức năng xuất báo cáo sẽ được triển khai.",
+                CloseButtonText = "Đóng",
+                XamlRoot = this.Content.XamlRoot
+            };
 
-        private void RevenueChartTab_Click(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel.ChartTabs.Count > 1)
+            // Await WinRT IAsyncOperation using Completed -> TaskCompletionSource
+            var op = dialog.ShowAsync();
+            var tcs = new TaskCompletionSource<ContentDialogResult>();
+            op.Completed = (info, status) =>
             {
-                ViewModel.SelectedChartTab = ViewModel.ChartTabs[1];
-            }
-        }
+                try
+                {
+                    var res = info.GetResults();
+                    tcs.TrySetResult(res);
+                }
+                catch (System.Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            };
 
-        private void CommissionTab_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.SelectedChartTab = "Hoa Hồng";
+            await tcs.Task;
         }
 
         private CancellationTokenSource _ctsSearch;
@@ -65,7 +70,7 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             // Create search box and list
             // Make the search box width match the product name display area (240)
-            var searchBox = new TextBox { PlaceholderText = "Tìm sản phẩm...", Width = 360, HorizontalAlignment = HorizontalAlignment.Left };
+            var searchBox = new TextBox { PlaceholderText = "Tìm sản phẩm...", Width = 420, HorizontalAlignment = HorizontalAlignment.Left };
             var listView = new ListView { MaxHeight = 360, Width = 420, IsItemClickEnabled = true };
 
             // bind initial items (map ProductSummaryDto list)
@@ -174,6 +179,27 @@ namespace TechHaven.Presentation.WinUI.Views
                     ViewModel.SelectedProduct = sel;
                 }
             }
+        }
+
+        private void ProductChartTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.ChartTabs.Any())
+            {
+                ViewModel.SelectedChartTab = ViewModel.ChartTabs.First();
+            }
+        }
+
+        private void RevenueChartTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.ChartTabs.Count > 1)
+            {
+                ViewModel.SelectedChartTab = ViewModel.ChartTabs[1];
+            }
+        }
+
+        private void CommissionTab_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SelectedChartTab = "Hoa Hồng";
         }
     }
 }

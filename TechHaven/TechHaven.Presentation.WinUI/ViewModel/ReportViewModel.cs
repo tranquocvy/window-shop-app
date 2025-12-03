@@ -145,6 +145,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             // IsAdmin kept true for both sellers and admins so both can see main report UI
             IsAdmin = IsSeller || IsFullAdmin;
 
+            // set placeholder product so the UI shows prompt before selection
+            SelectedProduct = new ProductSummaryDto { ProductId = 0, ProductName = "Chọn sản phẩm..." };
+
             _ = LoadProductsAsync();
         }
 
@@ -188,8 +191,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                         Products.Add(product);
                     }
                     
-                    // Select first product by default if available
-                    SelectedProduct = Products.FirstOrDefault();
+                    // Do not select first product by default - wait for user
+                    // SelectedProduct = Products.FirstOrDefault();
                 }
             }
             catch (Exception ex)
@@ -238,7 +241,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 // If commission tab selected and user is full admin, load commission data
                 if (IsCommissionVisible)
                 {
-                    await LoadCommissionAsync(query);
+                    // map to CommissionQueryDto (month/year)
+                    var commissionQuery = new TechHaven.Shared.DTOs.Reports.CommissionQueryDto
+                    {
+                        Month = !string.IsNullOrWhiteSpace(SelectedMonth) && SelectedMonth != "Tất cả" && int.TryParse(SelectedMonth, out var m) ? m : queryStart.Month,
+                        Year = SelectedYear > 0 ? SelectedYear : queryStart.Year
+                    };
+
+                    await LoadCommissionAsync(commissionQuery);
                     return;
                 }
 
@@ -308,8 +318,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        [RelayCommand]
-        private async Task LoadCommissionAsync(ReportQueryDto query)
+        private async Task LoadCommissionAsync(TechHaven.Shared.DTOs.Reports.CommissionQueryDto query)
         {
             try
             {

@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Reports;
+using CommissionQueryDto = TechHaven.Shared.DTOs.Reports.CommissionQueryDto;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
 {
@@ -72,11 +73,12 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             }
         }
 
-        public async Task<List<CommissionReportDto>> GetCommissionReportAsync(ReportQueryDto query)
+        public async Task<List<CommissionReportDto>> GetCommissionReportAsync(CommissionQueryDto query)
         {
             try
             {
-                var url = $"{BaseUrl}/commission?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}";
+                var url = $"{BaseUrl}/commission?month={query.Month}&year={query.Year}";
+
                 var response = await _httpClient.GetFromJsonAsync<List<CommissionReportDto>>(url);
                 return response ?? new List<CommissionReportDto>();
             }

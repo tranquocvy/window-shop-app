@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TechHaven.Shared.DTOs.Reports;
+using CommissionQueryDto = TechHaven.Shared.DTOs.Reports.CommissionQueryDto;
 
 namespace TechHaven.Presentation.WinUI.Services.Interfaces
 {
@@ -24,7 +25,7 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         /// <summary>
         /// Get commission report grouped by user (admin only)
         /// </summary>
-        Task<List<CommissionReportDto>> GetCommissionReportAsync(ReportQueryDto query);
+        Task<List<CommissionReportDto>> GetCommissionReportAsync(CommissionQueryDto query);
     }
 
     public class ProductSummaryDto
