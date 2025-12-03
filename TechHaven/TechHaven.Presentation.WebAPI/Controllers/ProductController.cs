@@ -25,7 +25,7 @@ public class ProductController : BaseApiController
   [HttpGet]
   [ProducesResponseType(typeof(ResponseWrapper<PagingResponse<ProductDto>>), StatusCodes.Status200OK)]
   public async Task<IActionResult> GetProducts(
-    [FromQuery] ProductQueryDto queryDto,
+    [FromQuery] ProductListQueryDto queryDto,
     CancellationToken cancellationToken = default)
   {
     _logger.LogInformation(
@@ -35,8 +35,12 @@ public class ProductController : BaseApiController
     // Map CustomerQueryDto -> CustomerSearchCriteria
     var criteria = new ProductSearchCriteria
     {
-      IsDraft = queryDto.IsDraft,
       SearchTerm = queryDto.SearchTerm,
+      IsDraft = queryDto.IsDraft,
+      FromPrice = queryDto.FromPrice,
+      ToPrice = queryDto.ToPrice,
+      Brand = queryDto.Brand,
+      Status = (Domain.SearchCriteria.ProductStatus)(queryDto.Status ?? default),
       PageNumber = queryDto.PageNumber,
       PageSize = queryDto.PageSize,
       SortBy = queryDto.Sorting?.SortBy,
@@ -90,7 +94,7 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   public async Task<IActionResult> CreateProduct(
-      [FromBody] ProductCreateUpdateDto request,
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
     _logger.LogInformation(
@@ -131,7 +135,11 @@ public class ProductController : BaseApiController
         request.ProductName, result.ErrorMessage);
     }
 
-    return HandleResult(result);
+    return HandleResult(
+      result,
+      nameof(GetProductById),
+      new { id = result.Data?.ProductId }
+    );
   }
 
   /// <summary>
@@ -143,7 +151,7 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<IActionResult> UpdateProduct(
       int id,
-      [FromBody] ProductCreateUpdateDto request,
+      [FromBody] ProductUpsertRequest request,
       CancellationToken cancellationToken)
   {
     _logger.LogInformation(

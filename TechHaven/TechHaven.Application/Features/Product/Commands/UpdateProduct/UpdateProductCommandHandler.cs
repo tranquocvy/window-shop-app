@@ -40,21 +40,8 @@ public class UpdateProductCommandHandler
         );
       }
 
-      // Update properties
-      product.ProductName = request.ProductName;
-      product.BrandName = request.BrandName;
-      product.Color = request.Color;
-      product.StorageCapacity = request.StorageCapacity;
-      product.Processor = request.Processor;
-      product.ScreenSize = request.ScreenSize;
-      product.BatteryCapacity = request.BatteryCapacity;
-      product.ImageUrl = request.ImageUrl;
-      product.ImageGalleryJson = request.ImageGalleryJson;
-      product.SellPrice = request.SellPrice;
-      product.StockQuantity = request.StockQuantity;
-      product.Description = request.Description;
-      product.IsDraft = request.IsDraft;
-      product.UpdatedAt = DateTime.Now;
+      _mapper.Map(request, product);
+      product.UpdatedAt = DateTime.UtcNow;
 
       await _unitOfWork.Products.UpdateAsync(product);
       await _unitOfWork.SaveChangesAsync();
@@ -66,7 +53,7 @@ public class UpdateProductCommandHandler
     catch (Exception ex)
     {
       return Result<ProductDto>.Failure(
-        $"Failed to create product: {ex.Message}",
+        $"Failed to update product: {ex.Message}",
         ErrorType.InternalError);
     }
   }

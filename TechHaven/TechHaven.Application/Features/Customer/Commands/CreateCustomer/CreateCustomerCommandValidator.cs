@@ -2,14 +2,12 @@ using FluentValidation;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Application.Features.Customer.Commands.CreateCustomer;
 
+namespace TechHaven.Application.Features.Customer.Commands.CreateCustomer;
+
 public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCommand>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public CreateCustomerCommandValidator(IUnitOfWork unitOfWork)
+    public CreateCustomerCommandValidator()
     {
-        _unitOfWork = unitOfWork;
-
         RuleFor(x => x.CustomerName)
             .NotEmpty().WithMessage("Customer name is required.")
             .MaximumLength(150).WithMessage("Customer name cannot exceed 150 characters.");
@@ -28,9 +26,6 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
 
         RuleFor(x => x.Type)
             .IsInEnum().WithMessage("Customer type is required.");
-
-        RuleFor(x => x.TotalPurchased)
-            .GreaterThanOrEqualTo(0).WithMessage("Total purchased cannot be negative.");
 
         RuleFor(x => x.Note)
             .MaximumLength(255).WithMessage("Note cannot exceed 255 characters.");

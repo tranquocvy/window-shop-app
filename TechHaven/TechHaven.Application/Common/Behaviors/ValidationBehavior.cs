@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace TechHaven.Application.Common.Behaviors;
 
@@ -10,10 +11,14 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     where TRequest : IRequest<TResponse>
 {
   private readonly IEnumerable<IValidator<TRequest>> _validators;
+  private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger;
 
-  public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
+  public ValidationBehavior(
+      IEnumerable<IValidator<TRequest>> validators,
+      ILogger<ValidationBehavior<TRequest, TResponse>> logger)
   {
     _validators = validators;
+    _logger = logger;
   }
 
   public async Task<TResponse> Handle(
@@ -23,6 +28,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
   {
     if (!_validators.Any())
     {
+      _logger.LogDebug("No validators registered for {RequestName}", typeof(TRequest).Name);
       return await next();
     }
 
@@ -38,8 +44,15 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
     if (failures.Any())
     {
+      _logger.LogWarning(
+          "Validation failed for {RequestName}. Errors: {Errors}",
+          typeof(TRequest).Name,
+          failures.Select(f => $"{f.PropertyName}: {f.ErrorMessage}"));
+
       throw new Common.Exceptions.ValidationException(failures);
     }
+
+    _logger.LogDebug("Validation succeeded for {RequestName}", typeof(TRequest).Name);
 
     return await next();
   }

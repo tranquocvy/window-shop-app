@@ -1,9 +1,10 @@
 using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Customers;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Customer.Commands.CreateCustomer;
 
-public record CreateCustomerCommand() : ICommand<CustomerDto>
+public record CreateCustomerCommand() : ICommand<Result<CustomerDto>>
 {
   public int CustomerId { get; set; }
   public string CustomerName { get; set; } = string.Empty;
@@ -11,6 +12,5 @@ public record CreateCustomerCommand() : ICommand<CustomerDto>
   public string? Email { get; set; }
   public string? Address { get; set; }
   public CustomerType Type { get; set; }
-  public decimal TotalPurchased { get; set; }
   public string? Note { get; set; }
 }

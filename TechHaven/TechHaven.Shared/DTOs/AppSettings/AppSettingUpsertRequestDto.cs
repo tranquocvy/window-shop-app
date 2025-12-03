@@ -1,6 +1,6 @@
 namespace TechHaven.Shared.DTOs.AppSettings;
 
-public class AppSettingCreateUpdateDto
+public class AppSettingUpsertRequestDto
 {
 	public string Key { get; set; } = string.Empty;
 

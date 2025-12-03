@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TechHaven.Domain.Interfaces;
@@ -20,8 +21,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
     public GenericRepository(
         AppDbContext context,
-         ILoggerFactory loggerFactory
-        )
+        ILoggerFactory loggerFactory)
     {
         _context = context;
         _dbSet = context.Set<TEntity>();
@@ -40,7 +40,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
     public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet.ToListAsync(cancellationToken);
+        return await ExecuteOperationAsync(
+            "GetAll",
+            () => _dbSet.AsNoTracking().ToListAsync(cancellationToken));
     }
 
     // public virtual async Task<IReadOnlyList<TEntity>> GetAsync(

@@ -39,6 +39,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6901" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
+    <PackageReference Include="QuestPDF" Version="2025.7.4" />
   </ItemGroup>
 
   <!--
@@ -58,10 +59,18 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Docs\**" />
     <Compile Remove="ViewModels\**" />
+    <Compile Remove="Views\Order\**" />
+    <EmbeddedResource Remove="Docs\**" />
     <EmbeddedResource Remove="ViewModels\**" />
+    <EmbeddedResource Remove="Views\Order\**" />
+    <None Remove="Docs\**" />
     <None Remove="ViewModels\**" />
+    <None Remove="Views\Order\**" />
+    <Page Remove="Docs\**" />
     <Page Remove="ViewModels\**" />
+    <Page Remove="Views\Order\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
@@ -70,6 +79,10 @@
     <PRIResource Remove="ViewModels\**" />
   </ItemGroup>
   <ItemGroup>
+    <Content Remove="Assets\RoleToVisibilityConverter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Themes\MidnightTheme.xaml" />
     <None Remove="Views\CustomerPage.xaml" />
     <None Remove="Views\DashboardPage.xaml" />
     <None Remove="Views\OrderPage.xaml" />
@@ -97,7 +110,25 @@
     <Page Remove="Views\SettingsPage.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Themes\Common.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Accents.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\CustomerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\DarkTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\LightTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\HyperVioletTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\MidnightTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <None Update="Views\AddCustomerDialog.xaml">
@@ -168,7 +199,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\Order\" />
     <Folder Include="Views\Product\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Views\Order\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Docs\**" />
   </ItemGroup>
 </Project>

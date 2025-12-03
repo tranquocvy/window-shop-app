@@ -6,11 +6,46 @@
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="White"
-    Foreground="#0A2E8C">
+    xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
+    mc:Ignorable="d">
 
-    <Grid Padding="16" RequestedTheme="Light">
+    <Page.Resources>
+        <converters:CustomerTypeToBrushConverter x:Key="CustomerTypeToBrush"/>
+        <converters:DecimalToCurrencyConverter x:Key="DecimalToCurrency"/>
+        
+        <Style x:Key="BadgeTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+        
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BorderBrush" Value="{StaticResource TH.BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Foreground" Value="{StaticResource TH.TextPrimary}" />
+        </Style>
+        
+        <Style x:Key="ListViewItemNoPadding" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid Padding="24" ColumnSpacing="12" RowSpacing="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -18,103 +53,194 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Customers" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,12" Foreground="#0A2E8C"/>
+        <TextBlock Grid.Row="0" 
+                   Text="Customers" 
+                   Style="{StaticResource SectionTitle}" 
+                   Margin="0,0,0,16"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12" Spacing="8">
+        <Grid Grid.Row="1" Margin="0,0,0,16" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.3*"/>
+            </Grid.ColumnDefinitions>
+            
             <TextBox
-                PlaceholderText="Tìm kiếm theo tên, SĐT, email..."
-                Width="300"
-                Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                Grid.Column="0"
+                PlaceholderText="Tìm kiếm theo Tên, SĐT, Email..."
+                VerticalContentAlignment="Center"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                
+            <ComboBox ItemsSource="{x:Bind ViewModel.SortableProperties}"
+                      Grid.Column="1"
+                      SelectedItem="{x:Bind ViewModel.SelectedProperty, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      Height="40"
+                      PlaceholderText="Tiêu chí"/>
+
+            <ComboBox ItemsSource="{x:Bind ViewModel.SortDirections}"
+                      Grid.Column="2"
+                      SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      Height="40"
+                      PlaceholderText="Thứ tự"/>
 
             <Button
                 x:Name="AddCustomerButton"
+                Grid.Column="3"
                 Content="Thêm Khách Hàng"
-                Margin="12,0,0,0"
-                Background="#0D47A1"
+                HorizontalAlignment="Stretch"
+                Background="{StaticResource TH.PrimaryBrush}"
                 Foreground="White"
-                FontWeight="Bold"
-                CornerRadius="5"
+                FontWeight="SemiBold"
+                CornerRadius="8"
                 Height="40"
-                Width="200"
                 Click="AddCustomer_Click"/>
-        </StackPanel>
+        </Grid>
 
-        <!-- Customers list -->
-        <ListView
-            x:Name="CustomersList"
-            Grid.Row="2"
-            ItemsSource="{Binding Customers}"
-            SelectionMode="None"
-            IsItemClickEnabled="True"
-            ItemClick="CustomersList_ItemClick"
-            Padding="0">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
+        <!-- Customers list wrapped in a card -->
+        <Border Grid.Row="2" 
+                Style="{StaticResource CardStyle}" 
+                VerticalAlignment="Stretch">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <ListView.Header>
-                <Grid Padding="0,6">
+                <TextBlock Grid.Row="0" 
+                           Text="Danh sách khách hàng" 
+                           FontWeight="SemiBold" 
+                           FontSize="16"
+                           Margin="0,0,0,12" 
+                           Foreground="{StaticResource TH.TextPrimary}"/>
+
+                <!-- Header -->
+                <Grid Grid.Row="1" 
+                      Margin="0,0,0,8" 
+                      Background="{StaticResource TH.Layer1Background}" 
+                      Padding="12,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.5*"/>
                         <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1.5*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="1" Text="Tên Khách Hàng" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="2" Text="Số Điện Thoại" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="3" Text="Email" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="4" Text="Địa chỉ" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="5" Text="Loại" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="6" Text="Tổng Mua" FontWeight="SemiBold" TextAlignment="Left"/>
+                    <TextBlock Grid.Column="0" Text="Tên Khách Hàng" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="1" Text="Số Điện Thoại" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="2" Text="Email" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="3" Text="Địa chỉ" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="4" Text="Hạng" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="5" Text="Tổng Mua" FontWeight="SemiBold" FontSize="12" TextAlignment="Right" Foreground="{StaticResource TH.TextPrimary}"/>
                 </Grid>
-            </ListView.Header>
 
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="0,6">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.5*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
+                <ListView
+                    x:Name="CustomersList"
+                    Grid.Row="2"
+                    ItemsSource="{Binding Customers}"
+                    SelectionMode="None"
+                    IsItemClickEnabled="True"
+                    ItemClick="CustomersList_ItemClick"
+                    Padding="0"
+                    ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                    
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="12,8">
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Sửa" Click="EditCustomer_Click" Tag="{Binding}">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE70F;"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem Text="Xóa" Click="DeleteCustomer_Click" Tag="{Binding}">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE74D;" Foreground="{StaticResource TH.DangerBrush}"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                                
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="1.5*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="1.5*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1.5*"/>
+                                </Grid.ColumnDefinitions>
 
-                        <!-- Bindings to the CustomerDto properties -->
-                        <TextBlock Grid.Column="0" Text="{Binding CustomerId}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="1" Text="{Binding CustomerName}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="2" Text="{Binding PhoneNumber}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="3" Text="{Binding Email}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="4" Text="{Binding Address}" TextTrimming="CharacterEllipsis" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="5" Text="{Binding Type}" TextAlignment="Left"/>
-                        <TextBlock Grid.Column="6" Text="{Binding TotalPurchased}" TextAlignment="Left"/>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                                <TextBlock Grid.Column="0" Text="{Binding CustomerName}" TextAlignment="Left" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PhoneNumber}" TextAlignment="Left" Foreground="{StaticResource TH.TextPrimary}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Email}" TextAlignment="Left" Foreground="{StaticResource TH.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="3" Text="{Binding Address}" TextTrimming="CharacterEllipsis" TextAlignment="Left" Foreground="{StaticResource TH.TextSecondary}"/>
+
+                                <Border Grid.Column="4"
+                                        CornerRadius="12"
+                                        Padding="8,4"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Background="{Binding Type, Converter={StaticResource CustomerTypeToBrush}}">
+                                    <TextBlock Text="{Binding Type}"
+                                               Style="{StaticResource BadgeTextStyle}"/>
+                                </Border>
+
+                                <TextBlock Grid.Column="5" Text="{Binding TotalPurchased, Converter={StaticResource DecimalToCurrency}}" TextAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
 
         <!-- Paging controls -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="8">
-            <Button Content="Previous" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding CanGoPrevious}"/>
-            <TextBlock VerticalAlignment="Center" Text="{Binding PageInfo}"/>
-            <Button Content="Next" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoNext}"/>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0" Spacing="12">
+            <Button Command="{Binding PreviousPageCommand}"
+                    IsEnabled="{Binding CanGoPrevious}"
+                    ToolTipService.ToolTip="Trang trước"
+                    Width="40" 
+                    Height="40"
+                    CornerRadius="8"
+                    Background="{StaticResource TH.CardBackground}"
+                    BorderBrush="{StaticResource TH.BorderBrush}"
+                    BorderThickness="1">
+                <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+            </Button>
 
-            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Text="Items per page:"/>
-            <ComboBox Width="80" SelectedValue="{Binding PageSize, Mode=TwoWay}" SelectedValuePath="Content">
-                <ComboBoxItem Content="5" />
-                <ComboBoxItem Content="10" />
-                <ComboBoxItem Content="20" />
-                <ComboBoxItem Content="50" />
-            </ComboBox>
+            <TextBlock VerticalAlignment="Center" 
+                       Text="{Binding PageInfo}" 
+                       Foreground="{StaticResource TH.TextPrimary}"
+                       FontWeight="SemiBold"/>
+
+            <Button Command="{Binding NextPageCommand}"
+                    IsEnabled="{Binding CanGoNext}"
+                    ToolTipService.ToolTip="Trang sau"
+                    Width="40" 
+                    Height="40"
+                    CornerRadius="8"
+                    Background="{StaticResource TH.CardBackground}"
+                    BorderBrush="{StaticResource TH.BorderBrush}"
+                    BorderThickness="1">
+                <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+            </Button>
+
+            <TextBlock VerticalAlignment="Center" 
+                       Margin="12,0,0,0" 
+                       Text="Items per page:" 
+                       Foreground="{StaticResource TH.TextSecondary}"/>
+            <ComboBox ItemsSource="{x:Bind ViewModel.PageSizeOptions}"
+                      SelectedItem="{x:Bind ViewModel.SelectedPageSize, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      Height="40"
+                      MinWidth="80"/>
         </StackPanel>
     </Grid>
 </Page>

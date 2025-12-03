@@ -7,11 +7,33 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
 {
     public interface ICustomerService
     {
-        Task<ResponseWrapper<List<CustomerDto>>> GetAllCustomersAsync();
+        /// <summary>
+        /// Query customers with pagination, filtering, and sorting
+        /// GET api/Customer/
+        /// </summary>
+        Task<ResponseWrapper<PagingResponse<CustomerDto>>> QueryCustomersAsync(CustomerListQueryDto query);
+
+        /// <summary>
+        /// Get customer by ID
+        /// GET api/Customer/{id}
+        /// </summary>
         Task<ResponseWrapper<CustomerDto>> GetCustomerByIdAsync(int id);
-        Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerCreateUpdateDto Customerdto);
-        Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerCreateUpdateDto dto);
+        /// <summary>
+        /// Create new customer
+        /// POST api/Customer/
+        /// </summary>
+        Task<ResponseWrapper<CustomerDto>> CreateCustomerAsync(CustomerUpsertRequestDto dto);
+
+        /// <summary>
+        /// Update existing customer
+        /// PUT api/Customer/{id}
+        /// </summary>
+        Task<ResponseWrapper<CustomerDto>> UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto);
+
+        /// <summary>
+        /// Delete customer
+        /// DELETE api/Customer/{id}
+        /// </summary>
         Task<ResponseWrapper<bool>> DeleteCustomerAsync(int id);
-        Task<ResponseWrapper<List<CustomerDto>>> QueryCustomersAsync(CustomerQueryDto query);
     }
 }

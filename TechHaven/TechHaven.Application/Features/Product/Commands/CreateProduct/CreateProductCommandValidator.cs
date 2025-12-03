@@ -5,12 +5,8 @@ namespace TechHaven.Application.Features.Product.Commands.CreateProduct;
 
 public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
 {
-  private readonly IUnitOfWork _unitOfWork;
-
-  public CreateProductCommandValidator(IUnitOfWork unitOfWork)
+  public CreateProductCommandValidator()
   {
-    _unitOfWork = unitOfWork;
-
     RuleFor(x => x.ProductName)
       .NotEmpty().WithMessage("Product name is required.")
       .MaximumLength(200).WithMessage("Product name cannot exceed 200 characters.");

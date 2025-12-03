@@ -5,12 +5,8 @@ using System.Text.RegularExpressions;
 
 public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCommand>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateCustomerCommandValidator(IUnitOfWork unitOfWork)
+    public UpdateCustomerCommandValidator()
     {
-        _unitOfWork = unitOfWork;
-
         RuleFor(x => x.CustomerName)
             .NotEmpty().WithMessage("Customer name is required.")
             .MaximumLength(150).WithMessage("Customer name cannot exceed 150 characters.");
@@ -29,9 +25,6 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
 
         RuleFor(x => x.Type)
             .IsInEnum().WithMessage("Customer type is required.");
-
-        RuleFor(x => x.TotalPurchased)
-            .GreaterThanOrEqualTo(0).WithMessage("Total purchased cannot be negative.");
 
         RuleFor(x => x.Note)
             .MaximumLength(255).WithMessage("Note cannot exceed 255 characters.");

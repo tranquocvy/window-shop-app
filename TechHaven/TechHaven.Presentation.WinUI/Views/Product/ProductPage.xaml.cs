@@ -2,10 +2,11 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.ViewModel;
-using TechHaven.Shared.DTOs.Products;
 using TechHaven.Presentation.WinUI.Views.Controls; 
+using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -19,6 +20,7 @@ namespace TechHaven.Presentation.WinUI.Views
             ViewModel = new ProductViewModel();
             this.DataContext = ViewModel;
         }
+
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -65,6 +67,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 // Lấy dữ liệu từ form (đã validate bên trong UserControl)
                 var resultDto = productForm.GetFormData();
 
+
                 if (resultDto == null)
                 {
                     // Validate thất bại (UserControl đã hiện chữ đỏ) -> Giữ Dialog mở
@@ -72,9 +75,12 @@ namespace TechHaven.Presentation.WinUI.Views
                 }
                 else
                 {
+
                     // Dữ liệu OK -> Gọi ViewModel xử lý
                     if (itemForEdit == null)
                     {
+                        
+
                         // Chế độ THÊM
                         await ViewModel.CreateProductAsync(resultDto);
                     }
@@ -100,12 +106,12 @@ namespace TechHaven.Presentation.WinUI.Views
         /// </summary>
         private async void ProductsList_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (e.ClickedItem is ProductItemViewModel item)
+            if (e.ClickedItem is ProductItemViewModel selected)
             {
-                // Gọi hàm chung với item được chọn (Chế độ Sửa)
-                await ShowProductDialogAsync(item);
+                await ShowProductDialogAsync(selected);
             }
         }
+
 
         /// <summary>
         /// Xử lý sự kiện context menu (Chuột phải -> Xem chi tiết/Sửa)

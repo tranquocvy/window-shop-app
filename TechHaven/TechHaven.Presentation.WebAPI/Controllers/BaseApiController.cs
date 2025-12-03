@@ -70,4 +70,39 @@ public abstract class BaseApiController : ControllerBase
             : new List<string> { result.ErrorMessage ?? "Unknown error" }
     });
   }
+
+  // Overload cho CreatedAtAction
+  protected IActionResult HandleResult<T>(Result<T> result, string actionName, object routeValues)
+  {
+    if (result.IsSuccess)
+    {
+      return CreatedAtAction(actionName, routeValues, new ResponseWrapper<T>
+      {
+        Success = true,
+        Data = result.Data
+      });
+    }
+
+    // Map error code to HTTP status
+    var statusCode = result.ErrorCode switch
+    {
+      ErrorType.NotFound => StatusCodes.Status404NotFound,
+      ErrorType.Validation => StatusCodes.Status400BadRequest,
+      ErrorType.Conflict => StatusCodes.Status409Conflict,
+      ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
+      ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+      _ => StatusCodes.Status500InternalServerError
+    };
+
+    var errors = result.Errors.Any()
+        ? result.Errors
+        : new List<string> { result.ErrorMessage ?? "Unknown error" };
+
+    return StatusCode(statusCode, new ResponseWrapper<T>
+    {
+      Success = false,
+      Message = result.ErrorMessage ?? "Operation failed",
+      Errors = errors
+    });
+  }
 }
