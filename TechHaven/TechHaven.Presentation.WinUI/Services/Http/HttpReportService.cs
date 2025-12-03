@@ -75,5 +75,20 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                 return new List<ProductSummaryDto>();
             }
         }
+
+        public async Task<List<CommissionReportDto>> GetCommissionReportAsync(ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/commission?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}";
+                var response = await _httpClient.GetFromJsonAsync<List<CommissionReportDto>>(url);
+                return response ?? new List<CommissionReportDto>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return new List<CommissionReportDto>();
+            }
+        }
     }
 }
