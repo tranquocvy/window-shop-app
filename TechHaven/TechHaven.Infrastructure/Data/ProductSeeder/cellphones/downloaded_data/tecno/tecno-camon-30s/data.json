@@ -1,0 +1,13 @@
+{
+    "ProductName": "TECNO CAMON 30S 8GB 256GB",
+    "BrandName": "Tecno",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "Mediatek G100",
+    "ScreenSize": 6.78,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "tecno-camon-30s_main.jpg",
+    "ImageGalleryJson": "[\"tecno-camon-30s_gallery_1.jpg\", \"tecno-camon-30s_gallery_2.jpg\"]",
+    "SellPrice": 0,
+    "Description": "120Hz\nGorilla Glass 5"
+}

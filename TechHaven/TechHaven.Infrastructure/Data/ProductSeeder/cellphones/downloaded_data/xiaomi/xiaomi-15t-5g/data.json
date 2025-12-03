@@ -1,0 +1,13 @@
+{
+    "ProductName": "Xiaomi 15T 5G 12GB 512GB",
+    "BrandName": "Xiaomi",
+    "Color": "Titan",
+    "StorageCapacity": 512,
+    "Processor": "MediaTek Dimensity 8400-Ultra",
+    "ScreenSize": 6.83,
+    "BatteryCapacity": 5500,
+    "ImageUrl": "xiaomi-15t-5g_main.jpg",
+    "ImageGalleryJson": "[\"xiaomi-15t-5g_gallery_1.jpg\", \"xiaomi-15t-5g_gallery_2.jpg\"]",
+    "SellPrice": 780000.0,
+    "Description": "Độ sáng tối đa 3200 nits (25% vùng hiển thị)\n68 tỷ màu\nDCI-P3\nChứng nhận TÜV Rheinland (Low Blue Light, Flicker Free, Circadian Friendly)"
+}

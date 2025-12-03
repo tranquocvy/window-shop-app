@@ -1,0 +1,13 @@
+{
+    "ProductName": "vivo V25e 8GB 128GB",
+    "BrandName": "Vivo",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "MediaTek Helio G99",
+    "ScreenSize": 6.44,
+    "BatteryCapacity": 4500,
+    "ImageUrl": "vivo-v25e_main.jpg",
+    "ImageGalleryJson": "[\"vivo-v25e_gallery_1.jpg\", \"vivo-v25e_gallery_2.jpg\"]",
+    "SellPrice": 0,
+    "Description": "1300 nits, Tần số quét 90 Hz, Kính cường lực Schott Xensation UP"
+}

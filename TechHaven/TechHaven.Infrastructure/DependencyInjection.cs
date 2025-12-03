@@ -132,6 +132,19 @@ public static class DependencyInjection
         // Register Email Service
         services.AddScoped<IEmailService, EmailService>();
 
+        // 7. Supabase Storage Configuration
+        services.Configure<SupabaseSettings>(options =>
+        {
+            options.Url = Environment.GetEnvironmentVariable("SUPABASE_URL") ?? "";
+            options.ApiKey = Environment.GetEnvironmentVariable("SUPABASE_API_KEY") ?? "";
+            options.BucketName = Environment.GetEnvironmentVariable("SUPABASE_BUCKET_NAME") ?? "";
+            options.MaxFileSizeBytes = configuration.GetSection("SupabaseSettings").GetValue<long>("MaxFileSizeBytes", 5242880);
+            options.AllowedExtensions = configuration.GetSection("SupabaseSettings").GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+        });
+
+        // Register Image Upload Service
+        services.AddScoped<IImageUploadService, SupabaseImageUploadService>();
+
         return services;
     }
 }

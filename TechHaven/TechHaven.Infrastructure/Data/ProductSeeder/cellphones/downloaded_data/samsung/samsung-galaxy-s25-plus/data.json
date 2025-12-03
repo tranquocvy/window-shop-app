@@ -1,0 +1,13 @@
+{
+    "ProductName": "Samsung Galaxy S25 Plus 256GB",
+    "BrandName": "Samsung",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "Snapdragon 8 Elite dành cho Galaxy (3nm)",
+    "ScreenSize": 6.7,
+    "BatteryCapacity": 4900,
+    "ImageUrl": "samsung-galaxy-s25-plus_main.jpg",
+    "ImageGalleryJson": "[\"samsung-galaxy-s25-plus_gallery_1.jpg\", \"samsung-galaxy-s25-plus_gallery_2.jpg\"]",
+    "SellPrice": 7490000.0,
+    "Description": "120Hz\n2600 nits\nCorning® Gorilla® Armor 2"
+}

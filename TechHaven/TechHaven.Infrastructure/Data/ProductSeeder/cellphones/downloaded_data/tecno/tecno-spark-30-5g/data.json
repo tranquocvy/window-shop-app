@@ -1,0 +1,13 @@
+{
+    "ProductName": "TECNO SPARK 30 5G 6GB 128GB",
+    "BrandName": "Tecno",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "MediaTek D6300",
+    "ScreenSize": null,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "tecno-spark-30-5g_main.jpg",
+    "ImageGalleryJson": "[\"tecno-spark-30-5g_gallery_1.jpg\", \"tecno-spark-30-5g_gallery_2.jpg\"]",
+    "SellPrice": 2490000.0,
+    "Description": "120Hz"
+}
