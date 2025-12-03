@@ -1,7 +1,6 @@
 using MediatR;
 // using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using TechHaven.Application.Features.Dashboard.Queries.GetDashboard;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Dashboard;
@@ -11,8 +10,6 @@ namespace TechHaven.Presentation.WebAPI.Controllers;
 /// <summary>
 /// Controller for dashboard overview data
 /// </summary>
-[ApiController]
-[Route("api/[controller]")]
 // [Authorize] // Uncomment when authentication is ready
 public class DashboardController : BaseApiController
 {
@@ -20,8 +17,8 @@ public class DashboardController : BaseApiController
   private readonly ILogger<DashboardController> _logger;
 
   public DashboardController(
-      IMediator mediator,
-      ILogger<DashboardController> logger)
+    IMediator mediator,
+    ILogger<DashboardController> logger)
   {
     _mediator = mediator;
     _logger = logger;

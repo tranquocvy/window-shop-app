@@ -29,6 +29,10 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
             "Searching products with criteria {@Criteria}",
             criteria);
 
+        _logger.LogInformation(
+            "Searching products with criteria {@Criteria}",
+            criteria);
+
         var items = await GetAsync(spec, cancellationToken);
 
         // Count total (không paging)
@@ -50,12 +54,23 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         return await GetAsync(spec, cancellationToken);
     }
 
+    /// <summary>
+    /// Get products with out of stock
+    /// </summary>
+    public async Task<IReadOnlyList<Product>> GetOutOfStockAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var spec = new OutOfStockProductsSpecification();
+        _logger.LogInformation("Fetching products with out of stock");
+        return await GetAsync(spec, cancellationToken);
+    }
+
     public async Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default)
-  {
-    return await ExecuteOperationAsync(
-        "GetTotalProductCount",
-        () => _dbSet
-            .Where(p => p.IsDraft == false)
-            .CountAsync(cancellationToken));
-  }
+    {
+        return await ExecuteOperationAsync(
+            "GetTotalProductCount",
+            () => _dbSet
+                .Where(p => p.IsDraft == false)
+                .CountAsync(cancellationToken));
+    }
 }

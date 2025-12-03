@@ -6,6 +6,9 @@ using TechHaven.Infrastructure.Persistence;
 using DotNetEnv;
 using Serilog;
 using TechHaven.Presentation.WebAPI.Middleware;
+using TechHaven.Shared.DTOs.Common;
+using Microsoft.AspNetCore.Mvc;
+using TechHaven.Presentation.WebAPI.Seeders;
 
 // ============================================
 // Serilog Configuration Guide
@@ -66,7 +69,28 @@ try
     builder.Configuration.AddEnvironmentVariables();
 
     // Add services to the container
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            // Customize validation error response
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(e => e.Value?.Errors.Count > 0)
+                    .SelectMany(e => e.Value!.Errors.Select(x =>
+                        $"{e.Key}: {x.ErrorMessage}"))
+                    .ToList();
+
+                var response = new ResponseWrapper<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = errors
+                };
+
+                return new BadRequestObjectResult(response);
+            };
+        });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
@@ -79,6 +103,8 @@ try
     });
 
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<CellphoneProductSeeder>();
+    builder.Services.AddScoped<OrderSeeder>();
 
     // Register Application & Infrastructure layers
     builder.Services.AddApplication();
@@ -110,6 +136,13 @@ try
             var loggerFactory = services.GetRequiredService<ILoggerFactory>();
             var seedLogger = loggerFactory.CreateLogger("DbInitializer");
             await DbInitializer.SeedAsync(context, seedLogger);
+
+            var productSeeder = services.GetRequiredService<CellphoneProductSeeder>();
+            await productSeeder.SeedAsync();
+
+            var orderSeeder = services.GetRequiredService<OrderSeeder>();
+            await orderSeeder.SeedAsync();
+
             Log.Information("Database seeding completed successfully");
         }
         catch (Exception ex)
