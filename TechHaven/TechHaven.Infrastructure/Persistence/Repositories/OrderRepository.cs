@@ -5,6 +5,7 @@ using TechHaven.Domain.Entities;
 using TechHaven.Domain.Enums;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
+using TechHaven.Domain.Specifications;
 using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Infrastructure.Persistence.Repositories;
@@ -17,6 +18,25 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     public OrderRepository(AppDbContext context, ILoggerFactory loggerFactory)
         : base(context, loggerFactory)
     {
+    }
+
+    // 1. Hàm Search cho danh sách 
+    public async Task<(IReadOnlyList<Order> Items, int TotalCount)> SearchWithPaginationAsync(
+        OrderSearchCriteria criteria,
+        CancellationToken cancellationToken)
+    {
+        var spec = new OrderSearchSpecification(criteria);
+        _logger.LogInformation(
+           "Searching orders with criteria {@Criteria}",
+           criteria);
+
+        var items = await GetAsync(spec, cancellationToken);
+
+        // Count
+        var countSpec = new OrderSearchSpecification(criteria, true); //for counting = true 
+        var totalCount = await CountAsync(countSpec, cancellationToken);
+
+        return (items, totalCount);
     }
 
     public async Task<(IReadOnlyList<Order> Items, int TotalCount)>
@@ -82,7 +102,6 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             });
     }
 
-    //TODO: Cần kiểm tra _dbSet có đúng là _context.Orders không?
     public async Task<Order?> GetWithDetailsAsync(int orderId, CancellationToken cancellationToken = default)
     {
         return await ExecuteOperationAsync(

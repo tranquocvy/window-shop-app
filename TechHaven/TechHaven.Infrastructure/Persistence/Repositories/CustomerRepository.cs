@@ -140,11 +140,11 @@ public class CustomerRepository : GenericRepository<Customer>, ICustomerReposito
     //         "type" or "customertype" => sortDescending
     //             ? query.OrderByDescending(p => p.Type)
     //             : query.OrderBy(p => p.Type),
-            
+
     //         "totalpurchased" => sortDescending
     //             ? query.OrderByDescending(p => p.TotalPurchased)
     //             : query.OrderBy(p => p.TotalPurchased),
-            
+
     //         _ => sortDescending
     //             ? query.OrderByDescending(p => p.CustomerName)
     //             : query.OrderBy(p => p.CustomerName)
