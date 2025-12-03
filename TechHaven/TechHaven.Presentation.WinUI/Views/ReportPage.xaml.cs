@@ -1,20 +1,33 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using TechHaven.Presentation.WinUI.ViewModel;
 using System.Linq;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using System.Threading.Tasks;
+using Windows.Foundation;
+using System.Threading;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Shared.DTOs.Products;
+using TechHaven.Shared.DTOs.Common;
+using System.Collections.Generic;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
     public sealed partial class ReportPage : Page
     {
         public ReportViewModel ViewModel { get; }
+        private readonly IReportService _reportService;
+        private readonly IProductService _productService;
 
         public ReportPage()
         {
             this.InitializeComponent();
             ViewModel = new ReportViewModel();
             this.DataContext = ViewModel;
+            _reportService = new HttpReportService(ApiClientFactory.GetHttpClient());
+            _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -43,7 +56,124 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private void CommissionTab_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.SelectedChartTab = "Hoa H?ng";
+            ViewModel.SelectedChartTab = "Hoa Hồng";
+        }
+
+        private CancellationTokenSource _ctsSearch;
+
+        private async void OpenProductPicker_Click(object sender, RoutedEventArgs e)
+        {
+            // Create search box and list
+            // Make the search box width match the product name display area (240)
+            var searchBox = new TextBox { PlaceholderText = "Tìm sản phẩm...", Width = 360, HorizontalAlignment = HorizontalAlignment.Left };
+            var listView = new ListView { MaxHeight = 360, Width = 420, IsItemClickEnabled = true };
+
+            // bind initial items (map ProductSummaryDto list)
+            listView.ItemsSource = ViewModel.Products;
+            listView.SelectionMode = ListViewSelectionMode.Single;
+
+            // template
+            listView.ItemTemplate = (DataTemplate)Resources["ProductListItemTemplate"];
+
+            // filter logic -> debounce and call product Query API
+            searchBox.TextChanged += async (_, _) =>
+            {
+                _ctsSearch?.Cancel();
+                _ctsSearch = new CancellationTokenSource();
+                var token = _ctsSearch.Token;
+
+                // small debounce
+                try
+                {
+                    await Task.Delay(300, token);
+                }
+                catch (TaskCanceledException) { return; }
+
+                var kw = searchBox.Text?.Trim();
+                try
+                {
+                    var query = new ProductListQueryDto
+                    {
+                        SearchTerm = kw,
+                        PageNumber = 1,
+                        PageSize = 50
+                    };
+
+                    var resp = await _productService.QueryProductsAsync(query);
+                    if (token.IsCancellationRequested) return;
+
+                    if (resp?.Success == true && resp.Data?.Items != null)
+                    {
+                        // map ProductDto -> ProductSummaryDto
+                        var mapped = resp.Data.Items.Select(p => new ProductSummaryDto { ProductId = p.ProductId, ProductName = p.ProductName ?? string.Empty }).ToList();
+                        listView.ItemsSource = mapped;
+                    }
+                    else
+                    {
+                        listView.ItemsSource = new List<ProductSummaryDto>();
+                    }
+                }
+                catch
+                {
+                    // ignore errors
+                    listView.ItemsSource = new List<ProductSummaryDto>();
+                }
+            };
+
+            var stack = new StackPanel();
+            stack.Children.Add(searchBox);
+            stack.Children.Add(new TextBlock { Text = "", Height = 6 });
+            stack.Children.Add(listView);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Chọn sản phẩm",
+                Content = stack,
+                XamlRoot = this.Content.XamlRoot,
+                PrimaryButtonText = "Chọn",
+                CloseButtonText = "Đóng"
+            };
+
+            ProductSummaryDto selected = null;
+            listView.ItemClick += (_, args) =>
+            {
+                selected = args.ClickedItem as ProductSummaryDto;
+                dialog.Hide();
+            };
+
+            // Await WinRT IAsyncOperation using Completed -> TaskCompletionSource
+            var op = dialog.ShowAsync();
+            var tcs = new TaskCompletionSource<ContentDialogResult>();
+            op.Completed = (info, status) =>
+            {
+                try
+                {
+                    var res = info.GetResults();
+                    tcs.TrySetResult(res);
+                }
+                catch (System.Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            };
+
+            var result = await tcs.Task;
+
+            _ctsSearch?.Cancel();
+
+            if (selected != null)
+            {
+                ViewModel.SelectedProduct = selected;
+            }
+            else if (result == ContentDialogResult.Primary)
+            {
+                // try primary selection
+                var sel = listView.SelectedItem as ProductSummaryDto;
+                if (sel != null)
+                {
+                    ViewModel.SelectedProduct = sel;
+                }
+            }
         }
     }
 }

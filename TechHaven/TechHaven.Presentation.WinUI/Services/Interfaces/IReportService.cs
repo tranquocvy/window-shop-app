@@ -9,7 +9,7 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         /// <summary>
         /// Get product sales report (for line chart)
         /// </summary>
-        Task<List<ProductSalesDto>> GetProductSalesReportAsync(ReportQueryDto query);
+        Task<List<ProductSalesTrendDto>> GetProductSalesReportAsync(ReportQueryDto query);
 
         /// <summary>
         /// Get revenue and profit report (trend with summary)
@@ -17,9 +17,9 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         Task<SalesTrendDto> GetRevenueReportAsync(ReportQueryDto query);
 
         /// <summary>
-        /// Get list of products for dropdown
+        /// Get list of products for dropdown or search
         /// </summary>
-        Task<List<ProductSummaryDto>> GetProductsAsync();
+        Task<List<ProductSummaryDto>> GetProductsAsync(string? keyword = null);
 
         /// <summary>
         /// Get commission report grouped by user (admin only)

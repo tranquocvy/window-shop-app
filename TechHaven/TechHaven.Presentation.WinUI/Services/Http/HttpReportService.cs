@@ -11,14 +11,14 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpReportService : IReportService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "/api/reports";
+        private const string BaseUrl = "/api/Report";
 
         public HttpReportService(HttpClient httpClient)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public async Task<List<ProductSalesDto>> GetProductSalesReportAsync(ReportQueryDto query)
+        public async Task<List<ProductSalesTrendDto>> GetProductSalesReportAsync(ReportQueryDto query)
         {
             try
             {
@@ -27,13 +27,13 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                          $"endDate={query.EndDate:yyyy-MM-dd}&" +
                          $"periodType={query.PeriodType}";
 
-                var response = await _httpClient.GetFromJsonAsync<List<ProductSalesDto>>(url);
-                return response ?? new List<ProductSalesDto>();
+                var response = await _httpClient.GetFromJsonAsync<List<ProductSalesTrendDto>>(url);
+                return response ?? new List<ProductSalesTrendDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-                return new List<ProductSalesDto>();
+                return new List<ProductSalesTrendDto>();
             }
         }
 
@@ -52,11 +52,16 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             }
         }
 
-        public async Task<List<ProductSummaryDto>> GetProductsAsync()
+        public async Task<List<ProductSummaryDto>> GetProductsAsync(string? keyword = null)
         {
             try
             {
-                var url = "/api/products/summary";
+                var url = "/api/Product";
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    url += $"?SearchTerm={Uri.EscapeDataString(keyword)}";
+                }
+
                 var response = await _httpClient.GetFromJsonAsync<List<ProductSummaryDto>>(url);
                 return response ?? new List<ProductSummaryDto>();
             }

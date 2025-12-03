@@ -66,7 +66,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _selectedMonth = "Tất cả"; // default to 'all'
 
         // Chart data for display
-        public ObservableCollection<ProductSalesDto> ProductSalesData { get; } = new();
+        public ObservableCollection<ProductSalesTrendDto> ProductSalesData { get; } = new();
         public ObservableCollection<SalesReportDto> RevenueData { get; } = new();
 
         [ObservableProperty]
@@ -182,14 +182,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 if (products != null)
                 {
                     Products.Clear();
-                    // Add "All Products" option
-                    Products.Add(new ProductSummaryDto { ProductId = 0, ProductName = "Tất cả sản phẩm" });
                     
                     foreach (var product in products)
                     {
                         Products.Add(product);
                     }
                     
+                    // Select first product by default if available
                     SelectedProduct = Products.FirstOrDefault();
                 }
             }
