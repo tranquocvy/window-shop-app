@@ -1,0 +1,13 @@
+{
+    "ProductName": "TECNO POVA 6 8GB 256GB",
+    "BrandName": "Tecno",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "MediaTek G99 Ultimate",
+    "ScreenSize": 6.78,
+    "BatteryCapacity": 6,
+    "ImageUrl": "tecno-pova-6_main.jpg",
+    "ImageGalleryJson": "[\"tecno-pova-6_gallery_1.jpg\", \"tecno-pova-6_gallery_2.jpg\"]",
+    "SellPrice": 0,
+    "Description": null
+}

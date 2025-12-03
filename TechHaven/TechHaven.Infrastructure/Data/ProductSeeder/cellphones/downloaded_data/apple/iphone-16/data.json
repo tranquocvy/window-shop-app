@@ -1,0 +1,13 @@
+{
+    "ProductName": "iPhone 16 128GB | Chính hãng VN/A",
+    "BrandName": "Apple",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "Apple A18",
+    "ScreenSize": 6.1,
+    "BatteryCapacity": null,
+    "ImageUrl": "iphone-16_main.jpg",
+    "ImageGalleryJson": "[\"iphone-16_gallery_1.jpg\", \"iphone-16_gallery_2.jpg\"]",
+    "SellPrice": 0,
+    "Description": "Dynamic Island\nMàn hình HDR\nTrue Tone\nDải màu rộng (P3)\nHaptic Touch\nTỷ lệ tương phản 2.000.000:1\nĐộ sáng tối đa 1000 nit\n460 ppi\nLớp phủ kháng dầu chống in dấu vân tay\nHỗ trợ hiển thị đồng thời nhiều ngôn ngữ và ký tự"
+}

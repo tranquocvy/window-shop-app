@@ -6,6 +6,7 @@ using TechHaven.Infrastructure.Persistence;
 using DotNetEnv;
 using Serilog;
 using TechHaven.Presentation.WebAPI.Middleware;
+using TechHaven.Presentation.WebAPI.Seeders;
 
 // ============================================
 // Serilog Configuration Guide
@@ -79,6 +80,8 @@ try
     });
 
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<CellphoneProductSeeder>();
+    builder.Services.AddScoped<OrderSeeder>();
 
     // Register Application & Infrastructure layers
     builder.Services.AddApplication();
@@ -110,6 +113,13 @@ try
             var loggerFactory = services.GetRequiredService<ILoggerFactory>();
             var seedLogger = loggerFactory.CreateLogger("DbInitializer");
             await DbInitializer.SeedAsync(context, seedLogger);
+
+            var productSeeder = services.GetRequiredService<CellphoneProductSeeder>();
+            await productSeeder.SeedAsync();
+
+            var orderSeeder = services.GetRequiredService<OrderSeeder>();
+            await orderSeeder.SeedAsync();
+
             Log.Information("Database seeding completed successfully");
         }
         catch (Exception ex)
