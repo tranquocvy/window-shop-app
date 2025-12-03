@@ -1,27 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using TechHaven.Presentation.WinUI.ViewModel;
-using TechHaven.Presentation.WinUI.Views.Controls;
 using TechHaven.Shared.DTOs.Orders;
-using TechHaven.Presentation.WinUI.Helpers;
-using TechHaven.Presentation.WinUI.Services.Mock;
-using TechHaven.Shared.DTOs.Products;
-using TechHaven.Shared.DTOs.Customers;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -32,11 +15,18 @@ namespace TechHaven.Presentation.WinUI.Views
     {
         private OrderViewModel ViewModel => (OrderViewModel)DataContext;
 
+        private class EditItem
+        {
+            public int ProductId { get; set; }
+            public string? ProductName { get; set; }
+            public decimal UnitPrice { get; set; }
+            public int Quantity { get; set; }
+        }
+
         public OrderPage()
         {
             InitializeComponent();
-
-            // Use production PDF service (will include StoreLogo.png if present in output)
+            // Use production PDF service
             DataContext = new OrderViewModel(new TechHaven.Presentation.WinUI.Helpers.OrderPdfService());
         }
 
@@ -44,7 +34,7 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             if (e.ClickedItem is OrderItemViewModel item)
             {
-                // Show edit dialog
+                // Open the edit/detail dialog (editable fields per requirements)
                 await ShowEditOrderDialog(item);
             }
         }
@@ -53,34 +43,7 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is OrderItemViewModel item)
             {
-                var details = item.Order.Details ?? new List<OrderDetailDto>();
-                var itemsText = string.Join("\n", details.Select(d => 
-                    $"- {d.ProductName} (ID: {d.ProductId}): {d.Quantity} × {d.UnitPrice:N0} ? = {d.SubTotal:N0} ?"));
-
-                var dialog = new ContentDialog
-                {
-                    Title = $"Order Details",
-                    Content = new ScrollViewer
-                    {
-                        Content = new TextBlock
-                        {
-                            Text = $"Customer: {item.CustomerDisplay}\n" +
-                                  $"User: {item.Order.UserFullName}\n" +
-                                  $"Date: {item.OrderDateDisplay}\n" +
-                                  $"Status: {item.StatusDisplay}\n\n" +
-                                  $"Items:\n{itemsText}\n\n" +
-                                  $"Subtotal: {item.Order.SubtotalAmount:N0} ?\n" +
-                                  $"Discount: {item.Order.Discount:N0} ?\n" +
-                                  $"Total: {item.TotalAmountDisplay}\n\n" +
-                                  $"Notes: {item.Order.Notes ?? "(none)"}",
-                            TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap
-                        },
-                        MaxHeight = 500
-                    },
-                    CloseButtonText = "Close",
-                    XamlRoot = this.Content.XamlRoot
-                };
-                await dialog.ShowAsync();
+                await ShowEditOrderDialog(item);
             }
         }
 
@@ -131,13 +94,37 @@ namespace TechHaven.Presentation.WinUI.Views
                 {
                     var newStatus = (OrderStatus)selectedItem.Tag;
 
+                    var fullOrder = await ViewModel.GetOrderByIdAsync(item.Order.OrderId);
+                    if (fullOrder == null)
+                    {
+                        await ShowErrorDialog("Load Error", "Không thể tải đơn hàng để cập nhật trạng thái.");
+                        return;
+                    }
+
                     var dto = new OrderUpsertRequestDto
                     {
-                        Status = newStatus
+                        CustomerId = fullOrder.CustomerId,
+                        Discount = fullOrder.Discount,
+                        Notes = fullOrder.Notes,
+                        Status = newStatus,
+                        Items = fullOrder.Details?.Select(d => new OrderUpsertItemDto
+                        {
+                            ProductId = d.ProductId,
+                            Quantity = d.Quantity,
+                            UnitPrice = d.UnitPrice
+                        }).ToList() ?? new List<OrderUpsertItemDto>()
                     };
 
-                    await ViewModel.UpdateOrderAsync(item.Order.OrderId, dto);
-                    await ViewModel.LoadOrdersCommand.ExecuteAsync(null);
+                    var resp = await ViewModel.UpdateOrderAsync(item.Order.OrderId, dto);
+                    if (resp != null && resp.Success)
+                    {
+                        await ViewModel.LoadOrdersCommand.ExecuteAsync(null);
+                    }
+                    else
+                    {
+                        var msg = resp?.Message ?? "Cập nhật trạng thái không thành công. Vui lòng thử lại hoặc kiểm tra kết nối.";
+                        await ShowErrorDialog("Update Failed", msg);
+                    }
                 }
             }
         }
@@ -220,16 +207,19 @@ namespace TechHaven.Presentation.WinUI.Views
                 decimal subtotal = 0;
                 foreach (var item in cart)
                 {
-                    var grid = new Grid { ColumnDefinitions = {
+                    var grid = new Grid
+                    {
+                        ColumnDefinitions = {
                         new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
                         new ColumnDefinition { Width = new GridLength(80) },
                         new ColumnDefinition { Width = new GridLength(100) },
                         new ColumnDefinition { Width = new GridLength(40) }
-                    }, Margin = new Microsoft.UI.Xaml.Thickness(0,4,0,4) };
+                    },
+                        Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 4)
+                    };
 
                     var nameBlock = new StackPanel { Orientation = Orientation.Vertical };
                     nameBlock.Children.Add(new TextBlock { Text = item.Product.ProductName, TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-                    nameBlock.Children.Add(new TextBlock { Text = item.Product.BrandName, FontSize = 12, Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TH.TextSecondary"], TextWrapping = TextWrapping.Wrap });
 
                     Grid.SetColumn(nameBlock, 0);
 
@@ -404,51 +394,299 @@ namespace TechHaven.Presentation.WinUI.Views
         }
 
         /// <summary>
-        /// Show dialog to edit existing order (simplified - just notes and discount)
+        /// Show dialog to edit existing order
         /// </summary>
         private async System.Threading.Tasks.Task ShowEditOrderDialog(OrderItemViewModel item)
         {
-            var discountBox = new TextBox
-            {
-                Text = item.Order.Discount.ToString(),
-                PlaceholderText = "Discount",
-                Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0)
-            };
+            if (item == null) return;
 
-            var notesBox = new TextBox
+            // Load fresh full order
+            var full = await ViewModel.GetOrderByIdAsync(item.Order.OrderId);
+            if (full == null)
             {
-                Text = item.Order.Notes ?? string.Empty,
-                PlaceholderText = "Notes",
-                AcceptsReturn = true,
-                TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap,
-                Height = 80,
-                Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0)
-            };
+                await ShowErrorDialog("Load Error", "Không thể tải chi tiết đơn hàng.");
+                return;
+            }
 
+            var editableItems = full.Details?.Select(d => new EditItem
+            {
+                ProductId = d.ProductId,
+                ProductName = d.ProductName,
+                UnitPrice = d.UnitPrice,
+                Quantity = d.Quantity
+            }).ToList() ?? new List<EditItem>();
+
+            var itemsPanel = new StackPanel { Spacing = 8 };
+
+            var subtotalText = new TextBlock { Text = $"Subtotal: {full.SubtotalAmount:N0} ₫", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
+            var totalText = new TextBlock { Text = $"Total: {full.TotalAmount:N0} ₫", FontWeight = Microsoft.UI.Text.FontWeights.Bold };
+
+            var discountCombo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+            for (int p = 0; p <= 100; p++)
+            {
+                discountCombo.Items.Add(new ComboBoxItem { Content = $"{p}%", Tag = p });
+            }
+            int initialPct = 0;
+            try
+            {
+                if (full.Discount > 0 && full.Discount <= 1)
+                {
+                    initialPct = (int)Math.Round((double)(full.Discount * 100));
+                }
+                else if (full.SubtotalAmount > 0)
+                {
+                    initialPct = (int)Math.Round((double)(full.Discount / full.SubtotalAmount * 100));
+                }
+
+                if (initialPct < 0) initialPct = 0;
+                if (initialPct > 100) initialPct = 100;
+            }
+            catch
+            {
+                initialPct = 0;
+            }
+
+            if (initialPct >= 0 && initialPct <= 100)
+                discountCombo.SelectedIndex = initialPct;
+
+            var notesBox = new TextBox { Text = full.Notes ?? string.Empty, PlaceholderText = "Notes (optional)", AcceptsReturn = true, TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap, Height = 80 };
+
+            void RefreshItemsUI()
+            {
+                itemsPanel.Children.Clear();
+                decimal subtotal = 0;
+
+                foreach (var it in editableItems.ToList())
+                {
+                    var grid = new Grid
+                    {
+                        ColumnDefinitions = {
+                            new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                            new ColumnDefinition { Width = new GridLength(80) },
+                            new ColumnDefinition { Width = new GridLength(100) },
+                            new ColumnDefinition { Width = new GridLength(40) }
+                        },
+                        Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 4)
+                    };
+
+                    var nameBlock = new StackPanel { Orientation = Orientation.Vertical };
+                    nameBlock.Children.Add(new TextBlock { Text = it.ProductName, TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                    Grid.SetColumn(nameBlock, 0);
+
+                    var qtyBox = new TextBox { Text = it.Quantity.ToString(), HorizontalAlignment = HorizontalAlignment.Right, Width = 70 };
+                    Grid.SetColumn(qtyBox, 1);
+
+                    var priceBlock = new TextBlock { Text = it.UnitPrice.ToString("N0") + " ₫", HorizontalAlignment = HorizontalAlignment.Right };
+                    Grid.SetColumn(priceBlock, 2);
+
+                    var removeBtn = new Button { Content = "X", Width = 36, HorizontalAlignment = HorizontalAlignment.Right };
+                    Grid.SetColumn(removeBtn, 3);
+
+                    var capturedId = it.ProductId;
+
+                    qtyBox.KeyDown += (s, e) =>
+                    {
+                        try
+                        {
+                            if (e.Key == Windows.System.VirtualKey.Enter)
+                            {
+                                if (int.TryParse(qtyBox.Text, out var q) && q >= 0)
+                                {
+                                    var idx = editableItems.FindIndex(ei => ei.ProductId == capturedId);
+                                    if (idx >= 0)
+                                    {
+                                        editableItems[idx].Quantity = q;
+                                        RefreshItemsUI();
+                                    }
+                                }
+                            }
+                        }
+                        catch { }
+                    };
+
+                    qtyBox.LostFocus += (_, _) =>
+                    {
+                        if (int.TryParse(qtyBox.Text, out var q) && q >= 0)
+                        {
+                            var idx = editableItems.FindIndex(ei => ei.ProductId == capturedId);
+                            if (idx >= 0)
+                            {
+                                editableItems[idx].Quantity = q;
+                                RefreshItemsUI();
+                            }
+                        }
+                    };
+
+                    removeBtn.Click += (_, _) =>
+                    {
+                        var idx = editableItems.FindIndex(ei => ei.ProductId == capturedId);
+                        if (idx >= 0)
+                        {
+                            editableItems.RemoveAt(idx);
+                            RefreshItemsUI();
+                        }
+                    };
+
+                    grid.Children.Add(nameBlock);
+                    grid.Children.Add(qtyBox);
+                    grid.Children.Add(priceBlock);
+                    grid.Children.Add(removeBtn);
+
+                    itemsPanel.Children.Add(grid);
+
+                    subtotal += it.UnitPrice * it.Quantity;
+                }
+
+                subtotalText.Text = $"Subtotal: {subtotal:N0} ₫";
+
+                var pct = 0;
+                if (discountCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag is int t)
+                    pct = t;
+                var discFraction = Math.Max(0, Math.Min(100, pct)) / 100m;
+
+                var total = Math.Max(0, subtotal - (subtotal * discFraction));
+                totalText.Text = $"Total: {total:N0} ₫";
+            }
+
+            // Status combobox
+            var statusCombo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Pending", Tag = OrderStatus.Pending });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Processing", Tag = OrderStatus.Processing });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Completed", Tag = OrderStatus.Completed });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Cancelled", Tag = OrderStatus.Cancelled });
+            statusCombo.Items.Add(new ComboBoxItem { Content = "Returned", Tag = OrderStatus.Returned });
+
+            var currentStatusItem = statusCombo.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (OrderStatus)i.Tag == full.Status);
+            if (currentStatusItem != null) statusCombo.SelectedItem = currentStatusItem;
+
+            // Build panel
             var panel = new StackPanel { Spacing = 8 };
-            panel.Children.Add(new TextBlock { Text = $"Order", FontSize = 18, FontWeight = Microsoft.UI.Text.FontWeights.Bold });
-            panel.Children.Add(new TextBlock { Text = $"Customer: {item.CustomerDisplay}" });
-            panel.Children.Add(new TextBlock { Text = $"Current Total: {item.TotalAmountDisplay}" });
-            panel.Children.Add(new TextBlock { Text = "Discount:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Microsoft.UI.Xaml.Thickness(0, 8, 0, 0) });
-            panel.Children.Add(discountBox);
+            panel.Children.Add(new TextBlock { Text = $"Customer: {full.CustomerName ?? "Walk-in Customer"}", Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TH.TextSecondary"] });
+            panel.Children.Add(new TextBlock { Text = $"User: {full.UserFullName}", Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TH.TextSecondary"] });
+            panel.Children.Add(new TextBlock { Text = $"Date: {full.OrderDate:dd/MM/yyyy HH:mm}", Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TH.TextSecondary"] });
+
+            panel.Children.Add(new TextBlock { Text = "Status:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            panel.Children.Add(statusCombo);
+
+            // Add product button to allow opening product selector from edit dialog
+            var addProductBtn = new Button { Content = "Thêm sản phẩm", HorizontalAlignment = HorizontalAlignment.Stretch };
+
+            panel.Children.Add(new TextBlock { Text = "Items:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            panel.Children.Add(addProductBtn);
+            panel.Children.Add(new ScrollViewer { Content = itemsPanel, MaxHeight = 300 });
+
+            panel.Children.Add(subtotalText);
+            panel.Children.Add(new TextBlock { Text = "Discount:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            panel.Children.Add(discountCombo);
+            panel.Children.Add(totalText);
+
             panel.Children.Add(new TextBlock { Text = "Notes:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
             panel.Children.Add(notesBox);
 
+            // Initialize UI
+            RefreshItemsUI();
+
             var dialog = new ContentDialog
             {
-                Title = "Edit Order (Basic Info)",
-                Content = panel,
+                Title = "Edit Order",
+                Content = new ScrollViewer { Content = panel, MaxHeight = 700 },
                 PrimaryButtonText = "Save",
                 CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Primary,
                 XamlRoot = this.Content.XamlRoot
             };
 
-            var result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Primary)
+            bool openProductSelectorRequested = false;
+            addProductBtn.Click += (_, _) =>
             {
-                await ShowErrorDialog("Info", "Full order editing is not yet implemented.\n\n" +
-                                              "Currently, you can only update the status using the 'Update Status' option in the context menu.");
+                openProductSelectorRequested = true;
+                try { dialog.Hide(); } catch { }
+            };
+
+            // Update totals live when discount selection changes
+            discountCombo.SelectionChanged += (_, _) => RefreshItemsUI();
+
+            while (true)
+            {
+                var showTask = dialog.ShowAsync();
+                var result = await showTask;
+
+                if (openProductSelectorRequested)
+                {
+                    openProductSelectorRequested = false;
+                    var p = await ShowProductSelectorAsync();
+                    if (p != null)
+                    {
+                        // Add to editable items or increment quantity
+                        var idx = editableItems.FindIndex(ei => ei.ProductId == p.ProductId);
+                        if (idx >= 0)
+                        {
+                            editableItems[idx].Quantity += 1;
+                        }
+                        else
+                        {
+                            editableItems.Add(new EditItem
+                            {
+                                ProductId = p.ProductId,
+                                ProductName = p.ProductName,
+                                UnitPrice = p.SellPrice,
+                                Quantity = 1
+                            });
+                        }
+                        RefreshItemsUI();
+                    }
+                    continue; // reopen dialog
+                }
+
+                if (result == ContentDialogResult.Primary)
+                {
+                    // Validate
+                    if (!editableItems.Any())
+                    {
+                        await ShowErrorDialog("Validation Error", "Order must contain at least one item.");
+                        return;
+                    }
+
+                    // compute discount as fraction 0.01..1
+                    var selPct = 0;
+                    if (discountCombo.SelectedItem is ComboBoxItem sc && sc.Tag is int tagPct)
+                        selPct = tagPct;
+                    var parsedDiscount = Math.Max(0, Math.Min(100, selPct)) / 100m;
+
+                    var itemsDto = editableItems.Select(ei => new OrderUpsertItemDto
+                    {
+                        ProductId = ei.ProductId,
+                        Quantity = ei.Quantity,
+                        UnitPrice = ei.UnitPrice
+                    }).ToList();
+
+                    var selectedStatus = statusCombo.SelectedItem as ComboBoxItem;
+                    var status = selectedStatus != null ? (OrderStatus)selectedStatus.Tag : full.Status;
+
+                    var updateDto = new OrderUpsertRequestDto
+                    {
+                        CustomerId = full.CustomerId,
+                        // Discount expressed as fraction 0.01..1 per requirement
+                        Discount = parsedDiscount,
+                        Notes = string.IsNullOrWhiteSpace(notesBox.Text) ? null : notesBox.Text.Trim(),
+                        Status = status,
+                        Items = itemsDto
+                    };
+
+                    // Call update and show error on failure
+                    var resp = await ViewModel.UpdateOrderAsync(full.OrderId, updateDto);
+                    if (resp != null && resp.Success)
+                    {
+                        await ViewModel.LoadOrdersCommand.ExecuteAsync(null);
+                    }
+                    else
+                    {
+                        var msg = resp?.Message ?? "Cập nhật đơn hàng không thành công. Vui lòng thử lại.";
+                        await ShowErrorDialog("Update Failed", msg);
+                    }
+                }
+
+                break;
             }
         }
 
@@ -481,7 +719,7 @@ namespace TechHaven.Presentation.WinUI.Views
             var vm = new CustomerViewModel();
             await vm.EnsureInitialLoadAsync();
 
-            var searchBox = new TextBox { PlaceholderText = "Tìm kiếm khách hàng (tên, số điện thoại)", Margin = new Microsoft.UI.Xaml.Thickness(0,0,0,8) };
+            var searchBox = new TextBox { PlaceholderText = "Tìm kiếm khách hàng (tên, số điện thoại)", Margin = new Microsoft.UI.Xaml.Thickness(0, 0, 0, 8) };
 
             var list = new ListView
             {
@@ -574,7 +812,7 @@ namespace TechHaven.Presentation.WinUI.Views
             // Use generated command to load products
             await vm.LoadProductsCommand.ExecuteAsync(null);
 
-            var searchBox = new TextBox { PlaceholderText = "Tìm kiếm sản phẩm (tên)", Margin = new Microsoft.UI.Xaml.Thickness(0,0,0,8) };
+            var searchBox = new TextBox { PlaceholderText = "Tìm kiếm sản phẩm (tên)", Margin = new Microsoft.UI.Xaml.Thickness(0, 0, 0, 8) };
 
             var list = new ListView
             {
