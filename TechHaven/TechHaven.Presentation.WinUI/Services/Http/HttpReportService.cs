@@ -27,11 +27,6 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                          $"endDate={query.EndDate:yyyy-MM-dd}&" +
                          $"periodType={query.PeriodType}";
 
-                if (query.UserId.HasValue)
-                {
-                    url += $"&userId={query.UserId.Value}";
-                }
-
                 var response = await _httpClient.GetFromJsonAsync<List<ProductSalesDto>>(url);
                 return response ?? new List<ProductSalesDto>();
             }
@@ -42,22 +37,18 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             }
         }
 
-        public async Task<List<SalesReportDto>> GetRevenueReportAsync(ReportQueryDto query)
+        public async Task<SalesTrendDto> GetRevenueReportAsync(ReportQueryDto query)
         {
             try
             {
-                var url = $"{BaseUrl}/sales?" +
-                         $"startDate={query.StartDate:yyyy-MM-dd}&" +
-                         $"endDate={query.EndDate:yyyy-MM-dd}&" +
-                         $"periodType={query.PeriodType}";
-
-                var response = await _httpClient.GetFromJsonAsync<List<SalesReportDto>>(url);
-                return response ?? new List<SalesReportDto>();
+                var url = $"{BaseUrl}/trend?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}&periodType={query.PeriodType}";
+                var response = await _httpClient.GetFromJsonAsync<SalesTrendDto>(url);
+                return response ?? new SalesTrendDto();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-                return new List<SalesReportDto>();
+                return new SalesTrendDto();
             }
         }
 

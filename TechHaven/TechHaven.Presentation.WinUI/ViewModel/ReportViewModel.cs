@@ -233,8 +233,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 {
                     StartDate = queryStart,
                     EndDate = queryEnd,
-                    PeriodType = MapPeriodType(SelectedPeriodType),
-                    UserId = null // For now, keep null; backend should respect user context
+                    PeriodType = MapPeriodType(SelectedPeriodType)
                 };
 
                 // If commission tab selected and user is full admin, load commission data
@@ -257,7 +256,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 await Task.WhenAll(productSalesTask, revenueTask);
 
                 var productSalesData = await productSalesTask;
-                var revenueData = await revenueTask;
+                var revenueTrend = await revenueTask; // SalesTrendDto
 
                 if (productSalesData != null)
                 {
@@ -274,26 +273,28 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     }
                 }
 
-                if (revenueData != null)
+                if (revenueTrend != null)
                 {
                     RevenueData.Clear();
-                    foreach (var item in revenueData)
+                    foreach (var item in revenueTrend.DataPoints ?? new List<SalesReportDto>())
                     {
                         RevenueData.Add(item);
                     }
 
-                    // compute summary values
-                    TotalRevenue = revenueData.Sum(r => r.TotalRevenue);
-                    TotalProfit = revenueData.Sum(r => r.Profit);
+                    // compute summary values from trend summary
+                    TotalRevenue = revenueTrend.Summary?.TotalRevenue ?? 0m;
+                    TotalProfit = revenueTrend.Summary?.Profit ?? 0m;
 
-                    // placeholder growth calculation: set to 0.0% if not available
-                    RevenueGrowthText = "[^ 0.0% Growth]";
+                    // format growth e.g. "[^ 15.5% Growth]"
+                    RevenueGrowthText = revenueTrend.RevenueGrowth != 0m
+                        ? $"[^ {revenueTrend.RevenueGrowth:P1} Growth]"
+                        : "[^ 0.0% Growth]";
 
-                    // if seller, compute simple metrics
+                    // if seller, compute simple metrics from summary
                     if (IsSeller)
                     {
-                        SellerOrderCount = revenueData.Sum(r => r.TotalOrders);
-                        SellerCommission = Math.Round(revenueData.Sum(r => r.TotalRevenue) * 0.10m, 2);
+                        SellerOrderCount = revenueTrend.Summary?.TotalOrders ?? 0;
+                        SellerCommission = Math.Round((revenueTrend.Summary?.TotalRevenue ?? 0m) * 0.10m, 2);
                     }
                 }
             }

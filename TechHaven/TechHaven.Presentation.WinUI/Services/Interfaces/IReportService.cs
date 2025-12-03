@@ -12,9 +12,9 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         Task<List<ProductSalesDto>> GetProductSalesReportAsync(ReportQueryDto query);
 
         /// <summary>
-        /// Get revenue and profit report (for bar chart)
+        /// Get revenue and profit report (trend with summary)
         /// </summary>
-        Task<List<SalesReportDto>> GetRevenueReportAsync(ReportQueryDto query);
+        Task<SalesTrendDto> GetRevenueReportAsync(ReportQueryDto query);
 
         /// <summary>
         /// Get list of products for dropdown
