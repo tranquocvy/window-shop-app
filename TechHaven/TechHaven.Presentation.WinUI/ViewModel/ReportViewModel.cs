@@ -125,7 +125,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public bool IsAdmin
         {
             get => _isAdmin;
-            set => SetProperty(ref _isAdmin, value);
+            set
+            {
+                if (SetProperty(ref _isAdmin, value))
+                {
+                    OnPropertyChanged(nameof(CanExport));
+                }
+            }
         }
 
         // Full admin (real admin) - can see commission tab
@@ -140,8 +146,17 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public bool IsSeller
         {
             get => _isSeller;
-            set => SetProperty(ref _isSeller, value);
+            set
+            {
+                if (SetProperty(ref _isSeller, value))
+                {
+                    OnPropertyChanged(nameof(CanExport));
+                }
+            }
         }
+
+        // Both admins and sellers can export reports (but commission export remains admin-only)
+        public bool CanExport => IsAdmin || IsSeller;
 
         // Seller-only metrics
         private int _sellerOrderCount;

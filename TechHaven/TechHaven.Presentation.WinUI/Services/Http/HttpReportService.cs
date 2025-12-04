@@ -118,5 +118,54 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                 return new ProductSalesTrendDto();
             }
         }
+
+        public async Task<byte[]> ExportSalesAsync(ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/export/sales";
+                var resp = await _httpClient.PostAsJsonAsync(url, query);
+                resp.EnsureSuccessStatusCode();
+                var bytes = await resp.Content.ReadAsByteArrayAsync();
+                return bytes ?? Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting sales: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        }
+
+        public async Task<byte[]> ExportProductAsync(int productId, ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/export/products/{productId}";
+                var resp = await _httpClient.PostAsJsonAsync(url, query);
+                resp.EnsureSuccessStatusCode();
+                return await resp.Content.ReadAsByteArrayAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting product report: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        }
+
+        public async Task<byte[]> ExportCommissionAsync(CommissionQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/export/commission";
+                var resp = await _httpClient.PostAsJsonAsync(url, query);
+                resp.EnsureSuccessStatusCode();
+                return await resp.Content.ReadAsByteArrayAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting commission report: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        }
     }
 }

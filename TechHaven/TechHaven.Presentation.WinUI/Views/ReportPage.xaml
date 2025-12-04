@@ -101,8 +101,8 @@
             </Border>
         </Grid>
 
-        <!-- Filters: Date range and period + Search/Export (visible only to admin) -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- Filters: Date range and period + Search/Export (visible only to roles that can export) -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <!-- Single-row layout: all filters and buttons inline -->
             <Grid ColumnSpacing="12" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
@@ -160,8 +160,8 @@
             </Grid>
         </Border>
 
-        <!-- Chart Type Tabs (visible only to admin) -->
-        <Grid Grid.Row="2" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- Chart Type Tabs (visible to roles that can export/view reports) -->
+        <Grid Grid.Row="2" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -226,8 +226,8 @@
             </StackPanel>
         </Grid>
 
-        <!-- Chart Area (conditional, admin only) -->
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- Chart Area (conditional, visible to roles that can view reports) -->
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

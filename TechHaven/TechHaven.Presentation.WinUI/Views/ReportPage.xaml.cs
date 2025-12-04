@@ -11,12 +11,16 @@ using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Shared.DTOs.Products;
 using TechHaven.Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Reports;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
 using LiveChartsCore.Measure;
 using System.Collections.Specialized;
 using LiveChartsCore.SkiaSharpView;
+using Windows.Storage.Pickers;
+using Windows.Storage;
+using WinRT.Interop;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -111,35 +115,112 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private async void ExportReport_Click(object sender, RoutedEventArgs e)
         {
-            // Placeholder: call LoadReportsAsync to ensure data is current, then export logic
+            // Ensure latest data
             await ViewModel.LoadReportsCommand.ExecuteAsync(null);
 
-            // TODO: implement export (PDF/Excel) using existing services
-            var dialog = new ContentDialog
+            // Build export query from UI selections
+            var query = new ReportQueryDto
             {
-                Title = "Xuất báo cáo",
-                Content = "Chức năng xuất báo cáo sẽ được triển khai.",
-                CloseButtonText = "Đóng",
-                XamlRoot = this.Content.XamlRoot
+                StartDate = ViewModel.StartDate.DateTime,
+                EndDate = ViewModel.EndDate.DateTime,
+                PeriodType = ViewModel.SelectedPeriodType switch
+                {
+                    "Ngày" => ReportPeriodType.Daily,
+                    "Tuần" => ReportPeriodType.Weekly,
+                    "Tháng" => ReportPeriodType.Monthly,
+                    "Năm" => ReportPeriodType.Yearly,
+                    _ => ReportPeriodType.Monthly
+                }
             };
 
-            // Await WinRT IAsyncOperation using Completed -> TaskCompletionSource
-            var op = dialog.ShowAsync();
-            var tcs = new TaskCompletionSource<ContentDialogResult>();
-            op.Completed = (info, status) =>
+            try
             {
+                byte[] bytes = Array.Empty<byte>();
+                string suggestedName = "report";
+
+                if (ViewModel.SelectedChartTab == "Sản Phẩm")
+                {
+                    if (ViewModel.SelectedProduct == null || ViewModel.SelectedProduct.ProductId <= 0)
+                    {
+                        var warn = new ContentDialog { Title = "Chưa chọn sản phẩm", Content = "Vui lòng chọn sản phẩm trước khi xuất báo cáo sản phẩm.", CloseButtonText = "Đóng", XamlRoot = this.Content.XamlRoot };
+                        await warn.ShowAsync();
+                        return;
+                    }
+
+                    bytes = await _reportService.ExportProductAsync(ViewModel.SelectedProduct.ProductId, query);
+                    suggestedName = $"product_{ViewModel.SelectedProduct.ProductId}_{ViewModel.StartDate:yyyyMMdd}_{ViewModel.EndDate:yyyyMMdd}";
+                }
+                else if (ViewModel.SelectedChartTab == "Hoa Hồng")
+                {
+                    // only full admin should access commission tab but validate
+                    var commissionQuery = new CommissionQueryDto { Month = ViewModel.StartDate.Month, Year = ViewModel.StartDate.Year };
+                    bytes = await _reportService.ExportCommissionAsync(commissionQuery);
+                    suggestedName = $"commission_{commissionQuery.Month}_{commissionQuery.Year}";
+                }
+                else // default: sales
+                {
+                    bytes = await _reportService.ExportSalesAsync(query);
+                    suggestedName = $"sales_{ViewModel.StartDate:yyyyMMdd}_{ViewModel.EndDate:yyyyMMdd}";
+                }
+
+                if (bytes == null || bytes.Length == 0)
+                {
+                    var err = new ContentDialog { Title = "Lỗi", Content = "Không có dữ liệu xuất hoặc API trả về lỗi.", CloseButtonText = "Đóng", XamlRoot = this.Content.XamlRoot };
+                    await err.ShowAsync();
+                    return;
+                }
+
+                // Show save file picker
+                var picker = new FileSavePicker();
+                picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+                picker.FileTypeChoices.Add("Excel workbook", new List<string> { ".xlsx" });
+                picker.SuggestedFileName = suggestedName;
+
+                // Try to initialize picker with window handle. Some environments (or timing) may return an invalid handle
+                // causing "Invalid window handle" errors. Only call InitializeWithWindow if we have a non-zero handle.
                 try
                 {
-                    var res = info.GetResults();
-                    tcs.TrySetResult(res);
+                    if (App.MainWindow != null)
+                    {
+                        var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
+                        if (hwnd != IntPtr.Zero)
+                        {
+                            InitializeWithWindow.Initialize(picker, hwnd);
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Export: window handle is IntPtr.Zero, skipping InitializeWithWindow fallback to default picker.");
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Export: App.MainWindow is null, skipping InitializeWithWindow.");
+                    }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
-                    tcs.TrySetException(ex);
+                    // Log and continue — fallback to calling PickSaveFileAsync without initialization
+                    Debug.WriteLine($"InitializeWithWindow failed: {ex.Message}");
                 }
-            };
 
-            await tcs.Task;
+                var file = await picker.PickSaveFileAsync();
+                if (file == null)
+                {
+                    // user cancelled
+                    return;
+                }
+
+                await FileIO.WriteBytesAsync(file, bytes);
+
+                var ok = new ContentDialog { Title = "Hoàn thành", Content = "File đã được lưu.", CloseButtonText = "Đóng", XamlRoot = this.Content.XamlRoot };
+                await ok.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Export error: {ex.Message}");
+                var err = new ContentDialog { Title = "Lỗi", Content = $"Xuất báo cáo thất bại: {ex.Message}", CloseButtonText = "Đóng", XamlRoot = this.Content.XamlRoot };
+                await err.ShowAsync();
+            }
         }
 
         private CancellationTokenSource _ctsSearch;

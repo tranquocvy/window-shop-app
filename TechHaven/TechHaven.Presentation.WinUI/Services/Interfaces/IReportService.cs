@@ -31,6 +31,21 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         /// Get single product detail for product chart
         /// </summary>
         Task<ProductSalesTrendDto> GetProductDetailAsync(int productId, ReportQueryDto query);
+
+        /// <summary>
+        /// Export sales report as an Excel file (bytes)
+        /// </summary>
+        Task<byte[]> ExportSalesAsync(ReportQueryDto query);
+
+        /// <summary>
+        /// Export product detail report as Excel (for selected product)
+        /// </summary>
+        Task<byte[]> ExportProductAsync(int productId, ReportQueryDto query);
+
+        /// <summary>
+        /// Export commission report as Excel
+        /// </summary>
+        Task<byte[]> ExportCommissionAsync(CommissionQueryDto query);
     }
 
     public class ProductSummaryDto
