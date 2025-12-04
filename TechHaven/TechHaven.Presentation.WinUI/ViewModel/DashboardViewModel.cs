@@ -169,11 +169,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 new LineSeries<decimal>
                 {
                     Values = new List<decimal>(),
-                    Fill = new SolidColorPaint(new SKColor(100, 149, 237, 50)), // Light blue fill with transparency
-                    GeometrySize = 6, // Reduced from 10 to 6
-                    GeometryStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = 2 },
-                    GeometryFill = new SolidColorPaint(SKColors.White),
-                    Stroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = 2 },
+                    GeometrySize = 6,
+                    GeometryStroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 2 },
+                    Stroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 3 },
                     LineSmoothness = 0.8
                 }
             };
@@ -185,7 +183,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     Labels = new List<string>(),
                     LabelsRotation = 0,
                     TextSize = 11,
-                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray) { StrokeThickness = 1 }
+                    SeparatorsPaint = null
                 }
             };
 
@@ -195,7 +193,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 {
                     TextSize = 11,
                     Labeler = value => value.ToString("C0"),
-                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray) { StrokeThickness = 1 }
+                    SeparatorsPaint = new SolidColorPaint(SKColors.Gray) { StrokeThickness = 1 }
                 }
             };
         }
@@ -217,11 +215,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 new LineSeries<decimal>
                 {
                     Values = revenueValues,
-                    Fill = new SolidColorPaint(new SKColor(100, 149, 237, 80)), // Light blue fill with transparency
                     GeometrySize = 6, // Size point
-                    GeometryStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = 2 },
-                    GeometryFill = new SolidColorPaint(SKColors.White),
-                    Stroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = 2 },
+                    GeometryStroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 2 },
+                    Stroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 3 },
                     LineSmoothness = 0.8
                 }
             };
@@ -235,7 +231,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     Labels = dateLabels,
                     LabelsRotation = 0,
                     TextSize = 11,
-                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray) { StrokeThickness = 1 }
+                    SeparatorsPaint = null
                 }
             };
         }
