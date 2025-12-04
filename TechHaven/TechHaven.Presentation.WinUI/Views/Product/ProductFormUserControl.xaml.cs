@@ -20,6 +20,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private readonly IProductService _productService;
         private string? SelectedImagePath = null;
         private string? _originalImageUrl = null;
+        public string? OriginalImageUrl => _originalImageUrl;
 
         public ProductFormUserControl()
         {

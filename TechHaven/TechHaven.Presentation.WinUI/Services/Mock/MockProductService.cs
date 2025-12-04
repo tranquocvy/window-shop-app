@@ -226,5 +226,18 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
+        // File: Services/Mock/MockProductService.cs
+
+        public Task<ResponseWrapper<bool>> DeleteImageAsync(string imageUrl)
+        {
+            // Giả vờ xóa thành công
+            return Task.FromResult(new ResponseWrapper<bool>
+            {
+                Success = true,
+                Message = "Mock delete image success",
+                Data = true
+            });
+        }
+
     }
 }

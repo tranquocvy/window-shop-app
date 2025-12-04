@@ -15,6 +15,7 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         public Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query);
 
         Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType);
+        Task<ResponseWrapper<bool>> DeleteImageAsync(string imageUrl);
 
     }
 }

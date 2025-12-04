@@ -154,5 +154,47 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             }
         }
 
+        // File: Services/Http/HttpProductService.cs
+
+        public async Task<ResponseWrapper<bool>> DeleteImageAsync(string imageUrl)
+        {
+            try
+            {
+                // Gọi API: api/Image/delete?imageUrl=...
+                // Lưu ý: Cần EscapeDataString vì imageUrl chứa ký tự đặc biệt như "://", "/"
+                string requestUrl = $"api/Image?imageUrl={Uri.EscapeDataString(imageUrl)}";
+
+                var response = await _httpClient.DeleteAsync(requestUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return new ResponseWrapper<bool>
+                    {
+                        Success = true,
+                        Message = "Xóa ảnh cũ thành công",
+                        Data = true
+                    };
+                }
+                else
+                {
+                    return new ResponseWrapper<bool>
+                    {
+                        Success = false,
+                        Message = $"Lỗi xóa ảnh: {response.StatusCode}",
+                        Data = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseWrapper<bool>
+                {
+                    Success = false,
+                    Message = $"Lỗi kết nối xóa ảnh: {ex.Message}",
+                    Data = false
+                };
+            }
+        }
+
     }
 }
