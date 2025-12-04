@@ -47,6 +47,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private Geometry monthlyRevenueGeometry;
 
+        [ObservableProperty]
+        private Geometry tabletMonthlyRevenueGeometry;
+
         // Spline configuration: tension (0..1) and samples per segment (smoothness)
         [ObservableProperty]
         private double splineTension = 1.0; // 0 = linear, 1 = full Catmull-Rom
@@ -100,10 +103,20 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Call this from UI when chart container size changes
         public void UpdateMonthlyRevenueGeometry(double width, double height)
         {
-            if (MonthlyRevenue == null || MonthlyRevenue.Count == 0)
+            MonthlyRevenueGeometry = GenerateChartGeometry(width, height);
+        }
+
+        // Call this from UI when tablet chart container size changes
+        public void UpdateTabletMonthlyRevenueGeometry(double width, double height)
+        {
+            TabletMonthlyRevenueGeometry = GenerateChartGeometry(width, height);
+        }
+
+        private Geometry GenerateChartGeometry(double width, double height)
+        {
+            if (MonthlyRevenue == null || MonthlyRevenue.Count == 0 || width <= 0 || height <= 0)
             {
-                MonthlyRevenueGeometry = null;
-                return;
+                return null;
             }
 
             var values = MonthlyRevenue.Select(x => x.Revenue).ToList();
@@ -149,8 +162,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (n == 1)
             {
                 // single point: nothing to draw
-                MonthlyRevenueGeometry = null;
-                return;
+                return null;
             }
             else
             {
@@ -200,7 +212,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             var figs = new PathFigureCollection { fig };
             var pathGeom = new PathGeometry { Figures = figs };
-            MonthlyRevenueGeometry = pathGeom;
+            return pathGeom;
         }
     }
 }
