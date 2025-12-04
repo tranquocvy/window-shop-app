@@ -23,6 +23,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         private readonly IReportService _reportService;
 
+        [ObservableProperty]
+        private string _commissionTitle = "Bảng hoa hồng nhân viên";
+
         // Tab Options
         public ObservableCollection<string> ChartTabs { get; } = new()
         {
@@ -341,6 +344,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             try
             {
+                // update title to show month/year used for the commission query
+                CommissionTitle = $"Bảng hoa hồng nhân viên T{query.Month}/{query.Year}";
+
                 var data = await _reportService.GetCommissionReportAsync(query);
                 CommissionData.Clear();
                 foreach (var item in data)
