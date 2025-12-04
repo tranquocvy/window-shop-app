@@ -5,20 +5,36 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Reports;
+using TechHaven.Shared.DTOs.Common;
+using CommissionQueryDto = TechHaven.Shared.DTOs.Reports.CommissionQueryDto;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
 {
     public class HttpReportService : IReportService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "/api/reports";
+        private const string BaseUrl = "/api/Report";
 
         public HttpReportService(HttpClient httpClient)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public async Task<List<ProductSalesDto>> GetProductSalesReportAsync(ReportQueryDto query)
+        private async Task<T?> GetWrappedAsync<T>(string url) where T : class
+        {
+            try
+            {
+                var wrapper = await _httpClient.GetFromJsonAsync<ResponseWrapper<T>>(url);
+                return wrapper?.Data;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"HttpReportService.GetWrappedAsync error: {ex.Message}");
+                return default;
+            }
+        }
+
+        public async Task<List<ProductSalesTrendDto>> GetProductSalesReportAsync(ReportQueryDto query)
         {
             try
             {
@@ -27,13 +43,13 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                          $"endDate={query.EndDate:yyyy-MM-dd}&" +
                          $"periodType={query.PeriodType}";
 
-                var response = await _httpClient.GetFromJsonAsync<List<ProductSalesDto>>(url);
-                return response ?? new List<ProductSalesDto>();
+                var data = await GetWrappedAsync<List<ProductSalesTrendDto>>(url);
+                return data ?? new List<ProductSalesTrendDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-                return new List<ProductSalesDto>();
+                return new List<ProductSalesTrendDto>();
             }
         }
 
@@ -41,9 +57,9 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         {
             try
             {
-                var url = $"{BaseUrl}/trend?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}&periodType={query.PeriodType}";
-                var response = await _httpClient.GetFromJsonAsync<SalesTrendDto>(url);
-                return response ?? new SalesTrendDto();
+                var url = $"{BaseUrl}/sales?StartDate={query.StartDate:yyyy-MM-dd}&EndDate={query.EndDate:yyyy-MM-dd}&PeriodType={query.PeriodType}";
+                var data = await GetWrappedAsync<SalesTrendDto>(url);
+                return data ?? new SalesTrendDto();
             }
             catch (Exception ex)
             {
@@ -52,13 +68,18 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             }
         }
 
-        public async Task<List<ProductSummaryDto>> GetProductsAsync()
+        public async Task<List<ProductSummaryDto>> GetProductsAsync(string? keyword = null)
         {
             try
             {
-                var url = "/api/products/summary";
-                var response = await _httpClient.GetFromJsonAsync<List<ProductSummaryDto>>(url);
-                return response ?? new List<ProductSummaryDto>();
+                var url = "/api/Product";
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    url += $"?SearchTerm={Uri.EscapeDataString(keyword)}";
+                }
+
+                var data = await GetWrappedAsync<List<ProductSummaryDto>>(url);
+                return data ?? new List<ProductSummaryDto>();
             }
             catch (Exception ex)
             {
@@ -67,18 +88,83 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             }
         }
 
-        public async Task<List<CommissionReportDto>> GetCommissionReportAsync(ReportQueryDto query)
+        public async Task<List<CommissionReportDto>> GetCommissionReportAsync(CommissionQueryDto query)
         {
             try
             {
-                var url = $"{BaseUrl}/commission?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}";
-                var response = await _httpClient.GetFromJsonAsync<List<CommissionReportDto>>(url);
-                return response ?? new List<CommissionReportDto>();
+                var url = $"{BaseUrl}/commission?month={query.Month}&year={query.Year}";
+
+                var data = await GetWrappedAsync<List<CommissionReportDto>>(url);
+                return data ?? new List<CommissionReportDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 return new List<CommissionReportDto>();
+            }
+        }
+
+        public async Task<ProductSalesTrendDto> GetProductDetailAsync(int productId, ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/products/{productId}?StartDate={query.StartDate:yyyy-MM-dd}&EndDate={query.EndDate:yyyy-MM-dd}&PeriodType={(int)query.PeriodType}";
+                var data = await GetWrappedAsync<ProductSalesTrendDto>(url);
+                return data ?? new ProductSalesTrendDto();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return new ProductSalesTrendDto();
+            }
+        }
+
+        public async Task<byte[]> ExportSalesAsync(ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/export/sales";
+                var resp = await _httpClient.PostAsJsonAsync(url, query);
+                resp.EnsureSuccessStatusCode();
+                var bytes = await resp.Content.ReadAsByteArrayAsync();
+                return bytes ?? Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting sales: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        }
+
+        public async Task<byte[]> ExportProductAsync(int productId, ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/export/products/{productId}";
+                var resp = await _httpClient.PostAsJsonAsync(url, query);
+                resp.EnsureSuccessStatusCode();
+                return await resp.Content.ReadAsByteArrayAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting product report: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        }
+
+        public async Task<byte[]> ExportCommissionAsync(CommissionQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/export/commission";
+                var resp = await _httpClient.PostAsJsonAsync(url, query);
+                resp.EnsureSuccessStatusCode();
+                return await resp.Content.ReadAsByteArrayAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting commission report: {ex.Message}");
+                return Array.Empty<byte>();
             }
         }
     }

@@ -10,12 +10,23 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Reports;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
+
+// LiveCharts imports for chart series
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.Measure;
+using LiveChartsCore.Kernel.Sketches;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class ReportViewModel : ObservableObject
     {
         private readonly IReportService _reportService;
+
+        [ObservableProperty]
+        private string _commissionTitle = "Bảng hoa hồng nhân viên";
 
         // Tab Options
         public ObservableCollection<string> ChartTabs { get; } = new()
@@ -40,34 +51,68 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Commission report data (admin only)
         public ObservableCollection<CommissionReportDto> CommissionData { get; } = new();
 
-        // Years and Months for filtering
-        public ObservableCollection<int> Years { get; } = new();
-        public ObservableCollection<string> Months { get; } = new();
-
         [ObservableProperty]
         private string _selectedChartTab = "Sản Phẩm"; // Default: Product chart
 
         [ObservableProperty]
         private ProductSummaryDto _selectedProduct;
 
-        [ObservableProperty]
-        private string _selectedPeriodType = "Năm";
+        public bool IsProductSelected => SelectedProduct != null && SelectedProduct.ProductId > 0;
+        public bool IsProductNotSelected => !IsProductSelected;
 
         [ObservableProperty]
-        private DateTimeOffset _startDate = DateTimeOffset.Now; // Default: Hôm nay
+        private string _selectedPeriodType = "Ngày"; // Default: Daily period
 
         [ObservableProperty]
-        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: Hôm nay
+        private DateTimeOffset _startDate = DateTimeOffset.Now.AddDays(-6); // Default: last 7 days (inclusive)
 
         [ObservableProperty]
-        private int _selectedYear;
-
-        [ObservableProperty]
-        private string _selectedMonth = "Tất cả"; // default to 'all'
+        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: today
 
         // Chart data for display
-        public ObservableCollection<ProductSalesDto> ProductSalesData { get; } = new();
+        public ObservableCollection<ProductSalesTrendDto> ProductSalesData { get; } = new();
         public ObservableCollection<SalesReportDto> RevenueData { get; } = new();
+
+        // New collections for chart binding: labels and two series (revenue, profit)
+        public ObservableCollection<string> ChartLabels { get; } = new();
+        public ObservableCollection<double> RevenueValues { get; } = new();
+        public ObservableCollection<double> ProfitValues { get; } = new();
+
+        // LiveCharts series property for binding in XAML
+        private IEnumerable<ISeries> _chartSeries = Array.Empty<ISeries>();
+        public IEnumerable<ISeries> ChartSeries
+        {
+            get => _chartSeries;
+            set => SetProperty(ref _chartSeries, value);
+        }
+
+        // Product chart related
+        public ProductSalesTrendDto SelectedProductDetail { get; } = new ProductSalesTrendDto();
+        public ObservableCollection<string> ProductChartLabels { get; } = new();
+        public ObservableCollection<double> ProductQuantityValues { get; } = new();
+
+        [ObservableProperty]
+        private string _productStockText = "—";
+
+        [ObservableProperty]
+        private string _productTotalSoldText = "0 cái";
+
+        [ObservableProperty]
+        private decimal _productTotalRevenueValue;
+
+        private IEnumerable<ISeries> _productChartSeries = Array.Empty<ISeries>();
+        public IEnumerable<ISeries> ProductChartSeries
+        {
+            get => _productChartSeries;
+            set => SetProperty(ref _productChartSeries, value);
+        }
+
+        private ICartesianAxis[] _productXAxes = Array.Empty<ICartesianAxis>();
+        public ICartesianAxis[] ProductXAxes
+        {
+            get => _productXAxes;
+            set => SetProperty(ref _productXAxes, value);
+        }
 
         [ObservableProperty]
         private bool _isLoading;
@@ -80,7 +125,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public bool IsAdmin
         {
             get => _isAdmin;
-            set => SetProperty(ref _isAdmin, value);
+            set
+            {
+                if (SetProperty(ref _isAdmin, value))
+                {
+                    OnPropertyChanged(nameof(CanExport));
+                }
+            }
         }
 
         // Full admin (real admin) - can see commission tab
@@ -95,8 +146,17 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public bool IsSeller
         {
             get => _isSeller;
-            set => SetProperty(ref _isSeller, value);
+            set
+            {
+                if (SetProperty(ref _isSeller, value))
+                {
+                    OnPropertyChanged(nameof(CanExport));
+                }
+            }
         }
+
+        // Both admins and sellers can export reports (but commission export remains admin-only)
+        public bool CanExport => IsAdmin || IsSeller;
 
         // Seller-only metrics
         private int _sellerOrderCount;
@@ -129,12 +189,35 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _revenueGrowthText = string.Empty;
 
         [ObservableProperty]
+        private string _profitGrowthText = string.Empty;
+
+        [ObservableProperty]
+        private SolidColorBrush _revenueGrowthBrush = new SolidColorBrush(Colors.Transparent);
+
+        [ObservableProperty]
+        private SolidColorBrush _profitGrowthBrush = new SolidColorBrush(Colors.Transparent);
+
+        [ObservableProperty]
         private decimal _totalCommission;
+
+        [ObservableProperty]
+        private string _summaryPeriod = string.Empty;
+
+        [ObservableProperty]
+        private int _summaryTotalOrders;
+
+        [ObservableProperty]
+        private decimal _summaryTotalCost;
+
+        [ObservableProperty]
+        private decimal _summaryProfitMargin;
+
+        [ObservableProperty]
+        private decimal _profitGrowth;
 
         public ReportViewModel(IReportService reportService = null)
         {
             _reportService = reportService ?? CreateDefaultReportService();
-            InitializeYearMonth();
 
             // determine role from AppState.CurrentUser.RoleName
             var role = AppState.CurrentUser?.RoleName ?? string.Empty;
@@ -146,25 +229,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             IsAdmin = IsSeller || IsFullAdmin;
 
             _ = LoadProductsAsync();
-        }
-
-        private void InitializeYearMonth()
-        {
-            var currentYear = DateTime.Now.Year;
-            for (int y = currentYear - 4; y <= currentYear; y++)
-            {
-                Years.Add(y);
-            }
-
-            // "Tất cả" means 'All'
-            Months.Add("Tất cả");
-            for (int m = 1; m <= 12; m++)
-            {
-                Months.Add(m.ToString());
-            }
-
-            SelectedYear = currentYear;
-            SelectedMonth = "Tất cả"; // All months by default
         }
 
         private static IReportService CreateDefaultReportService()
@@ -182,15 +246,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 if (products != null)
                 {
                     Products.Clear();
-                    // Add "All Products" option
-                    Products.Add(new ProductSummaryDto { ProductId = 0, ProductName = "Tất cả sản phẩm" });
                     
                     foreach (var product in products)
                     {
                         Products.Add(product);
                     }
                     
-                    SelectedProduct = Products.FirstOrDefault();
+                    // Do not select first product by default - wait for user
+                    // SelectedProduct = Products.FirstOrDefault();
                 }
             }
             catch (Exception ex)
@@ -210,24 +273,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 DateTime queryStart = StartDate.DateTime;
                 DateTime queryEnd = EndDate.DateTime;
 
-                // If year/month selector used, override dates accordingly
-                if (SelectedYear > 0)
-                {
-                    if (!string.IsNullOrWhiteSpace(SelectedMonth) && SelectedMonth != "Tất cả")
-                    {
-                        if (int.TryParse(SelectedMonth, out var month))
-                        {
-                            queryStart = new DateTime(SelectedYear, month, 1);
-                            queryEnd = queryStart.AddMonths(1).AddDays(-1);
-                        }
-                    }
-                    else
-                    {
-                        // whole year
-                        queryStart = new DateTime(SelectedYear, 1, 1);
-                        queryEnd = new DateTime(SelectedYear, 12, 31);
-                    }
-                }
+                // Filtering is based on StartDate/EndDate (set by UI)
 
                 var query = new ReportQueryDto
                 {
@@ -239,8 +285,62 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 // If commission tab selected and user is full admin, load commission data
                 if (IsCommissionVisible)
                 {
-                    await LoadCommissionAsync(query);
+                    // map to CommissionQueryDto using the query start date (month/year)
+                    var commissionQuery = new TechHaven.Shared.DTOs.Reports.CommissionQueryDto
+                    {
+                        Month = queryStart.Month,
+                        Year = queryStart.Year
+                    };
+
+                    await LoadCommissionAsync(commissionQuery);
                     return;
+                }
+                
+                // If product chart visible, and a product is selected, fetch product detail and prepare line chart
+                if (IsProductChartVisible)
+                {
+                    if (SelectedProduct == null || SelectedProduct.ProductId <= 0)
+                    {
+                        // clear chart
+                        ProductChartLabels.Clear();
+                        ProductQuantityValues.Clear();
+                        ProductChartSeries = Array.Empty<ISeries>();
+                        ProductXAxes = Array.Empty<ICartesianAxis>();
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var prodQuery = new ReportQueryDto { StartDate = queryStart, EndDate = queryEnd, PeriodType = MapPeriodType(SelectedPeriodType) };
+                            var detail = await _reportService.GetProductDetailAsync(SelectedProduct.ProductId, prodQuery);
+
+                            ProductChartLabels.Clear();
+                            ProductQuantityValues.Clear();
+                            SelectedProductDetail.DataPoints.Clear();
+
+                            foreach (var dp in (detail?.DataPoints ?? new List<ProductSalesDataPointDto>()).OrderBy(d => d.Period))
+                            {
+                                SelectedProductDetail.DataPoints.Add(dp);
+                                ProductChartLabels.Add(dp.Period);
+                                ProductQuantityValues.Add(dp.QuantitySold);
+                            }
+
+                            // populate summary fields from product detail
+                            ProductTotalSoldText = $"{detail.TotalQuantitySold} cái";
+                            ProductTotalRevenueValue = detail.TotalRevenue;
+                            // stock not available in report DTO; keep placeholder
+                            ProductStockText = "—";
+
+                            ProductChartSeries = new ISeries[] { new LineSeries<double> { Values = ProductQuantityValues, Name = "Số lượng" } };
+                            ProductXAxes = new ICartesianAxis[] { new Axis { Labels = ProductChartLabels } };
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Error loading product detail: {ex.Message}");
+                            ProductChartSeries = Array.Empty<ISeries>();
+                            ProductXAxes = Array.Empty<ICartesianAxis>();
+                        }
+                    }
                 }
 
                 // Load both reports
@@ -276,26 +376,52 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 if (revenueTrend != null)
                 {
                     RevenueData.Clear();
+
+                    // Clear chart series/labels before populating
+                    ChartLabels.Clear();
+                    RevenueValues.Clear();
+                    ProfitValues.Clear();
+
                     foreach (var item in revenueTrend.DataPoints ?? new List<SalesReportDto>())
                     {
                         RevenueData.Add(item);
+
+                        // period used as X axis label
+                        ChartLabels.Add(item.Period);
+
+                        // series values for chart (cast to double for most chart controls)
+                        RevenueValues.Add((double)item.TotalRevenue);
+                        ProfitValues.Add((double)item.Profit);
                     }
+
+                    // create LiveCharts series
+                    ChartSeries = new ISeries[]
+                    {
+                        new ColumnSeries<double> { Values = RevenueValues, Name = "Doanh thu" },
+                        new ColumnSeries<double> { Values = ProfitValues, Name = "Lợi nhuận" }
+                    };
 
                     // compute summary values from trend summary
                     TotalRevenue = revenueTrend.Summary?.TotalRevenue ?? 0m;
                     TotalProfit = revenueTrend.Summary?.Profit ?? 0m;
 
-                    // format growth e.g. "[^ 15.5% Growth]"
-                    RevenueGrowthText = revenueTrend.RevenueGrowth != 0m
-                        ? $"[^ {revenueTrend.RevenueGrowth:P1} Growth]"
-                        : "[^ 0.0% Growth]";
+                    // revenue growth text - API already returns percent value; show as-is with % sign
+                    RevenueGrowthText = revenueTrend.RevenueGrowth != 0m ? $"{revenueTrend.RevenueGrowth:F2}%" : "0.00%";
+                    RevenueGrowthBrush = revenueTrend.RevenueGrowth > 0
+                        ? new SolidColorBrush(Colors.Green)
+                        : (revenueTrend.RevenueGrowth < 0 ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Green));
 
-                    // if seller, compute simple metrics from summary
-                    if (IsSeller)
-                    {
-                        SellerOrderCount = revenueTrend.Summary?.TotalOrders ?? 0;
-                        SellerCommission = Math.Round((revenueTrend.Summary?.TotalRevenue ?? 0m) * 0.10m, 2);
-                    }
+                    // additional summary fields
+                    SummaryPeriod = revenueTrend.Summary?.Period ?? string.Empty;
+                    SummaryTotalOrders = revenueTrend.Summary?.TotalOrders ?? 0;
+                    SummaryTotalCost = revenueTrend.Summary?.TotalCost ?? 0m;
+                    SummaryProfitMargin = revenueTrend.Summary?.ProfitMargin ?? 0m;
+                    ProfitGrowth = revenueTrend.ProfitGrowth;
+                    // profit growth text - show raw percent
+                    ProfitGrowthText = revenueTrend.ProfitGrowth != 0m ? $"{revenueTrend.ProfitGrowth:F2}%" : "0.00%";
+                    ProfitGrowthBrush = revenueTrend.ProfitGrowth > 0
+                        ? new SolidColorBrush(Colors.Green)
+                        : (revenueTrend.ProfitGrowth < 0 ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Transparent));
                 }
             }
             catch (Exception ex)
@@ -309,11 +435,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        [RelayCommand]
-        private async Task LoadCommissionAsync(ReportQueryDto query)
+        private async Task LoadCommissionAsync(TechHaven.Shared.DTOs.Reports.CommissionQueryDto query)
         {
             try
             {
+                // update title to show month/year used for the commission query
+                CommissionTitle = $"Bảng hoa hồng nhân viên T{query.Month}/{query.Year}";
+
                 var data = await _reportService.GetCommissionReportAsync(query);
                 CommissionData.Clear();
                 foreach (var item in data)
@@ -351,14 +479,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _ = LoadReportsAsync();
         }
 
-        partial void OnSelectedPeriodTypeChanged(string value)
-        {
-            _ = LoadReportsAsync();
-        }
-
+        // Do not auto-load when period type or selected product changes; require user to click Search
+        partial void OnSelectedPeriodTypeChanged(string value) { }
         partial void OnSelectedProductChanged(ProductSummaryDto value)
         {
-            _ = LoadReportsAsync();
+            OnPropertyChanged(nameof(IsProductSelected));
+            OnPropertyChanged(nameof(IsProductNotSelected));
         }
 
         partial void OnStartDateChanged(DateTimeOffset value)

@@ -62,6 +62,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Navigate to ShellWindow
             var shellWindow = new ShellWindow();
+            App.MainWindow = shellWindow;
             shellWindow.Activate();
 
             // Close login window
