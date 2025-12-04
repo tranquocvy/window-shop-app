@@ -16,6 +16,8 @@ using Microsoft.UI.Xaml.Media;
 // LiveCharts imports for chart series
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.Measure;
+using LiveChartsCore.Kernel.Sketches;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -55,6 +57,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private ProductSummaryDto _selectedProduct;
 
+        public bool IsProductSelected => SelectedProduct != null && SelectedProduct.ProductId > 0;
+        public bool IsProductNotSelected => !IsProductSelected;
+
         [ObservableProperty]
         private string _selectedPeriodType = "Ngày"; // Default: Daily period
 
@@ -79,6 +84,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             get => _chartSeries;
             set => SetProperty(ref _chartSeries, value);
+        }
+
+        // Product chart related
+        public ProductSalesTrendDto SelectedProductDetail { get; } = new ProductSalesTrendDto();
+        public ObservableCollection<string> ProductChartLabels { get; } = new();
+        public ObservableCollection<double> ProductQuantityValues { get; } = new();
+
+        [ObservableProperty]
+        private string _productStockText = "—";
+
+        [ObservableProperty]
+        private string _productTotalSoldText = "0 cái";
+
+        [ObservableProperty]
+        private decimal _productTotalRevenueValue;
+
+        private IEnumerable<ISeries> _productChartSeries = Array.Empty<ISeries>();
+        public IEnumerable<ISeries> ProductChartSeries
+        {
+            get => _productChartSeries;
+            set => SetProperty(ref _productChartSeries, value);
+        }
+
+        private ICartesianAxis[] _productXAxes = Array.Empty<ICartesianAxis>();
+        public ICartesianAxis[] ProductXAxes
+        {
+            get => _productXAxes;
+            set => SetProperty(ref _productXAxes, value);
         }
 
         [ObservableProperty]
@@ -247,6 +280,53 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     await LoadCommissionAsync(commissionQuery);
                     return;
                 }
+                
+                // If product chart visible, and a product is selected, fetch product detail and prepare line chart
+                if (IsProductChartVisible)
+                {
+                    if (SelectedProduct == null || SelectedProduct.ProductId <= 0)
+                    {
+                        // clear chart
+                        ProductChartLabels.Clear();
+                        ProductQuantityValues.Clear();
+                        ProductChartSeries = Array.Empty<ISeries>();
+                        ProductXAxes = Array.Empty<ICartesianAxis>();
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var prodQuery = new ReportQueryDto { StartDate = queryStart, EndDate = queryEnd, PeriodType = MapPeriodType(SelectedPeriodType) };
+                            var detail = await _reportService.GetProductDetailAsync(SelectedProduct.ProductId, prodQuery);
+
+                            ProductChartLabels.Clear();
+                            ProductQuantityValues.Clear();
+                            SelectedProductDetail.DataPoints.Clear();
+
+                            foreach (var dp in (detail?.DataPoints ?? new List<ProductSalesDataPointDto>()).OrderBy(d => d.Period))
+                            {
+                                SelectedProductDetail.DataPoints.Add(dp);
+                                ProductChartLabels.Add(dp.Period);
+                                ProductQuantityValues.Add(dp.QuantitySold);
+                            }
+
+                            // populate summary fields from product detail
+                            ProductTotalSoldText = $"{detail.TotalQuantitySold} cái";
+                            ProductTotalRevenueValue = detail.TotalRevenue;
+                            // stock not available in report DTO; keep placeholder
+                            ProductStockText = "—";
+
+                            ProductChartSeries = new ISeries[] { new LineSeries<double> { Values = ProductQuantityValues, Name = "Số lượng" } };
+                            ProductXAxes = new ICartesianAxis[] { new Axis { Labels = ProductChartLabels } };
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Error loading product detail: {ex.Message}");
+                            ProductChartSeries = Array.Empty<ISeries>();
+                            ProductXAxes = Array.Empty<ICartesianAxis>();
+                        }
+                    }
+                }
 
                 // Load both reports
                 var productSalesTask = _reportService.GetProductSalesReportAsync(query);
@@ -386,7 +466,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         // Do not auto-load when period type or selected product changes; require user to click Search
         partial void OnSelectedPeriodTypeChanged(string value) { }
-        partial void OnSelectedProductChanged(ProductSummaryDto value) { }
+        partial void OnSelectedProductChanged(ProductSummaryDto value)
+        {
+            OnPropertyChanged(nameof(IsProductSelected));
+            OnPropertyChanged(nameof(IsProductNotSelected));
+        }
 
         partial void OnStartDateChanged(DateTimeOffset value)
         {

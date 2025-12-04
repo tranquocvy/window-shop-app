@@ -103,5 +103,20 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                 return new List<CommissionReportDto>();
             }
         }
+
+        public async Task<ProductSalesTrendDto> GetProductDetailAsync(int productId, ReportQueryDto query)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/products/{productId}?StartDate={query.StartDate:yyyy-MM-dd}&EndDate={query.EndDate:yyyy-MM-dd}&PeriodType={(int)query.PeriodType}";
+                var data = await GetWrappedAsync<ProductSalesTrendDto>(url);
+                return data ?? new ProductSalesTrendDto();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return new ProductSalesTrendDto();
+            }
+        }
     }
 }

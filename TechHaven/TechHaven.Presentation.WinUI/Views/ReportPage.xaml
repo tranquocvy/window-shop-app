@@ -207,19 +207,23 @@
                         FontWeight="SemiBold"/>
             </StackPanel>
 
-            <!-- Product selector moved to far right next to tabs area -->
-            <Button Grid.Column="4" Margin="12,0,0,0" Width="300" Height="32" HorizontalAlignment="Right" Visibility="{x:Bind ViewModel.IsProductChartVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
-                    Click="OpenProductPicker_Click"
-                    HorizontalContentAlignment="Stretch"
-                    Padding="12,4"
-                    CornerRadius="8"
-                    BorderBrush="{StaticResource TH.BorderBrush}"
-                    BorderThickness="1"
-                    Background="{StaticResource TH.CardBackground}">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Spacing="8">
-                    <TextBlock Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay, TargetNullValue='Chọn sản phẩm...'}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Width="240" />
-                </StackPanel>
-            </Button>
+            <!-- Product selector moved to far right next to tabs area; now includes label -->
+            <StackPanel Grid.Column="4" Margin="12,0,0,0" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Visibility="{x:Bind ViewModel.IsProductChartVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="Sản phẩm:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" FontWeight="SemiBold" Margin="0,0,6,0" />
+
+                <Button Width="300" Height="32" HorizontalAlignment="Right"
+                        Click="OpenProductPicker_Click"
+                        HorizontalContentAlignment="Stretch"
+                        Padding="12,4"
+                        CornerRadius="8"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        Background="{StaticResource TH.CardBackground}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Spacing="8">
+                        <TextBlock Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay, TargetNullValue='Chọn sản phẩm'}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Width="240" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- Chart Area (conditional, admin only) -->
@@ -273,7 +277,7 @@
                                                 <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,8" />
 
                                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Tồn kho:" FontWeight="SemiBold" Foreground="{StaticResource TH.TextSecondary}" />
-                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="100 cái" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,0" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.ProductStockText, Mode=OneWay}" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,0" />
                                             </Grid>
 
                                             <!-- Right: Total sold + revenue in two rows, label and value in same row -->
@@ -288,18 +292,29 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Tổng bán:" FontWeight="SemiBold" Foreground="{StaticResource TH.TextSecondary}" />
-                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="25 cái" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,8" />
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.ProductTotalSoldText, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,8" />
 
                                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Tổng thu về:" FontWeight="SemiBold" Foreground="{StaticResource TH.TextSecondary}" />
-                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="625.000.000 đ" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,0" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.ProductTotalRevenueValue, Mode=OneWay, Converter={StaticResource CurrencyConverter}}" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" Margin="8,0,0,0" />
                                             </Grid>
                                         </Grid>
                                      </Border>
 
-                                    <!-- Chart placeholder -->
+                                    <!-- Product chart: show prompt when no product selected; show chart when selected -->
                                     <Border Grid.Row="1" Background="{StaticResource TH.Layer1Background}" CornerRadius="8" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1" MinHeight="240">
-                                        <Grid>
-                                            <TextBlock Text="Biểu đồ Sản phẩm" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}"/>
+                                        <Grid Padding="12">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay, TargetNullValue='Chưa chọn sản phẩm'}" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" Margin="0,0,0,8" />
+
+                                            <Grid Grid.Row="1">
+                                                <TextBlock Text="Vui lòng chọn sản phẩm để hiển thị biểu đồ" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" Visibility="{x:Bind ViewModel.IsProductNotSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                                                <lvc:CartesianChart Series="{x:Bind ViewModel.ProductChartSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.ProductXAxes, Mode=OneWay}" LegendPosition="Top" Visibility="{x:Bind ViewModel.IsProductSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                            </Grid>
                                         </Grid>
                                     </Border>
                                 </Grid>

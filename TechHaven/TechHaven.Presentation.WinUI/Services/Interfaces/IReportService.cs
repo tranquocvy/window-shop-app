@@ -26,6 +26,11 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         /// Get commission report grouped by user (admin only)
         /// </summary>
         Task<List<CommissionReportDto>> GetCommissionReportAsync(CommissionQueryDto query);
+
+        /// <summary>
+        /// Get single product detail for product chart
+        /// </summary>
+        Task<ProductSalesTrendDto> GetProductDetailAsync(int productId, ReportQueryDto query);
     }
 
     public class ProductSummaryDto
