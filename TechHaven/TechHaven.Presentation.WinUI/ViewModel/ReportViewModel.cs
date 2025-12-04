@@ -69,6 +69,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public ObservableCollection<ProductSalesTrendDto> ProductSalesData { get; } = new();
         public ObservableCollection<SalesReportDto> RevenueData { get; } = new();
 
+        // New collections for chart binding: labels and two series (revenue, profit)
+        public ObservableCollection<string> ChartLabels { get; } = new();
+        public ObservableCollection<double> RevenueValues { get; } = new();
+        public ObservableCollection<double> ProfitValues { get; } = new();
+
         [ObservableProperty]
         private bool _isLoading;
 
@@ -144,9 +149,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             // IsAdmin kept true for both sellers and admins so both can see main report UI
             IsAdmin = IsSeller || IsFullAdmin;
-
-            // set placeholder product so the UI shows prompt before selection
-            SelectedProduct = new ProductSummaryDto { ProductId = 0, ProductName = "Chọn sản phẩm..." };
 
             _ = LoadProductsAsync();
         }
@@ -285,9 +287,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 if (revenueTrend != null)
                 {
                     RevenueData.Clear();
+
+                    // Clear chart series/labels before populating
+                    ChartLabels.Clear();
+                    RevenueValues.Clear();
+                    ProfitValues.Clear();
+
                     foreach (var item in revenueTrend.DataPoints ?? new List<SalesReportDto>())
                     {
                         RevenueData.Add(item);
+
+                        // period used as X axis label
+                        ChartLabels.Add(item.Period);
+
+                        // series values for chart (cast to double for most chart controls)
+                        RevenueValues.Add((double)item.TotalRevenue);
+                        ProfitValues.Add((double)item.Profit);
                     }
 
                     // compute summary values from trend summary

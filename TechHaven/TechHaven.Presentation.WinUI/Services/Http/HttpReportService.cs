@@ -42,7 +42,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         {
             try
             {
-                var url = $"{BaseUrl}/trend?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}&periodType={query.PeriodType}";
+                var url = $"{BaseUrl}/sales?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}&periodType={query.PeriodType}";
                 var response = await _httpClient.GetFromJsonAsync<SalesTrendDto>(url);
                 return response ?? new SalesTrendDto();
             }
