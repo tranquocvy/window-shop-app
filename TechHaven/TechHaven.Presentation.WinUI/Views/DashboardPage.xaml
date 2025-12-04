@@ -119,17 +119,15 @@
                 <!-- Header for columns -->
                 <Grid Margin="0,0,0,8" Padding="8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="120" /> <!-- OrderId -->
-                        <ColumnDefinition Width="2*" />   <!-- CustomerName -->
-                        <ColumnDefinition Width="160" /> <!-- OrderDate -->
-                        <ColumnDefinition Width="140" /> <!-- TotalAmount -->
-                        <ColumnDefinition Width="100" /> <!-- Status -->
+                        <ColumnDefinition Width="25*" />   <!-- CustomerName -->
+                        <ColumnDefinition Width="25*" /> <!-- OrderDate -->
+                        <ColumnDefinition Width="25*" /> <!-- TotalAmount -->
+                        <ColumnDefinition Width="25*" /> <!-- Status -->
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="OrderId" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="1" Text="CustomerName" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="2" Text="OrderDate" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="3" Text="TotalAmount" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                    <TextBlock Grid.Column="4" Text="Status" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Column="0" Text="CustomerName" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="OrderDate" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="2" Text="TotalAmount" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="Status" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
                 </Grid>
 
                 <ListView ItemsSource="{Binding RecentOrders}" VerticalAlignment="Stretch" Foreground="{StaticResource TH.TextPrimary}" Padding="0" ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
@@ -137,17 +135,15 @@
                         <DataTemplate x:DataType="dashboard:RecentOrderDto">
                             <Grid Padding="8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
-                                    <ColumnDefinition Width="2*" />
-                                    <ColumnDefinition Width="160" />
-                                    <ColumnDefinition Width="140" />
-                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="25*" />
+                                    <ColumnDefinition Width="25*" />
+                                    <ColumnDefinition Width="25*" />
+                                    <ColumnDefinition Width="25*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding OrderId}" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" />
-                                <TextBlock Grid.Column="1" Text="{Binding CustomerName}" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="2" Text="{Binding OrderDate, Converter={StaticResource DateTimeConverter}, ConverterParameter='g'}" Foreground="{StaticResource TH.TextPrimary}" />
-                                <TextBlock Grid.Column="3" Text="{Binding TotalAmount, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" Foreground="{StaticResource TH.TextPrimary}" />
-                                <TextBlock Grid.Column="4" Text="{Binding Status}" HorizontalAlignment="Center" Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="0" Text="{Binding CustomerName}" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1" Text="{Binding OrderDate, Converter={StaticResource DateTimeConverter}, ConverterParameter='g'}" Foreground="{StaticResource TH.TextPrimary}" />
+                                <TextBlock Grid.Column="2" Text="{Binding TotalAmount, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" />
+                                <TextBlock Grid.Column="3" Text="{Binding Status}" HorizontalAlignment="Center" Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" FontWeight="SemiBold" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
