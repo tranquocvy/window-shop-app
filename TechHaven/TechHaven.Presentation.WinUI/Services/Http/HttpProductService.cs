@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
@@ -99,19 +100,39 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                 streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
                 content.Add(streamContent, "file", fileName);
 
+                // Gửi lên server
                 var response = await _httpClient.PostAsync("api/Image/upload", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    string imageUrl = await response.Content.ReadAsStringAsync();
+                    // 1. Đọc chuỗi JSON trả về
+                    string jsonString = await response.Content.ReadAsStringAsync();
 
-                    // SỬA Ở ĐÂY: Khởi tạo thủ công
-                    return new ResponseWrapper<string>
+                    // 2. Bóc tách JSON để lấy link ảnh
+                    // Cấu trúc JSON: { "data": { "imageUrl": "..." } }
+                    var jsonNode = JsonNode.Parse(jsonString);
+
+                    // Lấy giá trị của imageUrl, chuyển thành string
+                    string? imageUrl = jsonNode?["data"]?["imageUrl"]?.ToString();
+
+                    // 3. Trả về kết quả
+                    if (!string.IsNullOrEmpty(imageUrl))
                     {
-                        Success = true,
-                        Data = imageUrl,
-                        Message = "Upload thành công"
-                    };
+                        return new ResponseWrapper<string>
+                        {
+                            Success = true,
+                            Data = imageUrl, // Lúc này Data chỉ còn là "https://..." sạch đẹp
+                            Message = "Upload thành công"
+                        };
+                    }
+                    else
+                    {
+                        return new ResponseWrapper<string>
+                        {
+                            Success = false,
+                            Message = "Không tìm thấy link ảnh trong phản hồi từ server"
+                        };
+                    }
                 }
                 else
                 {

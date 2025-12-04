@@ -4,12 +4,13 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
-using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Http;
+using System.Text.Json;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Products;
-using Windows.Storage.Pickers;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 namespace TechHaven.Presentation.WinUI.Views.Controls
@@ -133,7 +134,12 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             if (!isValid)
                 return null;
 
+            // Logic: Nếu vừa upload ảnh mới (SelectedImagePath có giá trị) thì dùng nó.
+            // Nếu không, dùng lại ảnh cũ (_originalImageUrl).
             string? finalImageUrl = !string.IsNullOrEmpty(SelectedImagePath) ? SelectedImagePath : _originalImageUrl;
+
+            var jsonRes = JsonSerializer.Serialize(finalImageUrl, new JsonSerializerOptions { WriteIndented = true });
+            System.Diagnostics.Debug.WriteLine($"[Link ANh------------------]:\n{jsonRes}");
 
             // ========== BUILD DTO ==========
             return new ProductUpsertRequest
@@ -154,8 +160,9 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
                 ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
 
-                //ImageUrl = finalImageUrl,
-                ImageUrl = "https://cdn2.fptshop.com.vn/unsafe/828x0/filters:format(webp):quality(75)/2022_10_28_638025679601008898_iPhone%2014%20(13).jpg",
+                // Bỏ dòng code cứng, dùng biến finalImageUrl đã tính toán ở trên
+                ImageUrl = finalImageUrl,
+
                 IsDraft = false
             };
         }
