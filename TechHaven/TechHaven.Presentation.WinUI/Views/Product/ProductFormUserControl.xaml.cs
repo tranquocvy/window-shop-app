@@ -2,20 +2,32 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.Json;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Products;
-using Windows.Storage.Pickers;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 namespace TechHaven.Presentation.WinUI.Views.Controls
 {
     public sealed partial class ProductFormUserControl : UserControl
     {
+        private readonly IProductService _productService;
         private string? SelectedImagePath = null;
         private string? _originalImageUrl = null;
+        public string? OriginalImageUrl => _originalImageUrl;
+
         public ProductFormUserControl()
         {
             this.InitializeComponent();
+
+            // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
+            _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
         }
 
 
@@ -32,7 +44,19 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             _originalImageUrl = product.ImageUrl;
 
             ProductNameBox.Text = product.ProductName ?? string.Empty;
-            BrandNameBox.Text = product.BrandName ?? string.Empty;
+            BrandComboBox.SelectedItem = null;
+            if (!string.IsNullOrEmpty(product.BrandName))
+            {
+                // Duyệt qua các item trong ComboBox để tìm item trùng tên
+                foreach (ComboBoxItem item in BrandComboBox.Items)
+                {
+                    if (item.Content?.ToString() == product.BrandName)
+                    {
+                        BrandComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
             DescriptionBox.Text = product.Description ?? string.Empty;
 
             CostPriceBox.Value = product.CostPrice > 0 ? (double)product.CostPrice : double.NaN;
@@ -75,7 +99,11 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             bool isValid = true;
 
             string rawName = ProductNameBox.Text?.Trim();
-            string brandName = BrandNameBox.Text?.Trim();
+            string? brandName = null;
+            if (BrandComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                brandName = selectedItem.Content.ToString();
+            }
             double sellPrice = GetDoubleSafe(SellPriceBox.Value);
             double stockQty = GetDoubleSafe(StockQuantityBox.Value);
 
@@ -107,13 +135,18 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             if (!isValid)
                 return null;
 
+            // Logic: Nếu vừa upload ảnh mới (SelectedImagePath có giá trị) thì dùng nó.
+            // Nếu không, dùng lại ảnh cũ (_originalImageUrl).
             string? finalImageUrl = !string.IsNullOrEmpty(SelectedImagePath) ? SelectedImagePath : _originalImageUrl;
+
+            var jsonRes = JsonSerializer.Serialize(finalImageUrl, new JsonSerializerOptions { WriteIndented = true });
+            System.Diagnostics.Debug.WriteLine($"[Link ANh------------------]:\n{jsonRes}");
 
             // ========== BUILD DTO ==========
             return new ProductUpsertRequest
             {
                 ProductName = rawName,
-                BrandName = GetStringOrNull(BrandNameBox.Text),
+                BrandName = brandName,
 
                 CostPrice = IsValidNumber(CostPriceBox.Value) ? (decimal)CostPriceBox.Value : 0m,
                 SellPrice = (decimal)sellPrice,
@@ -128,8 +161,9 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
                 ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
 
-                //ImageUrl = finalImageUrl,
-                ImageUrl = "https://cdn2.fptshop.com.vn/unsafe/828x0/filters:format(webp):quality(75)/2022_10_28_638025679601008898_iPhone%2014%20(13).jpg",
+                // Bỏ dòng code cứng, dùng biến finalImageUrl đã tính toán ở trên
+                ImageUrl = finalImageUrl,
+
                 IsDraft = false
             };
         }
@@ -141,6 +175,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private void ClearErrors()
         {
             ProductNameErrorText.Visibility = Visibility.Collapsed;
+            BrandNameErrorText.Visibility = Visibility.Collapsed;
             SellPriceErrorText.Visibility = Visibility.Collapsed;
             StockQuantityErrorText.Visibility = Visibility.Collapsed;
         }
@@ -149,6 +184,14 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         {
             if (sender == ProductNameBox)
                 ProductNameErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnBrandSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (BrandComboBox.SelectedItem != null)
+            {
+                BrandNameErrorText.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void OnNumberChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
@@ -195,30 +238,79 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// </summary>
         private async void OnSelectImageClick(object sender, RoutedEventArgs e)
         {
+            // 1. Setup FileOpenPicker
             var picker = new FileOpenPicker();
             picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
             picker.FileTypeFilter.Add(".png");
             picker.FileTypeFilter.Add(".jpg");
             picker.FileTypeFilter.Add(".jpeg");
 
-            // WinUI 3 Desktop: dùng HWND từ cửa sổ hiện tại
+            // WinUI 3 Desktop boilerplate (Lấy HWND)
             var window = App.MainWindow;
             var hwnd = WindowNative.GetWindowHandle(window);
             InitializeWithWindow.Initialize(picker, hwnd);
 
+            // 2. Chọn file
             var file = await picker.PickSingleFileAsync();
             if (file != null)
             {
+                // --- BƯỚC A: Hiển thị Preview ngay lập tức (UX) ---
                 var bitmap = new BitmapImage();
+                // Lưu ý: Mở stream WinRT để hiển thị ảnh
                 using (var stream = await file.OpenAsync(FileAccessMode.Read))
                 {
                     await bitmap.SetSourceAsync(stream);
                 }
-
                 ProductImage.Source = bitmap;
 
-                // Lưu đường dẫn ảnh mới để GetFormData dùng
-                SelectedImagePath = file.Path;
+                // --- BƯỚC B: Upload lên Server qua Service ---
+                try
+                {
+                    // (Tuỳ chọn) Bật loading indicator tại đây nếu có
+                    // LoadingRing.IsActive = true; 
+                    // ButtonSelectImage.IsEnabled = false;
+
+                    // Use WinRT IRandomAccessStream then convert to System.IO.Stream
+                    var randomAccess = await file.OpenAsync(FileAccessMode.Read);
+                    using (randomAccess)
+                    using (var readStream = randomAccess.AsStreamForRead())
+                    {
+                        // Gọi Service đã tách biệt
+                        var result = await _productService.UploadImageAsync(
+                            readStream,
+                            file.Name,
+                            file.ContentType // StorageFile tự động nhận diện ContentType (image/png, etc.)
+                        );
+
+                        if (result.Success)
+                        {
+                            // Lấy URL từ Data gán vào biến lưu trữ
+                            SelectedImagePath = result.Data;
+
+                            // (Debug) Console.WriteLine($"Upload thành công: {result.Data}");
+                        }
+                        else
+                        {
+                            // Upload thất bại -> Thông báo lỗi và reset ảnh
+                            await ShowErrorAsync("Lỗi Upload", result.Message);
+
+                            ProductImage.Source = null;
+                            SelectedImagePath = null;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await ShowErrorAsync("Lỗi ngoại lệ", ex.Message);
+                    ProductImage.Source = null;
+                    SelectedImagePath = null;
+                }
+                finally
+                {
+                    // (Tuỳ chọn) Tắt loading
+                    // LoadingRing.IsActive = false;
+                    // ButtonSelectImage.IsEnabled = true;
+                }
             }
         }
     }

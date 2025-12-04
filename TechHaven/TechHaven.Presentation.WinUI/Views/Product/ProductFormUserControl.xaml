@@ -37,9 +37,18 @@
 
             <!-- Thương hiệu -->
             <TextBlock Text="Thương hiệu" FontWeight="SemiBold"/>
-            <TextBox x:Name="BrandNameBox" PlaceholderText="Nhập thương hiệu..." />
+
+            <ComboBox x:Name="BrandComboBox" 
+                      PlaceholderText="Chọn thương hiệu..."
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="OnBrandSelectionChanged">
+                <ComboBoxItem Content="Apple"/>
+                <ComboBoxItem Content="Samsung"/>
+                <ComboBoxItem Content="Xiaomi"/>
+            </ComboBox>
+
             <TextBlock x:Name="BrandNameErrorText"
-                       Text="Phải nhập tên thương hiệu."
+                       Text="Phải chọn tên thương hiệu."
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
 
