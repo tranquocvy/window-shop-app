@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:dashboard="using:TechHaven.Shared.DTOs.Dashboard"
     xmlns:conv="using:TechHaven.Presentation.WinUI.Converters"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -233,27 +234,12 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Text="Monthly Revenue" Style="{StaticResource SectionTitle}" />
-                    <Border Grid.Row="1" x:Name="MonthlyChartBorder" Background="{StaticResource TH.Layer1Background}" CornerRadius="12" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1" VerticalAlignment="Stretch" PointerMoved="MonthlyChartBorder_PointerMoved" PointerExited="MonthlyChartBorder_PointerExited">
-                        <Grid>
-                            <Path x:Name="MonthlyRevenuePath"
-                                  Data="{Binding MonthlyRevenueGeometry}"
-                                  Stroke="{StaticResource TH.PrimaryBrush}"
-                                  StrokeThickness="2"
-                                  Stretch="None"
-                                  StrokeLineJoin="Round"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Stretch"/>
-
-                            <Canvas x:Name="MonthlyGridCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                        
-                             <Canvas x:Name="MonthlyXAxisCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="36" />
-
-                             <Canvas x:Name="MonthlyHoverCanvas" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                             </Canvas>
-                         </Grid>
-                     </Border>
+                    <lvc:CartesianChart Grid.Row="1" 
+                                       Series="{Binding Series}"
+                                       XAxes="{Binding XAxes}"
+                                       YAxes="{Binding YAxes}"
+                                       Background="{StaticResource TH.Layer1Background}"
+                                       CornerRadius="12"/>
                 </Grid>
             </Border>
 
@@ -505,7 +491,7 @@
                     </Grid>
                 </Border>
 
-                <!-- MonthlyRevenue - MOVED TO END -->
+                <!-- MonthlyRevenue -->
                 <Border Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -514,24 +500,12 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Text="Monthly Revenue" Style="{StaticResource SectionTitle}" />
-                        <Border Grid.Row="1" x:Name="MonthlyChartBorderTablet" Background="{StaticResource TH.Layer1Background}" CornerRadius="12" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1" SizeChanged="MonthlyChartBorderTablet_SizeChanged">
-                            <Grid>
-                                <Path x:Name="MonthlyRevenuePathTablet"
-                                      Data="{Binding TabletMonthlyRevenueGeometry}"
-                                      Stroke="{StaticResource TH.PrimaryBrush}"
-                                      StrokeThickness="2"
-                                      Stretch="None"
-                                      StrokeLineJoin="Round"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Stretch"/>
-
-                                <Canvas x:Name="MonthlyGridCanvasTablet" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-
-                                <Canvas x:Name="MonthlyXAxisCanvasTablet" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="36" />
-                            </Grid>
-                        </Border>
+                        <lvc:CartesianChart Grid.Row="1" 
+                                           Series="{Binding Series}"
+                                           XAxes="{Binding XAxes}"
+                                           YAxes="{Binding YAxes}"
+                                           Background="{StaticResource TH.Layer1Background}"
+                                           CornerRadius="12"/>
                     </Grid>
                 </Border>
             </StackPanel>
