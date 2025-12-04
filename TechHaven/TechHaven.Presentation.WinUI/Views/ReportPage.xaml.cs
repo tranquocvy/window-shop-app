@@ -232,8 +232,22 @@ namespace TechHaven.Presentation.WinUI.Views
             var searchBox = new TextBox { PlaceholderText = "Tìm sản phẩm...", Width = 420, HorizontalAlignment = HorizontalAlignment.Left };
             var listView = new ListView { MaxHeight = 360, Width = 420, IsItemClickEnabled = true };
 
-            // bind initial items (map ProductSummaryDto list)
-            listView.ItemsSource = ViewModel.Products;
+            // Ensure we have some initial products loaded so the picker shows suggestions immediately
+            if ((ViewModel.Products?.Count ?? 0) == 0)
+            {
+                try
+                {
+                    await ViewModel.LoadProductsCommand.ExecuteAsync(null);
+                }
+                catch
+                {
+                    // ignore load errors, fallback to empty list
+                }
+            }
+
+            // bind initial items - show first few as suggestions
+            var initial = ViewModel.Products?.Take(8).ToList() ?? new List<ProductSummaryDto>();
+            listView.ItemsSource = initial;
             listView.SelectionMode = ListViewSelectionMode.Single;
 
             // template
@@ -291,7 +305,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
             var dialog = new ContentDialog
             {
-                Title = "Chọn sản phẩm",
+                Title = "Nhập tên sản phẩm",
                 Content = stack,
                 XamlRoot = this.Content.XamlRoot,
                 PrimaryButtonText = "Chọn",
