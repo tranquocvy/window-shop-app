@@ -355,50 +355,53 @@
 
                                     <TextBlock Text="Bảng hoa hồng nhân viên" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TH.TextPrimary}" />
 
-                                    <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.CommissionData}" Margin="0,12,0,0">
+                                    <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.CommissionData}" Margin="0,12,0,0" Padding="0" HorizontalContentAlignment="Stretch">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="Padding" Value="0" />
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+
                                         <ListView.HeaderTemplate>
                                             <DataTemplate>
-                                                <Grid ColumnSpacing="8">
+                                                <Grid ColumnSpacing="8" Padding="8,6">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="60" />
-                                                        <ColumnDefinition Width="2*" />
+                                                        <ColumnDefinition Width="1.5*" />
+                                                        <ColumnDefinition Width="0.5*" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="0.5*" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
 
-                                                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="1" Text="Họ và Tên" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="2" Text="Vai trò" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="3" Text="Doanh số" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="4" Text="% HH" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="5" Text="Tiền HH" FontWeight="SemiBold" />
+                                                    <TextBlock Grid.Column="0" Text="Họ và Tên" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                                    <TextBlock Grid.Column="1" Text="Vai trò" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                                    <TextBlock Grid.Column="2" Text="Doanh số" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                                    <TextBlock Grid.Column="3" Text="% HH" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                                    <TextBlock Grid.Column="4" Text="Tiền HH" FontWeight="SemiBold" HorizontalAlignment="Left" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ListView.HeaderTemplate>
 
                                         <ListView.ItemTemplate>
                                             <DataTemplate x:DataType="reports:CommissionReportDto" xmlns:reports="using:TechHaven.Shared.DTOs.Reports">
-                                                <Grid ColumnSpacing="8">
+                                                <Grid ColumnSpacing="8" Padding="8,6">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="60" />
-                                                        <ColumnDefinition Width="2*" />
+                                                        <ColumnDefinition Width="1.5*" />
+                                                        <ColumnDefinition Width="0.5*" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="0.5*" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
 
-                                                    <TextBlock Grid.Column="0" Text="{x:Bind UserId, Mode=OneWay}" />
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind UserFullName, Mode=OneWay}" />
-                                                    <TextBlock Grid.Column="2" Text="{x:Bind RoleName, Mode=OneWay}" />
-                                                    <TextBlock Grid.Column="3" Text="{x:Bind TotalSales, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" />
-                                                    <TextBlock Grid.Column="4" HorizontalAlignment="Right">
+                                                    <TextBlock Grid.Column="0" Text="{x:Bind UserFullName, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" TextAlignment="Left" />
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind RoleName, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Left" />
+                                                    <TextBlock Grid.Column="2" Text="{x:Bind TotalSales, Converter={StaticResource CurrencyConverter}}" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Left" />
+                                                    <TextBlock Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Left">
                                                         <Run Text="{x:Bind CommissionRate}" />
                                                         <Run Text="%" />
                                                     </TextBlock>
-                                                    <TextBlock Grid.Column="5" Text="{x:Bind CommissionAmount, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" />
+                                                    <TextBlock Grid.Column="4" Text="{x:Bind CommissionAmount, Converter={StaticResource CurrencyConverter}}" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Left" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
