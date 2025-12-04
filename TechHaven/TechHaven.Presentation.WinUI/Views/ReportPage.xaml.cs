@@ -13,6 +13,10 @@ using TechHaven.Shared.DTOs.Products;
 using TechHaven.Shared.DTOs.Common;
 using System.Collections.Generic;
 using System;
+using System.Diagnostics;
+using LiveChartsCore.Measure;
+using System.Collections.Specialized;
+using LiveChartsCore.SkiaSharpView;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -29,6 +33,80 @@ namespace TechHaven.Presentation.WinUI.Views
             this.DataContext = ViewModel;
             _reportService = new HttpReportService(ApiClientFactory.GetHttpClient());
             _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+            this.Loaded += ReportPage_Loaded;
+
+            // subscribe to label changes so X axis updates when VM populates ChartLabels
+            ViewModel.ChartLabels.CollectionChanged += ChartLabels_CollectionChanged;
+        }
+
+        private void ChartLabels_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateChartLabels();
+        }
+
+        private async void ReportPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await ViewModel.LoadReportsCommand.ExecuteAsync(null);
+
+                // If still no datapoints, notify the user to check API/backend
+                if (ViewModel.RevenueData == null || ViewModel.RevenueData.Count == 0)
+                {
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Không có dữ liệu",
+                        Content = $"Không có dữ liệu báo cáo. Kiểm tra API đang chạy tại: {AppState.ApiBaseUri} và đảm bảo endpoint /api/Report/sales trả về dữ liệu.",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+
+                    var op = dialog.ShowAsync();
+                    var tcs = new TaskCompletionSource<ContentDialogResult>();
+                    op.Completed = (info, status) =>
+                    {
+                        try
+                        {
+                            var res = info.GetResults();
+                            tcs.TrySetResult(res);
+                        }
+                        catch (System.Exception ex)
+                        {
+                            tcs.TrySetException(ex);
+                        }
+                    };
+
+                    await tcs.Task;
+                }
+                else
+                {
+                    // ensure chart X axis is updated with period labels
+                    UpdateChartLabels();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ReportPage_Loaded error: {ex.Message}");
+            }
+        }
+
+        private void UpdateChartLabels()
+        {
+            try
+            {
+                if (RevenueChart == null) return;
+
+                var labels = ViewModel.ChartLabels?.ToList() ?? new List<string>();
+
+                RevenueChart.XAxes = new LiveChartsCore.SkiaSharpView.Axis[]
+                {
+                    new LiveChartsCore.SkiaSharpView.Axis { Labels = labels }
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"UpdateChartLabels error: {ex.Message}");
+            }
         }
 
         private async void ExportReport_Click(object sender, RoutedEventArgs e)

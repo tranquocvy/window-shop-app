@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Reports;
+using TechHaven.Shared.DTOs.Common;
 using CommissionQueryDto = TechHaven.Shared.DTOs.Reports.CommissionQueryDto;
 
 namespace TechHaven.Presentation.WinUI.Services.Http
@@ -19,6 +20,20 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
+        private async Task<T?> GetWrappedAsync<T>(string url) where T : class
+        {
+            try
+            {
+                var wrapper = await _httpClient.GetFromJsonAsync<ResponseWrapper<T>>(url);
+                return wrapper?.Data;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"HttpReportService.GetWrappedAsync error: {ex.Message}");
+                return default;
+            }
+        }
+
         public async Task<List<ProductSalesTrendDto>> GetProductSalesReportAsync(ReportQueryDto query)
         {
             try
@@ -28,8 +43,8 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                          $"endDate={query.EndDate:yyyy-MM-dd}&" +
                          $"periodType={query.PeriodType}";
 
-                var response = await _httpClient.GetFromJsonAsync<List<ProductSalesTrendDto>>(url);
-                return response ?? new List<ProductSalesTrendDto>();
+                var data = await GetWrappedAsync<List<ProductSalesTrendDto>>(url);
+                return data ?? new List<ProductSalesTrendDto>();
             }
             catch (Exception ex)
             {
@@ -42,9 +57,9 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         {
             try
             {
-                var url = $"{BaseUrl}/sales?startDate={query.StartDate:yyyy-MM-dd}&endDate={query.EndDate:yyyy-MM-dd}&periodType={query.PeriodType}";
-                var response = await _httpClient.GetFromJsonAsync<SalesTrendDto>(url);
-                return response ?? new SalesTrendDto();
+                var url = $"{BaseUrl}/sales?StartDate={query.StartDate:yyyy-MM-dd}&EndDate={query.EndDate:yyyy-MM-dd}&PeriodType={query.PeriodType}";
+                var data = await GetWrappedAsync<SalesTrendDto>(url);
+                return data ?? new SalesTrendDto();
             }
             catch (Exception ex)
             {
@@ -63,8 +78,8 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                     url += $"?SearchTerm={Uri.EscapeDataString(keyword)}";
                 }
 
-                var response = await _httpClient.GetFromJsonAsync<List<ProductSummaryDto>>(url);
-                return response ?? new List<ProductSummaryDto>();
+                var data = await GetWrappedAsync<List<ProductSummaryDto>>(url);
+                return data ?? new List<ProductSummaryDto>();
             }
             catch (Exception ex)
             {
@@ -79,8 +94,8 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             {
                 var url = $"{BaseUrl}/commission?month={query.Month}&year={query.Year}";
 
-                var response = await _httpClient.GetFromJsonAsync<List<CommissionReportDto>>(url);
-                return response ?? new List<CommissionReportDto>();
+                var data = await GetWrappedAsync<List<CommissionReportDto>>(url);
+                return data ?? new List<CommissionReportDto>();
             }
             catch (Exception ex)
             {

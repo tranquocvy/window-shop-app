@@ -10,6 +10,12 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Reports;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
+
+// LiveCharts imports for chart series
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -40,10 +46,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Commission report data (admin only)
         public ObservableCollection<CommissionReportDto> CommissionData { get; } = new();
 
-        // Years and Months for filtering
-        public ObservableCollection<int> Years { get; } = new();
-        public ObservableCollection<string> Months { get; } = new();
-
         [ObservableProperty]
         private string _selectedChartTab = "Sản Phẩm"; // Default: Product chart
 
@@ -51,19 +53,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private ProductSummaryDto _selectedProduct;
 
         [ObservableProperty]
-        private string _selectedPeriodType = "Năm";
+        private string _selectedPeriodType = "Ngày"; // Default: Daily period
 
         [ObservableProperty]
-        private DateTimeOffset _startDate = DateTimeOffset.Now; // Default: Hôm nay
+        private DateTimeOffset _startDate = DateTimeOffset.Now.AddDays(-6); // Default: last 7 days (inclusive)
 
         [ObservableProperty]
-        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: Hôm nay
-
-        [ObservableProperty]
-        private int _selectedYear;
-
-        [ObservableProperty]
-        private string _selectedMonth = "Tất cả"; // default to 'all'
+        private DateTimeOffset _endDate = DateTimeOffset.Now; // Default: today
 
         // Chart data for display
         public ObservableCollection<ProductSalesTrendDto> ProductSalesData { get; } = new();
@@ -73,6 +69,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public ObservableCollection<string> ChartLabels { get; } = new();
         public ObservableCollection<double> RevenueValues { get; } = new();
         public ObservableCollection<double> ProfitValues { get; } = new();
+
+        // LiveCharts series property for binding in XAML
+        private IEnumerable<ISeries> _chartSeries = Array.Empty<ISeries>();
+        public IEnumerable<ISeries> ChartSeries
+        {
+            get => _chartSeries;
+            set => SetProperty(ref _chartSeries, value);
+        }
 
         [ObservableProperty]
         private bool _isLoading;
@@ -134,12 +138,35 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _revenueGrowthText = string.Empty;
 
         [ObservableProperty]
+        private string _profitGrowthText = string.Empty;
+
+        [ObservableProperty]
+        private SolidColorBrush _revenueGrowthBrush = new SolidColorBrush(Colors.Transparent);
+
+        [ObservableProperty]
+        private SolidColorBrush _profitGrowthBrush = new SolidColorBrush(Colors.Transparent);
+
+        [ObservableProperty]
         private decimal _totalCommission;
+
+        [ObservableProperty]
+        private string _summaryPeriod = string.Empty;
+
+        [ObservableProperty]
+        private int _summaryTotalOrders;
+
+        [ObservableProperty]
+        private decimal _summaryTotalCost;
+
+        [ObservableProperty]
+        private decimal _summaryProfitMargin;
+
+        [ObservableProperty]
+        private decimal _profitGrowth;
 
         public ReportViewModel(IReportService reportService = null)
         {
             _reportService = reportService ?? CreateDefaultReportService();
-            InitializeYearMonth();
 
             // determine role from AppState.CurrentUser.RoleName
             var role = AppState.CurrentUser?.RoleName ?? string.Empty;
@@ -151,25 +178,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             IsAdmin = IsSeller || IsFullAdmin;
 
             _ = LoadProductsAsync();
-        }
-
-        private void InitializeYearMonth()
-        {
-            var currentYear = DateTime.Now.Year;
-            for (int y = currentYear - 4; y <= currentYear; y++)
-            {
-                Years.Add(y);
-            }
-
-            // "Tất cả" means 'All'
-            Months.Add("Tất cả");
-            for (int m = 1; m <= 12; m++)
-            {
-                Months.Add(m.ToString());
-            }
-
-            SelectedYear = currentYear;
-            SelectedMonth = "Tất cả"; // All months by default
         }
 
         private static IReportService CreateDefaultReportService()
@@ -214,24 +222,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 DateTime queryStart = StartDate.DateTime;
                 DateTime queryEnd = EndDate.DateTime;
 
-                // If year/month selector used, override dates accordingly
-                if (SelectedYear > 0)
-                {
-                    if (!string.IsNullOrWhiteSpace(SelectedMonth) && SelectedMonth != "Tất cả")
-                    {
-                        if (int.TryParse(SelectedMonth, out var month))
-                        {
-                            queryStart = new DateTime(SelectedYear, month, 1);
-                            queryEnd = queryStart.AddMonths(1).AddDays(-1);
-                        }
-                    }
-                    else
-                    {
-                        // whole year
-                        queryStart = new DateTime(SelectedYear, 1, 1);
-                        queryEnd = new DateTime(SelectedYear, 12, 31);
-                    }
-                }
+                // Filtering is based on StartDate/EndDate (set by UI)
 
                 var query = new ReportQueryDto
                 {
@@ -243,11 +234,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 // If commission tab selected and user is full admin, load commission data
                 if (IsCommissionVisible)
                 {
-                    // map to CommissionQueryDto (month/year)
+                    // map to CommissionQueryDto using the query start date (month/year)
                     var commissionQuery = new TechHaven.Shared.DTOs.Reports.CommissionQueryDto
                     {
-                        Month = !string.IsNullOrWhiteSpace(SelectedMonth) && SelectedMonth != "Tất cả" && int.TryParse(SelectedMonth, out var m) ? m : queryStart.Month,
-                        Year = SelectedYear > 0 ? SelectedYear : queryStart.Year
+                        Month = queryStart.Month,
+                        Year = queryStart.Year
                     };
 
                     await LoadCommissionAsync(commissionQuery);
@@ -305,21 +296,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                         ProfitValues.Add((double)item.Profit);
                     }
 
+                    // create LiveCharts series
+                    ChartSeries = new ISeries[]
+                    {
+                        new ColumnSeries<double> { Values = RevenueValues, Name = "Doanh thu" },
+                        new ColumnSeries<double> { Values = ProfitValues, Name = "Lợi nhuận" }
+                    };
+
                     // compute summary values from trend summary
                     TotalRevenue = revenueTrend.Summary?.TotalRevenue ?? 0m;
                     TotalProfit = revenueTrend.Summary?.Profit ?? 0m;
 
-                    // format growth e.g. "[^ 15.5% Growth]"
-                    RevenueGrowthText = revenueTrend.RevenueGrowth != 0m
-                        ? $"[^ {revenueTrend.RevenueGrowth:P1} Growth]"
-                        : "[^ 0.0% Growth]";
+                    // revenue growth text - API already returns percent value; show as-is with % sign
+                    RevenueGrowthText = revenueTrend.RevenueGrowth != 0m ? $"{revenueTrend.RevenueGrowth:F2}%" : "0.00%";
+                    RevenueGrowthBrush = revenueTrend.RevenueGrowth > 0
+                        ? new SolidColorBrush(Colors.Green)
+                        : (revenueTrend.RevenueGrowth < 0 ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Green));
 
-                    // if seller, compute simple metrics from summary
-                    if (IsSeller)
-                    {
-                        SellerOrderCount = revenueTrend.Summary?.TotalOrders ?? 0;
-                        SellerCommission = Math.Round((revenueTrend.Summary?.TotalRevenue ?? 0m) * 0.10m, 2);
-                    }
+                    // additional summary fields
+                    SummaryPeriod = revenueTrend.Summary?.Period ?? string.Empty;
+                    SummaryTotalOrders = revenueTrend.Summary?.TotalOrders ?? 0;
+                    SummaryTotalCost = revenueTrend.Summary?.TotalCost ?? 0m;
+                    SummaryProfitMargin = revenueTrend.Summary?.ProfitMargin ?? 0m;
+                    ProfitGrowth = revenueTrend.ProfitGrowth;
+                    // profit growth text - show raw percent
+                    ProfitGrowthText = revenueTrend.ProfitGrowth != 0m ? $"{revenueTrend.ProfitGrowth:F2}%" : "0.00%";
+                    ProfitGrowthBrush = revenueTrend.ProfitGrowth > 0
+                        ? new SolidColorBrush(Colors.Green)
+                        : (revenueTrend.ProfitGrowth < 0 ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Transparent));
                 }
             }
             catch (Exception ex)
@@ -374,15 +378,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _ = LoadReportsAsync();
         }
 
-        partial void OnSelectedPeriodTypeChanged(string value)
-        {
-            _ = LoadReportsAsync();
-        }
-
-        partial void OnSelectedProductChanged(ProductSummaryDto value)
-        {
-            _ = LoadReportsAsync();
-        }
+        // Do not auto-load when period type or selected product changes; require user to click Search
+        partial void OnSelectedPeriodTypeChanged(string value) { }
+        partial void OnSelectedProductChanged(ProductSummaryDto value) { }
 
         partial void OnStartDateChanged(DateTimeOffset value)
         {

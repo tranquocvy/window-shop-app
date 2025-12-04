@@ -8,6 +8,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
+    xmlns:lvcm="using:LiveChartsCore.Measure"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -318,26 +320,25 @@
                                         <Border Background="{StaticResource TH.CardBackground}" Padding="12" CornerRadius="8" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1">
                                             <StackPanel>
                                                 <TextBlock Text="TỔNG DOANH THU" FontWeight="SemiBold" Foreground="{StaticResource TH.TextSecondary}" />
-                                                <TextBlock Text="{x:Bind ViewModel.TotalRevenue, Converter={StaticResource CurrencyConverter}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" />
-                                                <TextBlock Text="{x:Bind ViewModel.RevenueGrowthText}" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" />
+                                                <TextBlock Text="{Binding TotalRevenue, Converter={StaticResource CurrencyConverter}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" />
+                                                <TextBlock Text="{Binding RevenueGrowthText}" FontSize="12" Foreground="{Binding RevenueGrowthBrush}" />
                                             </StackPanel>
-                                        </Border>
-
-                                        <Border Background="{StaticResource TH.CardBackground}" Padding="12" CornerRadius="8" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1">
-                                            <StackPanel>
+                                         </Border>
+ 
+                                         <Border Background="{StaticResource TH.CardBackground}" Padding="12" CornerRadius="8" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1">
+                                             <StackPanel>
                                                 <TextBlock Text="TỔNG LỢI NHUẬN" FontWeight="SemiBold" Foreground="{StaticResource TH.TextSecondary}" />
-                                                <TextBlock Text="{x:Bind ViewModel.TotalProfit, Converter={StaticResource CurrencyConverter}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" />
-                                                <TextBlock Text="{x:Bind ViewModel.RevenueGrowthText}" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" />
-                                            </StackPanel>
-                                        </Border>
+                                                <TextBlock Text="{Binding TotalProfit, Converter={StaticResource CurrencyConverter}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TH.TextPrimary}" />
+                                                <TextBlock Text="{Binding ProfitGrowthText}" FontSize="12" Foreground="{Binding ProfitGrowthBrush}" />
+                                             </StackPanel>
+                                         </Border>
                                     </StackPanel>
 
                                     <!-- Large placeholder for future chart drawing -->
                                     <Border Grid.Row="1" Background="{StaticResource TH.Layer1Background}" CornerRadius="8" BorderBrush="{StaticResource TH.BorderBrush}" BorderThickness="1" MinHeight="240" Margin="0,12,0,0">
-                                        <Grid>
-                                            <TextBlock Text="Biểu đồ doanh thu" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}"/>
-                                        </Grid>
-                                    </Border>
+                                        <!-- LiveCharts CartesianChart bound to ViewModel -->
+                                        <lvc:CartesianChart x:Name="RevenueChart" Series="{Binding ChartSeries}" LegendPosition="Top" />
+                                     </Border>
                                 </Grid>
                             </Border>
                         </Grid>
