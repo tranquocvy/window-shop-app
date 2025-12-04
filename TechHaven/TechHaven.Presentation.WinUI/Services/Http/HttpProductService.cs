@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     {
         private readonly HttpClient _httpClient;
         private const string BaseUrl = "api/Product";
+        private const string UploadUrl = "api/Image/upload";
 
         public HttpProductService(HttpClient httpClient)
         {
@@ -83,6 +86,51 @@ namespace TechHaven.Presentation.WinUI.Services.Http
 
             var url = string.IsNullOrEmpty(queryString) ? BaseUrl : $"{BaseUrl}?{queryString}";
             return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
+        }
+
+        public async Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType)
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                content.Add(new StringContent("Apple"), "folder");
+
+                var streamContent = new StreamContent(stream);
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                content.Add(streamContent, "file", fileName);
+
+                var response = await _httpClient.PostAsync("api/Image/upload", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string imageUrl = await response.Content.ReadAsStringAsync();
+
+                    // SỬA Ở ĐÂY: Khởi tạo thủ công
+                    return new ResponseWrapper<string>
+                    {
+                        Success = true,
+                        Data = imageUrl,
+                        Message = "Upload thành công"
+                    };
+                }
+                else
+                {
+                    return new ResponseWrapper<string>
+                    {
+                        Success = false,
+                        Message = $"Lỗi Server: {response.StatusCode}"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseWrapper<string>
+                {
+                    Success = false,
+                    Message = $"Lỗi kết nối: {ex.Message}",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
         }
 
     }

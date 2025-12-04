@@ -2,6 +2,11 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Shared.DTOs.Products;
 using Windows.Storage.Pickers;
 using Windows.Storage;
@@ -11,11 +16,16 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
 {
     public sealed partial class ProductFormUserControl : UserControl
     {
+        private readonly IProductService _productService;
         private string? SelectedImagePath = null;
         private string? _originalImageUrl = null;
+
         public ProductFormUserControl()
         {
             this.InitializeComponent();
+
+            // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
+            _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
         }
 
 
@@ -220,30 +230,79 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// </summary>
         private async void OnSelectImageClick(object sender, RoutedEventArgs e)
         {
+            // 1. Setup FileOpenPicker
             var picker = new FileOpenPicker();
             picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
             picker.FileTypeFilter.Add(".png");
             picker.FileTypeFilter.Add(".jpg");
             picker.FileTypeFilter.Add(".jpeg");
 
-            // WinUI 3 Desktop: dùng HWND từ cửa sổ hiện tại
+            // WinUI 3 Desktop boilerplate (Lấy HWND)
             var window = App.MainWindow;
             var hwnd = WindowNative.GetWindowHandle(window);
             InitializeWithWindow.Initialize(picker, hwnd);
 
+            // 2. Chọn file
             var file = await picker.PickSingleFileAsync();
             if (file != null)
             {
+                // --- BƯỚC A: Hiển thị Preview ngay lập tức (UX) ---
                 var bitmap = new BitmapImage();
+                // Lưu ý: Mở stream WinRT để hiển thị ảnh
                 using (var stream = await file.OpenAsync(FileAccessMode.Read))
                 {
                     await bitmap.SetSourceAsync(stream);
                 }
-
                 ProductImage.Source = bitmap;
 
-                // Lưu đường dẫn ảnh mới để GetFormData dùng
-                SelectedImagePath = file.Path;
+                // --- BƯỚC B: Upload lên Server qua Service ---
+                try
+                {
+                    // (Tuỳ chọn) Bật loading indicator tại đây nếu có
+                    // LoadingRing.IsActive = true; 
+                    // ButtonSelectImage.IsEnabled = false;
+
+                    // Use WinRT IRandomAccessStream then convert to System.IO.Stream
+                    var randomAccess = await file.OpenAsync(FileAccessMode.Read);
+                    using (randomAccess)
+                    using (var readStream = randomAccess.AsStreamForRead())
+                    {
+                        // Gọi Service đã tách biệt
+                        var result = await _productService.UploadImageAsync(
+                            readStream,
+                            file.Name,
+                            file.ContentType // StorageFile tự động nhận diện ContentType (image/png, etc.)
+                        );
+
+                        if (result.Success)
+                        {
+                            // Lấy URL từ Data gán vào biến lưu trữ
+                            SelectedImagePath = result.Data;
+
+                            // (Debug) Console.WriteLine($"Upload thành công: {result.Data}");
+                        }
+                        else
+                        {
+                            // Upload thất bại -> Thông báo lỗi và reset ảnh
+                            await ShowErrorAsync("Lỗi Upload", result.Message);
+
+                            ProductImage.Source = null;
+                            SelectedImagePath = null;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await ShowErrorAsync("Lỗi ngoại lệ", ex.Message);
+                    ProductImage.Source = null;
+                    SelectedImagePath = null;
+                }
+                finally
+                {
+                    // (Tuỳ chọn) Tắt loading
+                    // LoadingRing.IsActive = false;
+                    // ButtonSelectImage.IsEnabled = true;
+                }
             }
         }
     }
