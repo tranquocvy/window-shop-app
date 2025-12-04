@@ -19,6 +19,9 @@ public class ReportQueryDto
   /// Loại báo cáo: Daily, Weekly, Monthly, Yearly
   /// </summary>
   public ReportPeriodType PeriodType { get; set; } = ReportPeriodType.Daily;
+
+  public  int? UserId { get; set; }    
+
 }
 
 /// <summary>

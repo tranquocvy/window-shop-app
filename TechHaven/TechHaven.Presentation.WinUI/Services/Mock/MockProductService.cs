@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
+using System.IO;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -208,6 +209,33 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 Success = true,
                 Message = "Products queried successfully",
                 Data = paging
+            });
+        }
+
+        public Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType)
+        {
+            // Giả lập upload: Không làm gì cả, chỉ trả về thành công ngay lập tức
+            var response = new ResponseWrapper<string>
+            {
+                Success = true,
+                Message = "Mock upload successful",
+                // Trả về đại một đường dẫn giả, hoặc dùng chính tên file để hiện thị
+                Data = $"ms-appx:///Assets/{fileName}"
+            };
+
+            return Task.FromResult(response);
+        }
+
+        // File: Services/Mock/MockProductService.cs
+
+        public Task<ResponseWrapper<bool>> DeleteImageAsync(string imageUrl)
+        {
+            // Giả vờ xóa thành công
+            return Task.FromResult(new ResponseWrapper<bool>
+            {
+                Success = true,
+                Message = "Mock delete image success",
+                Data = true
             });
         }
 

@@ -413,27 +413,62 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return Task.FromResult(response);
         }
 
-        public Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequestDto dto)
+        public async Task<ResponseWrapper<OrderDto>> CreateOrderAsync(OrderUpsertRequestDto dto)
         {
-            var details = (dto.Items ?? Array.Empty<OrderUpsertItemDto>())
-                .Select(i => new OrderDetailDto
+            // Try to resolve real product and customer names using mock services
+            var productService = new MockProductService();
+            var customerService = new MockCustomerService();
+
+            var details = new List<OrderDetailDto>();
+            if (dto.Items != null)
+            {
+                foreach (var i in dto.Items)
                 {
-                    ProductId = i.ProductId,
-                    ProductName = $"Product {i.ProductId}", // Mock product name
-                    UnitPrice = i.UnitPrice,
-                    Quantity = i.Quantity,
-                    SubTotal = i.UnitPrice * i.Quantity
-                })
-                .ToList();
+                    string productName = $"Product {i.ProductId}";
+                    try
+                    {
+                        var prodResp = await productService.GetProductsByIdAsync(i.ProductId);
+                        if (prodResp?.Success == true && prodResp.Data != null)
+                            productName = prodResp.Data.ProductName;
+                    }
+                    catch { }
+
+                    details.Add(new OrderDetailDto
+                    {
+                        ProductId = i.ProductId,
+                        ProductName = productName,
+                        UnitPrice = i.UnitPrice,
+                        Quantity = i.Quantity,
+                        SubTotal = i.UnitPrice * i.Quantity
+                    });
+                }
+            }
 
             var subtotal = details.Sum(d => d.SubTotal);
             var total = subtotal - dto.Discount;
+
+            string customerName = "Khách lẻ";
+            if (dto.CustomerId.HasValue)
+            {
+                try
+                {
+                    var custResp = await customerService.GetCustomerByIdAsync(dto.CustomerId.Value);
+                    if (custResp?.Success == true && custResp.Data != null)
+                        customerName = custResp.Data.CustomerName;
+                    else
+                        customerName = $"Customer {dto.CustomerId.Value}";
+                }
+                catch
+                {
+                    customerName = $"Customer {dto.CustomerId.Value}";
+                }
+            }
 
             var order = new OrderDto
             {
                 OrderId = _nextOrderId++,
                 CustomerId = dto.CustomerId,
-                CustomerName = dto.CustomerId.HasValue ? $"Customer {dto.CustomerId}" : "Khách lẻ",
+                CustomerName = customerName,
                 UserId = 1,
                 UserFullName = "Nguyễn Khắc Vượng",
                 OrderDate = DateTime.Now,
@@ -453,7 +488,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 Message = "Order created successfully",
                 Data = order
             };
-            return Task.FromResult(response);
+            return response;
         }
 
         public Task<ResponseWrapper<bool>> DeleteOrderAsync(int id)

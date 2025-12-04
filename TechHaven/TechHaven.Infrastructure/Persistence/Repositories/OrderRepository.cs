@@ -318,7 +318,11 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         CancellationToken cancellationToken = default
     )
     {
-        var spec = new OrdersByProductAndDateRangeSpecification(productId, startDate, endDate);
+        // Ensure dates are in UTC
+        var startUtc = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
+        var endUtc = DateTime.SpecifyKind(endDate.Date.AddDays(1), DateTimeKind.Utc);
+        
+        var spec = new OrdersByProductAndDateRangeSpecification(productId, startUtc, endUtc);
 
         _logger.LogInformation
         (

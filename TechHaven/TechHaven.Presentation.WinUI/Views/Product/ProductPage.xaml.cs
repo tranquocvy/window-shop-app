@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views.Controls; 
 using TechHaven.Shared.DTOs.Products;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -86,6 +88,27 @@ namespace TechHaven.Presentation.WinUI.Views
                     }
                     else
                     {
+                        // 1. Lấy link ảnh gốc từ UserControl (Property bạn vừa tạo ở bước trước)
+                        string? oldImage = productForm.OriginalImageUrl;
+                        string? newImage = resultDto.ImageUrl;
+
+  
+
+                        // 2. So sánh: Nếu có ảnh cũ VÀ ảnh mới khác ảnh cũ -> Xóa ảnh cũ trên server
+                        if (!string.IsNullOrEmpty(oldImage) && oldImage != newImage)
+                        {
+                            try
+                            {
+                                // Khởi tạo Service để gọi API Delete (giống cách làm trong UserControl)
+                                var service = new HttpProductService(ApiClientFactory.GetHttpClient());
+                                await service.DeleteImageAsync(oldImage);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log lỗi nếu cần, nhưng không chặn luồng update
+                                System.Diagnostics.Debug.WriteLine($"Lỗi xóa ảnh cũ: {ex.Message}");
+                            }
+                        }
                         // Chế độ SỬA
                         await ViewModel.UpdateProductAsync(itemForEdit.Product.ProductId, resultDto);
                     }

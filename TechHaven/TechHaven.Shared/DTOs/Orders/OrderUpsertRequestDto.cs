@@ -2,8 +2,7 @@
 
 namespace TechHaven.Shared.DTOs.Orders;
 
-//TODO: Cân nhắc xóa kế thừa PagingRequest nếu không cần thiết vì nó chỉ dùng để truy vấn dữ liệu (GET) chứ ko phải POST/PUT trong file này
-public class OrderUpsertRequestDto : PagingRequest 
+public class OrderUpsertRequestDto
 {
     public int? CustomerId { get; set; }
 

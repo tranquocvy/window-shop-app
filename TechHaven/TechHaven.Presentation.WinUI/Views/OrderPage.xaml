@@ -37,6 +37,33 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
+
+        <!-- Customer item template used by the customer selector dialog -->
+        <DataTemplate x:Key="CustomerItemTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="160" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding PhoneNumber}" Grid.Column="1" HorizontalAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- Product item template used by the product selector dialog -->
+        <DataTemplate x:Key="ProductItemTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="80" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Product.ProductName}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Product.BrandName}" Grid.Column="1" HorizontalAlignment="Right" />
+                <TextBlock Text="{Binding Product.StockQuantity}" Grid.Column="2" HorizontalAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+
     </Page.Resources>
 
     <Grid Padding="24" RowSpacing="20">
@@ -68,7 +95,7 @@
             <!-- Search Box -->
             <TextBox
                 Grid.Column="0"
-                PlaceholderText="Tìm kiếm theo ID, khách hàng, sản phẩm..."
+                PlaceholderText="Tìm kiếm theo khách hàng"
                 VerticalContentAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Height="40"
@@ -154,7 +181,6 @@
                 <!-- Header -->
                 <Grid Grid.Row="1" 
                       Margin="0,0,0,8" 
-                      Background="{StaticResource TH.Layer1Background}" 
                       Padding="12,8"
                       CornerRadius="8">
                     <Grid.ColumnDefinitions>
