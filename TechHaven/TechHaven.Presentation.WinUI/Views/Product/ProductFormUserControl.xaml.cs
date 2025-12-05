@@ -2,6 +2,7 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
@@ -69,7 +70,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             ScreenSizeBox.Value = product.ScreenSize.HasValue ? (double)product.ScreenSize.Value : double.NaN;
             BatteryCapacityBox.Value = product.BatteryCapacity.HasValue ? (double)product.BatteryCapacity.Value : double.NaN;
 
-            ImageGalleryJsonBox.Text = product.ImageGalleryJson ?? string.Empty;
 
             // ---- Hiển thị ảnh trực tiếp ----
             if (!string.IsNullOrWhiteSpace(product.ImageUrl))
@@ -86,6 +86,35 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             else
             {
                 ProductImage.Source = null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(product.ImageGalleryJson))
+            {
+                try
+                {
+                    var gallery = JsonSerializer.Deserialize<List<string>>(product.ImageGalleryJson);
+
+                    if (gallery != null)
+                    {
+                        if (gallery.Count > 0)
+                            GalleryImg1.Source = new BitmapImage(new Uri(gallery[0]));
+                        if (gallery.Count > 1)
+                            GalleryImg2.Source = new BitmapImage(new Uri(gallery[1]));
+
+                         GalleryImg3.Source = new BitmapImage(new Uri(OriginalImageUrl));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Gallery Error] {ex.Message}");
+                }
+            }
+            else
+            {
+                // Không có gallery → reset ảnh
+                GalleryImg1.Source = null;
+                GalleryImg2.Source = null;
+                GalleryImg3.Source = null;
             }
         }
 
@@ -155,7 +184,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 Description = GetStringOrNull(DescriptionBox.Text),
                 Color = GetStringOrNull(ColorBox.Text),
                 Processor = GetStringOrNull(ProcessorBox.Text),
-                ImageGalleryJson = GetStringOrNull(ImageGalleryJsonBox.Text),
 
                 StorageCapacity = IsValidNumber(StorageCapacityBox.Value) ? (int)StorageCapacityBox.Value : null,
                 BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,

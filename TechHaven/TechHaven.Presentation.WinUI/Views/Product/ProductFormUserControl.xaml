@@ -17,13 +17,21 @@
             </Border>
             <Button Content="Chọn ảnh..." Click="OnSelectImageClick" Width="120" Margin="0,4,0,0"/>
 
-            <!-- Image Gallery JSON -->
-            <TextBlock Text="Image Gallery (JSON)" FontWeight="SemiBold" />
-            <TextBox x:Name="ImageGalleryJsonBox" 
-                 TextWrapping="Wrap" 
-                 AcceptsReturn="True"
-                 Height="100"
-                 PlaceholderText='["img1.png","img2.png"]' />
+            <!-- Ảnh phụ (Gallery) -->
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                <Border Width="60" Height="60" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                    <Image x:Name="GalleryImg1" Stretch="UniformToFill"/>
+                </Border>
+
+                <Border Width="60" Height="60" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                    <Image x:Name="GalleryImg2" Stretch="UniformToFill"/>
+                </Border>
+
+                <Border Width="60" Height="60" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                    <Image x:Name="GalleryImg3" Stretch="UniformToFill"/>
+                </Border>
+            </StackPanel>
+
 
             <!-- Tên sản phẩm -->
             <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold"/>
