@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private readonly IProductService _productService;
         private string? SelectedImagePath = null;
         private string? _originalImageUrl = null;
+
+        private List<string?> _galleryUrls = new List<string?> { null, null, null };
         public string? OriginalImageUrl => _originalImageUrl;
 
         public ProductFormUserControl()
@@ -88,20 +91,29 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 ProductImage.Source = null;
             }
 
+            _galleryUrls = new List<string?> { null, null, null };
+            // Reset UI
+            GalleryImg1.Source = null;
+            GalleryImg2.Source = null;
+            GalleryImg3.Source = null;
+
             if (!string.IsNullOrWhiteSpace(product.ImageGalleryJson))
             {
                 try
                 {
-                    var gallery = JsonSerializer.Deserialize<List<string>>(product.ImageGalleryJson);
-
-                    if (gallery != null)
+                    var list = JsonSerializer.Deserialize<List<string>>(product.ImageGalleryJson);
+                    if (list != null)
                     {
-                        if (gallery.Count > 0)
-                            GalleryImg1.Source = new BitmapImage(new Uri(gallery[0]));
-                        if (gallery.Count > 1)
-                            GalleryImg2.Source = new BitmapImage(new Uri(gallery[1]));
+                        // Đổ dữ liệu từ JSON vào list nội bộ và UI
+                        for (int i = 0; i < list.Count && i < 3; i++)
+                        {
+                            _galleryUrls[i] = list[i]; // Lưu vào biến nhớ
 
-                         GalleryImg3.Source = new BitmapImage(new Uri(OriginalImageUrl));
+                            // Hiển thị lên UI
+                            if (i == 0) GalleryImg1.Source = new BitmapImage(new Uri(list[i]));
+                            if (i == 1) GalleryImg2.Source = new BitmapImage(new Uri(list[i]));
+                            if (i == 2) GalleryImg3.Source = new BitmapImage(new Uri(list[i]));
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -168,8 +180,12 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             // Nếu không, dùng lại ảnh cũ (_originalImageUrl).
             string? finalImageUrl = !string.IsNullOrEmpty(SelectedImagePath) ? SelectedImagePath : _originalImageUrl;
 
-            var jsonRes = JsonSerializer.Serialize(finalImageUrl, new JsonSerializerOptions { WriteIndented = true });
-            System.Diagnostics.Debug.WriteLine($"[Link ANh------------------]:\n{jsonRes}");
+            var cleanGallery = new List<string>();
+            foreach (var url in _galleryUrls)
+            {
+                if (!string.IsNullOrEmpty(url)) cleanGallery.Add(url);
+            }
+            string galleryJsonResult = JsonSerializer.Serialize(cleanGallery);
 
             // ========== BUILD DTO ==========
             return new ProductUpsertRequest
@@ -185,6 +201,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 Color = GetStringOrNull(ColorBox.Text),
                 Processor = GetStringOrNull(ProcessorBox.Text),
 
+                ImageGalleryJson = galleryJsonResult,
+
                 StorageCapacity = IsValidNumber(StorageCapacityBox.Value) ? (int)StorageCapacityBox.Value : null,
                 BatteryCapacity = IsValidNumber(BatteryCapacityBox.Value) ? (int)BatteryCapacityBox.Value : null,
                 ScreenSize = IsValidNumber(ScreenSizeBox.Value) ? (decimal)ScreenSizeBox.Value : null,
@@ -196,6 +214,67 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             };
         }
 
+        private async void OnGalleryImageTapped(object sender, TappedRoutedEventArgs e)
+        {
+            // 1. Xác định xem người dùng click vào ảnh số mấy (0, 1 hay 2)
+            if (sender is Border border && int.TryParse(border.Tag.ToString(), out int index))
+            {
+                // 2. Mở File Picker (Code giống hệt phần chọn ảnh chính)
+                var picker = new FileOpenPicker();
+                picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+                picker.FileTypeFilter.Add(".png");
+                picker.FileTypeFilter.Add(".jpg");
+                picker.FileTypeFilter.Add(".jpeg");
+
+                var window = App.MainWindow;
+                var hwnd = WindowNative.GetWindowHandle(window);
+                InitializeWithWindow.Initialize(picker, hwnd);
+
+                var file = await picker.PickSingleFileAsync();
+                if (file != null)
+                {
+                    // 3. Upload ảnh
+                    try
+                    {
+                        var randomAccess = await file.OpenAsync(FileAccessMode.Read);
+                        using (randomAccess)
+                        using (var readStream = randomAccess.AsStreamForRead())
+                        {
+                            var result = await _productService.UploadImageAsync(
+                                readStream,
+                                file.Name,
+                                file.ContentType
+                            );
+
+                            if (result.Success)
+                            {
+                                // 4. Upload thành công -> Cập nhật List dữ liệu
+                                string newUrl = result.Data;
+                                _galleryUrls[index] = newUrl;
+
+                                // 5. Cập nhật UI ngay lập tức
+                                var bitmap = new BitmapImage(new Uri(newUrl));
+                                if (index == 0) GalleryImg1.Source = bitmap;
+                                else if (index == 1) GalleryImg2.Source = bitmap;
+                                else if (index == 2) GalleryImg3.Source = bitmap;
+
+                                // (Tuỳ chọn) Cập nhật lại TextBox Json để người dùng thấy thay đổi
+                                var cleanList = new List<string>();
+                                foreach (var u in _galleryUrls) if (!string.IsNullOrEmpty(u)) cleanList.Add(u);
+                            }
+                            else
+                            {
+                                await ShowErrorAsync("Lỗi Upload", result.Message);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await ShowErrorAsync("Lỗi", ex.Message);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Ẩn tất cả thông báo lỗi
@@ -264,7 +343,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// <summary>
         /// Chọn ảnh từ file picker và hiển thị
         /// </summary>
-        private async void OnSelectImageClick(object sender, RoutedEventArgs e)
+        private async void OnSelectImageTapped(object sender, TappedRoutedEventArgs e)
         {
             // 1. Setup FileOpenPicker
             var picker = new FileOpenPicker();
@@ -273,7 +352,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             picker.FileTypeFilter.Add(".jpg");
             picker.FileTypeFilter.Add(".jpeg");
 
-            // WinUI 3 Desktop boilerplate (Lấy HWND)
+            // WinUI 3 Desktop boilerplate (Lấy HWND từ App.MainWindow)
+            // Đảm bảo bạn đã fix lỗi App.MainWindow ở các bước trước
             var window = App.MainWindow;
             var hwnd = WindowNative.GetWindowHandle(window);
             InitializeWithWindow.Initialize(picker, hwnd);
@@ -282,46 +362,36 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             var file = await picker.PickSingleFileAsync();
             if (file != null)
             {
-                // --- BƯỚC A: Hiển thị Preview ngay lập tức (UX) ---
+                // A. Hiển thị Preview ngay lập tức (UX)
                 var bitmap = new BitmapImage();
-                // Lưu ý: Mở stream WinRT để hiển thị ảnh
                 using (var stream = await file.OpenAsync(FileAccessMode.Read))
                 {
                     await bitmap.SetSourceAsync(stream);
                 }
                 ProductImage.Source = bitmap;
 
-                // --- BƯỚC B: Upload lên Server qua Service ---
+                // B. Upload lên Server qua Service
                 try
                 {
-                    // (Tuỳ chọn) Bật loading indicator tại đây nếu có
-                    // LoadingRing.IsActive = true; 
-                    // ButtonSelectImage.IsEnabled = false;
-
-                    // Use WinRT IRandomAccessStream then convert to System.IO.Stream
                     var randomAccess = await file.OpenAsync(FileAccessMode.Read);
                     using (randomAccess)
                     using (var readStream = randomAccess.AsStreamForRead())
                     {
-                        // Gọi Service đã tách biệt
                         var result = await _productService.UploadImageAsync(
                             readStream,
                             file.Name,
-                            file.ContentType // StorageFile tự động nhận diện ContentType (image/png, etc.)
+                            file.ContentType
                         );
 
                         if (result.Success)
                         {
                             // Lấy URL từ Data gán vào biến lưu trữ
                             SelectedImagePath = result.Data;
-
-                            // (Debug) Console.WriteLine($"Upload thành công: {result.Data}");
                         }
                         else
                         {
                             // Upload thất bại -> Thông báo lỗi và reset ảnh
                             await ShowErrorAsync("Lỗi Upload", result.Message);
-
                             ProductImage.Source = null;
                             SelectedImagePath = null;
                         }
@@ -332,12 +402,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                     await ShowErrorAsync("Lỗi ngoại lệ", ex.Message);
                     ProductImage.Source = null;
                     SelectedImagePath = null;
-                }
-                finally
-                {
-                    // (Tuỳ chọn) Tắt loading
-                    // LoadingRing.IsActive = false;
-                    // ButtonSelectImage.IsEnabled = true;
                 }
             }
         }
