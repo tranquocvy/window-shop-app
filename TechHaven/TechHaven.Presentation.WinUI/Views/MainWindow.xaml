@@ -51,7 +51,16 @@
 
         <!-- BÊN PHẢI: Form đăng nhập -->
         <Grid Grid.Column="1" Background="#F7F7F7" RequestedTheme="Light">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top-left: Version -->
+            <TextBlock Grid.Row="0" x:Name="versionTextBlock" Text="v1.0.0" Foreground="#3A5FC0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0" />
+
             <StackPanel
+                Grid.Row="1"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center">
 
@@ -101,6 +110,9 @@
                         />
 
                 <TextBlock x:Name="errorTextBlock" Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+
+                <!-- Settings as clickable TextBlock below login -->
+                <TextBlock x:Name="configTextBlock" Text="Settings" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="configTextBlock_Tapped" />
 
             </StackPanel>
         </Grid>

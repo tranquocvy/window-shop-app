@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.ViewModel;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Input;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -13,7 +16,9 @@ namespace TechHaven.Presentation.WinUI.Views
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        private readonly MainWindowViewModel _viewModel;
+        private MainWindowViewModel _viewModel;
+        // App version constant - update this value to change shown version
+        private const string AppVersion = "v1.0.1";
 
         public MainWindow()
         {
@@ -25,11 +30,43 @@ namespace TechHaven.Presentation.WinUI.Views
             {
                 root.DataContext = _viewModel;
             }
+
+            // Use explicit app version constant
+            try
+            {
+                versionTextBlock.Text = AppVersion;
+            }
+            catch { }
         }
 
         // Phương thức xử lý sự kiện Click
         private async void loginButton_Click(object sender, RoutedEventArgs e)
         {
+            // Require API to be explicitly configured via Settings
+            if (!AppState.IsApiConfigured)
+            {
+                var prompt = new ContentDialog
+                {
+                    Title = "Server not configured",
+                    Content = "Please configure the server URL in Settings before logging in.",
+                    PrimaryButtonText = "Open Settings",
+                    CloseButtonText = "Cancel",
+                    XamlRoot = this.Content.XamlRoot
+                };
+
+                var r = await prompt.ShowAsync();
+                if (r == ContentDialogResult.Primary)
+                {
+                    await ShowSettingsDialogAsync();
+                }
+
+                // If still not configured, abort login
+                if (!AppState.IsApiConfigured)
+                {
+                    return;
+                }
+            }
+
             // Set username and password from UI to ViewModel
             _viewModel.Username = usernameBox.Text;
             _viewModel.Password = passwordBox.Password;
@@ -67,6 +104,76 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Close login window
             this.Close();
+        }
+
+        // Settings text tapped (clickable text under the login button)
+        private async void configTextBlock_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await ShowSettingsDialogAsync();
+        }
+
+        // Show settings dialog and apply new API URL if saved. Returns true if saved/applied.
+        private async Task<bool> ShowSettingsDialogAsync()
+        {
+            // Create UI for settings dialog
+            var urlBox = new TextBox
+            {
+                Text = AppState.ApiBaseUri?.ToString() ?? string.Empty,
+                PlaceholderText = "http://localhost:5207/",
+                Width = 360,
+                BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6)
+            };
+
+            var info = new TextBlock { Text = "Configure server base URL:", Margin = new Thickness(0, 0, 0, 6) };
+
+            var stack = new StackPanel { Spacing = 8 };
+            stack.Children.Add(info);
+            stack.Children.Add(urlBox);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Settings",
+                Content = stack,
+                PrimaryButtonText = "Save",
+                CloseButtonText = "Cancel",
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                var newUrl = urlBox.Text?.Trim();
+                if (!string.IsNullOrWhiteSpace(newUrl))
+                {
+                    AppState.SetApiBaseUri(newUrl);
+                    ApiClientFactory.ResetClient();
+
+                    // Recreate ViewModel with new HttpAuthService using updated HttpClient
+                    _viewModel = new MainWindowViewModel(new HttpAuthService(ApiClientFactory.GetHttpClient()));
+
+                    // Rebind DataContext so bindings still work
+                    if (this.Content is FrameworkElement root)
+                    {
+                        root.DataContext = _viewModel;
+                    }
+
+                    // Optionally show a brief confirmation
+                    var confirmation = new ContentDialog
+                    {
+                        Title = "Settings saved",
+                        Content = $"Server URL set to: {AppState.ApiBaseUri}",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+                    await confirmation.ShowAsync();
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string FormatTime(int seconds)
@@ -217,7 +324,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 await _viewModel.ResendOtpCommand.ExecuteAsync(null);
                 remaining = _viewModel.OtpRemaining;
                 _ = this.DispatcherQueue.TryEnqueue(() =>
-                {
+            {
                     otpBox.Text = string.Empty;
                     errorText.Text = string.Empty;
                     countdownText.Text = FormatTime(_viewModel.OtpRemaining);
