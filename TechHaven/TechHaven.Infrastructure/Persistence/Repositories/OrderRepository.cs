@@ -318,7 +318,11 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         CancellationToken cancellationToken = default
     )
     {
-        var spec = new OrdersByProductAndDateRangeSpecification(productId, startDate, endDate);
+        // Ensure dates are in UTC
+        var startUtc = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
+        var endUtc = DateTime.SpecifyKind(endDate.Date.AddDays(1), DateTimeKind.Utc);
+
+        var spec = new OrdersByProductAndDateRangeSpecification(productId, startUtc, endUtc);
 
         _logger.LogInformation
         (
@@ -327,24 +331,13 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         );
 
         var items = await GetAsync(spec, cancellationToken);
-            
+
         var groupedData = periodType switch
         {
             ReportPeriodType.Daily => items
                 .GroupBy(o => o.OrderDate)
                 .Select(g => (
                     Period: g.Key.ToString("yyyy-MM-dd"),
-                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
-                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
-                )),
-            ReportPeriodType.Monthly => items
-                .GroupBy(o => new
-                {
-                    o.OrderDate.Year,
-                    o.OrderDate.Month,
-                })
-                .Select(g => (
-                    Period: $"{g.Key.Year}-W{g.Key.Month:D2}",
                     QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
                     Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
                 )),
@@ -359,10 +352,21 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
                     QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
                     Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
                 )),
-            ReportPeriodType.Yearly => items
-                .GroupBy(o => o.OrderDate)
+            ReportPeriodType.Monthly => items
+                .GroupBy(o => new
+                {
+                    o.OrderDate.Year,
+                    o.OrderDate.Month,
+                })
                 .Select(g => (
-                    Period: g.Key.ToString("yyyy-MM-dd"),
+                    Period: $"{g.Key.Year}-M{g.Key.Month:D2}",
+                    QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
+                    Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
+                )),
+            ReportPeriodType.Yearly => items
+                .GroupBy(o => o.OrderDate.Year)
+                .Select(g => (
+                    Period: g.Key.ToString(),
                     QuantitySold: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity),
                     Revenue: g.SelectMany(o => o.OrderDetails!).Sum(od => od.Quantity * od.UnitPrice)
                 )),

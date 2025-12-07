@@ -332,6 +332,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
                         // 2. Mở lại cửa sổ Login (MainWindow)
                         var loginWindow = new MainWindow();
+                        App.MainWindow = loginWindow;
                         loginWindow.Activate();
 
                         // 3. Đóng cửa sổ chính này lại

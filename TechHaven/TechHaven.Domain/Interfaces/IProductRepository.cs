@@ -42,5 +42,42 @@ namespace TechHaven.Domain.Interfaces
         /// Đếm tổng số sản phẩm (không tính draft)
         /// </summary>
         Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default);
+
+        // INTERFACE REPOSITORY FOR BRAND
+        Task<List<BrandInfo>> GetBrandsAsync(
+            string searchTerm,
+            bool? inStockOnly,
+            string? sortBy,
+            bool sortDescending = false,
+            CancellationToken cancellationToken = default
+        );
+    }
+
+    public class BrandInfo
+    {
+        /// <summary>
+        /// Brand name (unique)
+        /// </summary>
+        public string BrandName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Number of products under this brand
+        /// </summary>
+        public int ProductCount { get; set; }
+
+        /// <summary>
+        /// Lowest price among products of this brand
+        /// </summary>
+        public decimal? MinPrice { get; set; }
+
+        /// <summary>
+        /// Highest price among products of this brand
+        /// </summary>
+        public decimal? MaxPrice { get; set; }
+
+        /// <summary>
+        /// Total stock quantity for all products of this brand
+        /// </summary>
+        public int TotalStock { get; set; }
     }
 }

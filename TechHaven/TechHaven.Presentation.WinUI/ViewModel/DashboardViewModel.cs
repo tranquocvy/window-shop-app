@@ -1,5 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.UI.Xaml.Media;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,198 +12,245 @@ using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
-using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Dashboard;
-using Windows.Foundation;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
+    /// <summary>
+    /// ViewModel for the Dashboard page
+    /// </summary>
     public partial class DashboardViewModel : ObservableObject
     {
+        #region Fields
+
         private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IDashboardService _service;
 
-        public DashboardViewModel() : this(new HttpDashboardService(SharedHttpClient)) { }
-        //public DashboardViewModel() : this(new MockDashboardService()) { }
+        #endregion
 
+        #region Constructor
+
+        /// <summary>
+        /// Initializes a new instance of DashboardViewModel with default HTTP service
+        /// </summary>
+        public DashboardViewModel() : this(new HttpDashboardService(SharedHttpClient)) { }
+
+        /// <summary>
+        /// Initializes a new instance of DashboardViewModel with specified service
+        /// </summary>
+        /// <param name="service">Dashboard service instance</param>
+        /// <exception cref="ArgumentNullException">Thrown when service is null</exception>
         public DashboardViewModel(IDashboardService service)
         {
-            _service = service;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
             LowStockProducts = new ObservableCollection<LowStockProductDto>();
             TopSellingProducts = new ObservableCollection<TopSellingProductDto>();
             RecentOrders = new ObservableCollection<RecentOrderDto>();
             MonthlyRevenue = new ObservableCollection<DailyRevenueDto>();
+            
+            InitializeChartSeries();
         }
 
+        #endregion
+
+        #region Observable Properties
+
+        /// <summary>
+        /// Total number of products in inventory
+        /// </summary>
         [ObservableProperty]
         private int totalProducts;
 
+        /// <summary>
+        /// Total number of orders
+        /// </summary>
         [ObservableProperty]
         private int totalOrders;
 
+        /// <summary>
+        /// Number of orders placed today
+        /// </summary>
         [ObservableProperty]
         private int todayOrderCount;
 
+        /// <summary>
+        /// Revenue generated today (formatted as currency)
+        /// </summary>
         [ObservableProperty]
         private string todayRevenue = string.Empty;
 
+        /// <summary>
+        /// Chart series for monthly revenue
+        /// </summary>
         [ObservableProperty]
-        private Geometry monthlyRevenueGeometry;
+        private IEnumerable<ISeries> series = Array.Empty<ISeries>();
 
-        // Spline configuration: tension (0..1) and samples per segment (smoothness)
+        /// <summary>
+        /// X-axis configuration for the chart
+        /// </summary>
         [ObservableProperty]
-        private double splineTension = 1.0; // 0 = linear, 1 = full Catmull-Rom
+        private IEnumerable<Axis> xAxes = Array.Empty<Axis>();
 
+        /// <summary>
+        /// Y-axis configuration for the chart
+        /// </summary>
         [ObservableProperty]
-        private int splineSamplesPerSegment = 12; // number of interpolation steps per segment
+        private IEnumerable<Axis> yAxes = Array.Empty<Axis>();
 
+        #endregion
+
+        #region Collections
+
+        /// <summary>
+        /// Collection of products with low stock levels
+        /// </summary>
         public ObservableCollection<LowStockProductDto> LowStockProducts { get; }
 
+        /// <summary>
+        /// Collection of top selling products
+        /// </summary>
         public ObservableCollection<TopSellingProductDto> TopSellingProducts { get; }
 
+        /// <summary>
+        /// Collection of recent orders
+        /// </summary>
         public ObservableCollection<RecentOrderDto> RecentOrders { get; }
 
+        /// <summary>
+        /// Collection of daily revenue data for the month
+        /// </summary>
         public ObservableCollection<DailyRevenueDto> MonthlyRevenue { get; }
 
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Loads dashboard data asynchronously from the service
+        /// </summary>
+        /// <returns>Task representing the asynchronous operation</returns>
         public async Task LoadAsync()
         {
-            var resp = await _service.GetDashboardAsync();
-            if (resp?.Success == true && resp.Data != null)
+            var response = await _service.GetDashboardAsync();
+            
+            if (response?.Success != true || response.Data == null)
             {
-                var d = resp.Data;
-
-                TotalProducts = d.TotalProducts;
-                TodayOrderCount = d.TodayOrderCount;
-                TodayRevenue = d.TodayRevenue.ToString("C");
-
-                LowStockProducts.Clear();
-                foreach (var item in d.LowStockProducts ?? new()) LowStockProducts.Add(item);
-
-                TopSellingProducts.Clear();
-                foreach (var item in d.TopSellingProducts ?? new()) TopSellingProducts.Add(item);
-
-                RecentOrders.Clear();
-                if (d.RecentOrders != null)
-                {
-                    foreach (var item in d.RecentOrders)
-                    {
-                        RecentOrders.Add(item);
-                    }
-                }
-
-                MonthlyRevenue.Clear();
-                if (d.MonthlyRevenue != null)
-                {
-                    foreach (var item in d.MonthlyRevenue)
-                        MonthlyRevenue.Add(item);
-                }
+                return;
             }
+
+            var data = response.Data;
+
+            // Update summary metrics
+            TotalProducts = data.TotalProducts;
+            TodayOrderCount = data.TodayOrderCount;
+            TodayRevenue = data.TodayRevenue.ToString("C");
+
+            // Update collections
+            UpdateCollection(LowStockProducts, data.LowStockProducts);
+            UpdateCollection(TopSellingProducts, data.TopSellingProducts);
+            UpdateCollection(RecentOrders, data.RecentOrders);
+            UpdateCollection(MonthlyRevenue, data.MonthlyRevenue);
+            
+            // Update chart
+            UpdateChartData();
         }
 
-        // Call this from UI when chart container size changes
-        public void UpdateMonthlyRevenueGeometry(double width, double height)
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Initializes chart series with default configuration
+        /// </summary>
+        private void InitializeChartSeries()
+        {
+            Series = new ISeries[]
+            {
+                new LineSeries<decimal>
+                {
+                    Values = new List<decimal>(),
+                    GeometrySize = 6,
+                    GeometryStroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 2 },
+                    Stroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 3 },
+                    LineSmoothness = 0.8
+                }
+            };
+
+            XAxes = new Axis[]
+            {
+                new Axis
+                {
+                    Labels = new List<string>(),
+                    LabelsRotation = 0,
+                    TextSize = 11,
+                    SeparatorsPaint = null
+                }
+            };
+
+            YAxes = new Axis[]
+            {
+                new Axis
+                {
+                    TextSize = 11,
+                    Labeler = value => value.ToString("C0"),
+                    SeparatorsPaint = new SolidColorPaint(SKColors.Gray) { StrokeThickness = 1 }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Updates chart data from MonthlyRevenue collection
+        /// </summary>
+        private void UpdateChartData()
         {
             if (MonthlyRevenue == null || MonthlyRevenue.Count == 0)
             {
-                MonthlyRevenueGeometry = null;
                 return;
             }
 
-            var values = MonthlyRevenue.Select(x => x.Revenue).ToList();
-            decimal min = values.Min();
-            decimal max = values.Max();
-            decimal range = max - min;
-            if (range == 0) range = 1; // avoid divide by zero
-
-            int n = values.Count;
-            // leave some padding 
-            double leftPadding = 62;
-            double topPadding = 12;
-            double rightPadding = 18;
-            double bottomPadding = 36;
-
-            double w = Math.Max(10, width - leftPadding - rightPadding);
-            double h = Math.Max(10, height - topPadding - bottomPadding);
-
-            // compute points
-            var points = new List<Point>(n);
-            for (int i = 0; i < n; i++)
+            // Update series values
+            var revenueValues = MonthlyRevenue.Select(x => x.Revenue).ToList();
+            Series = new ISeries[]
             {
-                double x = leftPadding + (n == 1 ? w / 2 : (w * i) / (n - 1));
-                double normalized = (double)((values[i] - min) / range); // 0..1
-                double y = topPadding + (1 - normalized) * h; // invert y
-                points.Add(new Point(x, y));
-            }
-
-            // clamp samples
-            int samples = Math.Max(1, splineSamplesPerSegment);
-            double tension = Math.Clamp(splineTension, 0.0, 1.0);
-
-            // build PathFigure using Catmull-Rom sampling between points
-            var fig = new PathFigure
-            {
-                IsClosed = false,
-                IsFilled = false,
-                StartPoint = points[0]
+                new LineSeries<decimal>
+                {
+                    Values = revenueValues,
+                    GeometrySize = 6, // Size point
+                    GeometryStroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 2 },
+                    Stroke = new SolidColorPaint(SKColors.LightSkyBlue) { StrokeThickness = 3 },
+                    LineSmoothness = 0.8
+                }
             };
 
-            var allInterpPoints = new List<Point>();
-
-            if (n == 1)
+            // Update X-axis labels
+            var dateLabels = MonthlyRevenue.Select(x => x.Date.ToString("dd/MM")).ToList();
+            XAxes = new Axis[]
             {
-                // single point: nothing to draw
-                MonthlyRevenueGeometry = null;
-                return;
-            }
-            else
-            {
-                // iterate segments between points[i] (P1) and points[i+1] (P2)
-                for (int i = 0; i < n - 1; i++)
+                new Axis
                 {
-                    Point p0 = (i - 1) >= 0 ? points[i - 1] : points[i];
-                    Point p1 = points[i];
-                    Point p2 = points[i + 1];
-                    Point p3 = (i + 2) < n ? points[i + 2] : points[i + 1];
-
-                    // generate samples for this segment (exclude t=0 because it's previous point)
-                    for (int s = 1; s <= samples; s++)
-                    {
-                        double t = (double)s / samples;
-
-                        // Catmull-Rom standard basis (with 0.5 tension factor)
-                        // CR point:
-                        double t2 = t * t;
-                        double t3 = t2 * t;
-
-                        double cr_x = 0.5 * ((2 * p1.X) + (-p0.X + p2.X) * t + (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t2 + (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t3);
-                        double cr_y = 0.5 * ((2 * p1.Y) + (-p0.Y + p2.Y) * t + (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t2 + (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t3);
-
-                        // linear interpolation for blending
-                        double lin_x = p1.X + (p2.X - p1.X) * t;
-                        double lin_y = p1.Y + (p2.Y - p1.Y) * t;
-
-                        // blend between linear (0) and CR (1) according to tension property
-                        double blended_x = lin_x * (1 - tension) + cr_x * tension;
-                        double blended_y = lin_y * (1 - tension) + cr_y * tension;
-
-                        allInterpPoints.Add(new Point(blended_x, blended_y));
-                    }
+                    Labels = dateLabels,
+                    LabelsRotation = 0,
+                    TextSize = 11,
+                    SeparatorsPaint = null
                 }
-            }
-
-            // create PolyLineSegment with the interpolated points
-            var poly = new PolyLineSegment();
-            foreach (var p in allInterpPoints)
-            {
-                poly.Points.Add(p);
-            }
-
-            var segs = new PathSegmentCollection { poly };
-            fig.Segments = segs;
-
-            var figs = new PathFigureCollection { fig };
-            var pathGeom = new PathGeometry { Figures = figs };
-            MonthlyRevenueGeometry = pathGeom;
+            };
         }
+
+        /// <summary>
+        /// Updates an observable collection with new items
+        /// </summary>
+        private static void UpdateCollection<T>(ObservableCollection<T> collection, IEnumerable<T>? items)
+        {
+            collection.Clear();
+            
+            if (items == null) return;
+
+            foreach (var item in items)
+            {
+                collection.Add(item);
+            }
+        }
+
+        #endregion
     }
 }
