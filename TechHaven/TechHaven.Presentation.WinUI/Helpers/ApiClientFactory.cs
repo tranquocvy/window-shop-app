@@ -14,7 +14,7 @@ namespace TechHaven.Presentation.WinUI.Helpers
     public static class ApiClientFactory
     {
         // Shared lazy HttpClient for the application
-        public static readonly Lazy<HttpClient> SharedClient = new(Create);
+        private static Lazy<HttpClient> _sharedClient = new(Create);
 
         private static HttpClient Create()
         {
@@ -32,6 +32,26 @@ namespace TechHaven.Presentation.WinUI.Helpers
             return client;
         }
 
-        public static HttpClient GetHttpClient() => SharedClient.Value;
+        public static HttpClient GetHttpClient() => _sharedClient.Value;
+
+        // Reset the underlying HttpClient so a new instance is created with the current AppState.ApiBaseUri
+        public static void ResetClient()
+        {
+            try
+            {
+                // Dispose existing client if already created
+                if (_sharedClient.IsValueCreated)
+                {
+                    try
+                    {
+                        _sharedClient.Value.Dispose();
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            _sharedClient = new Lazy<HttpClient>(Create);
+        }
     }
 }
