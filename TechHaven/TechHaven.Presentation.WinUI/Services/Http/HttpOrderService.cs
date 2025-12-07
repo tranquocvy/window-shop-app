@@ -14,7 +14,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     public class HttpOrderService : IOrderService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "api/orders";
+        private const string BaseUrl = "api/Order";
 
         public HttpOrderService(HttpClient httpClient)
         {
@@ -82,7 +82,6 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                     sb.Append($"Sorting.Desc={query.Sorting.Desc}&");
             }
 
-            // Remove trailing &
             if (sb.Length > 0 && sb[sb.Length - 1] == '&')
                 sb.Length--;
 

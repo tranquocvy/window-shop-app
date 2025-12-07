@@ -1,12 +1,17 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TechHaven.Domain.Entities;
 using TechHaven.Domain.Interfaces;
+using TechHaven.Domain.SearchCriteria;
+using TechHaven.Domain.Specifications;
 
 namespace TechHaven.Infrastructure.Persistence.Repositories;
 
 public class ProductRepository : GenericRepository<Product>, IProductRepository
 {
-    public ProductRepository(AppDbContext context) : base(context)
+    public ProductRepository(AppDbContext context, ILoggerFactory loggerFactory)
+        : base(context, loggerFactory)
     {
     }
 
@@ -15,111 +20,26 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     /// This method is optimized to avoid loading all data into memory
     /// </summary>
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> SearchWithPaginationAsync(
-        string? searchTerm = null,
-        bool? isDraft = null,
-        int pageNumber = 1,
-        int pageSize = 20,
-        string? sortBy = null,
-        bool sortDescending = false,
+        ProductSearchCriteria criteria,
         CancellationToken cancellationToken = default)
     {
-        // Step 1: Build base query with Include for Category (eager loading)
-        var query = _context.Products
-            .AsQueryable();
+        var spec = new ProductSearchSpecification(criteria, true);
 
-        // Step 2: Apply filters
-        query = ApplyFilters(query, searchTerm, isDraft);
+        _logger.LogInformation(
+            "Searching products with criteria {@Criteria}",
+            criteria);
 
-        // Step 3: Get total count BEFORE pagination (this executes a COUNT query on DB)
-        var totalCount = await query.CountAsync(cancellationToken);
+        _logger.LogInformation(
+            "Searching products with criteria {@Criteria}",
+            criteria);
 
-        // Step 4: Apply sorting
-        query = ApplySorting(query, sortBy, sortDescending);
+        var items = await GetAsync(spec, cancellationToken);
 
-        // Step 5: Apply pagination (Skip and Take are translated to OFFSET and LIMIT in SQL)
-        var items = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .AsNoTracking() // Performance optimization: don't track entities
-            .ToListAsync(cancellationToken);
+        // Count total (không paging)
+        var countSpec = new ProductSearchSpecification(criteria, false);
+        var totalCount = await CountAsync(countSpec, cancellationToken);
 
         return (items, totalCount);
-    }
-
-    /// <summary>
-    /// Apply filters to the query (returns IQueryable for further composition)
-    /// </summary>
-    private IQueryable<Product> ApplyFilters(
-        IQueryable<Product> query,
-        string? searchTerm,
-        bool? isDraft)
-    {
-        // Filter by search term (ProductName or BrandName)
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            var term = searchTerm.ToLower();
-            query = query.Where(p =>
-                p.ProductName.ToLower().Contains(term) ||
-                p.BrandName.ToLower().Contains(term));
-        }
-
-        // Filter by draft status
-        if (isDraft.HasValue)
-        {
-            query = query.Where(p => p.IsDraft == isDraft.Value);
-        }
-
-        return query;
-    }
-
-    /// <summary>
-    /// Apply sorting to the query (returns IQueryable for further composition)
-    /// </summary>
-    private IQueryable<Product> ApplySorting(
-        IQueryable<Product> query,
-        string? sortBy,
-        bool sortDescending)
-    {
-        if (string.IsNullOrWhiteSpace(sortBy))
-        {
-            // Default sorting
-            return sortDescending
-                ? query.OrderByDescending(p => p.ProductName)
-                : query.OrderBy(p => p.ProductName);
-        }
-
-        // Apply specific sorting based on sortBy parameter
-        // Todo: fix hardcode
-        return sortBy.ToLower() switch
-        {
-            "name" or "productname" => sortDescending
-                ? query.OrderByDescending(p => p.ProductName)
-                : query.OrderBy(p => p.ProductName),
-
-            "price" or "sellprice" => sortDescending
-                ? query.OrderByDescending(p => p.SellPrice)
-                : query.OrderBy(p => p.SellPrice),
-
-            "stock" or "stockquantity" => sortDescending
-                ? query.OrderByDescending(p => p.StockQuantity)
-                : query.OrderBy(p => p.StockQuantity),
-
-            "brand" or "brandname" => sortDescending
-                ? query.OrderByDescending(p => p.BrandName)
-                : query.OrderBy(p => p.BrandName),
-
-            "createdat" => sortDescending
-                ? query.OrderByDescending(p => p.CreatedAt)
-                : query.OrderBy(p => p.CreatedAt),
-
-            "updatedat" => sortDescending
-                ? query.OrderByDescending(p => p.UpdatedAt)
-                : query.OrderBy(p => p.UpdatedAt),
-
-            _ => sortDescending
-                ? query.OrderByDescending(p => p.ProductName)
-                : query.OrderBy(p => p.ProductName)
-        };
     }
 
     /// <summary>
@@ -129,11 +49,92 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         int threshold = 0,
         CancellationToken cancellationToken = default)
     {
-        return await _context.Products
-            .Where(p => p.StockQuantity <= threshold && !p.IsDraft)
-            .OrderBy(p => p.StockQuantity)
-            .ThenBy(p => p.ProductName)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var spec = new LowStockProductsSpecification(threshold);
+        _logger.LogInformation("Fetching products with stock threshold {Threshold}", threshold);
+        return await GetAsync(spec, cancellationToken);
+    }
+
+    /// <summary>
+    /// Get products with out of stock
+    /// </summary>
+    public async Task<IReadOnlyList<Product>> GetOutOfStockAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var spec = new OutOfStockProductsSpecification();
+        _logger.LogInformation("Fetching products with out of stock");
+        return await GetAsync(spec, cancellationToken);
+    }
+
+    public async Task<int> GetTotalProductCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await ExecuteOperationAsync(
+            "GetTotalProductCount",
+            () => _dbSet
+                .Where(p => p.IsDraft == false)
+                .CountAsync(cancellationToken));
+    }
+
+    public async Task<List<BrandInfo>> GetBrandsAsync(
+        string searchTerm,
+        bool? inStockOnly,
+        string? sortBy,
+        bool sortDescending = false,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteOperationAsync(
+            "GetBrandsAsync",
+            async () =>
+            {
+                var query = _dbSet.AsQueryable();
+
+                // Lọc theo searchTerm nếu có
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    query = query.Where(p => p.BrandName.ToLower().Contains(searchTerm.ToLower()));
+                }
+
+                // Lọc theo tồn kho nếu cần
+                if (inStockOnly == true)
+                {
+                    query = query.Where(p => p.StockQuantity > 0);
+                }
+
+                var grouped = query
+                    .GroupBy(p => p.BrandName)
+                    .Select(g => new BrandInfo
+                    {
+                        BrandName = g.Key,
+                        ProductCount = g.Count(),
+                        MinPrice = g.Min(p => p.SellPrice),
+                        MaxPrice = g.Max(p => p.SellPrice),
+                        TotalStock = g.Sum(p => p.StockQuantity)
+                    });
+
+                // Sắp xếp nếu có yêu cầu
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    switch (sortBy.ToLower())
+                    {
+                        case "productcount":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.ProductCount) : grouped.OrderBy(b => b.ProductCount);
+                            break;
+                        case "minprice":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.MinPrice) : grouped.OrderBy(b => b.MinPrice);
+                            break;
+                        case "maxprice":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.MaxPrice) : grouped.OrderBy(b => b.MaxPrice);
+                            break;
+                        case "totalstock":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.TotalStock) : grouped.OrderBy(b => b.TotalStock);
+                            break;
+                        default:
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.BrandName) : grouped.OrderBy(b => b.BrandName);
+                            break;
+                    }
+                }
+
+                return await grouped.ToListAsync(cancellationToken);
+            }
+        );
     }
 }

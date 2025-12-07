@@ -1,0 +1,13 @@
+{
+    "ProductName": "Samsung Galaxy S25 Ultra 12GB 256GB",
+    "BrandName": "Samsung",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "Snapdragon 8 Elite dành cho Galaxy (3nm)",
+    "ScreenSize": 6.9,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "samsung-galaxy-s25-ultra_main.jpg",
+    "ImageGalleryJson": "[\"samsung-galaxy-s25-ultra_gallery_1.jpg\", \"samsung-galaxy-s25-ultra_gallery_2.jpg\"]",
+    "SellPrice": 7490000.0,
+    "Description": "120Hz\n2600 nits\nCorning® Gorilla® Armor 2"
+}

@@ -2,7 +2,7 @@
 
 namespace TechHaven.Shared.DTOs.Orders;
 
-public class OrderUpsertRequestDto : PagingRequest
+public class OrderUpsertRequestDto
 {
     public int? CustomerId { get; set; }
 

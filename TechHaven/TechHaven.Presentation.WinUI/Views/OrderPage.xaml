@@ -8,15 +8,65 @@
     xmlns:vm="using:TechHaven.Presentation.WinUI.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="White"
-    Foreground="#0A2E8C">
+    mc:Ignorable="d">
 
     <Page.DataContext>
         <vm:OrderViewModel />
     </Page.DataContext>
 
-    <Grid Padding="16" RequestedTheme="Light">
+    <Page.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BorderBrush" Value="{StaticResource TH.BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Foreground" Value="{StaticResource TH.TextPrimary}" />
+        </Style>
+
+        <Style x:Key="ListViewItemNoPadding" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <!-- Customer item template used by the customer selector dialog -->
+        <DataTemplate x:Key="CustomerItemTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="160" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding PhoneNumber}" Grid.Column="1" HorizontalAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- Product item template used by the product selector dialog -->
+        <DataTemplate x:Key="ProductItemTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="80" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Product.ProductName}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Product.BrandName}" Grid.Column="1" HorizontalAlignment="Right" />
+                <TextBlock Text="{Binding Product.StockQuantity}" Grid.Column="2" HorizontalAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+
+    </Page.Resources>
+
+    <Grid Padding="24" RowSpacing="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -24,243 +74,302 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- HEADER -->
-        <TextBlock Grid.Row="0"
-                   Text="Orders"
-                   Style="{ThemeResource TitleTextBlockStyle}"
-                   Margin="0,0,0,12"
-                   Foreground="#0A2E8C"/>
+        <!-- Title -->
+        <TextBlock Grid.Row="0" 
+                   Text="Orders" 
+                   Style="{StaticResource SectionTitle}"
+                   Margin="0,0,0,16"/>
 
-        <!-- SEARCH + FILTERS + ADD BUTTON -->
-        <Grid Grid.Row="1" Margin="0,0,0,12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <!-- Filters -->
+        <Grid Grid.Row="1" Margin="0,0,0,16" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.5*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.7*"/>
+                <ColumnDefinition Width="0.7*"/>
+                <ColumnDefinition Width="2.5*"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Row 1: Search + Filters -->
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-                <TextBox
-                    PlaceholderText="Search by order ID, customer, product..."
-                    Width="300"
-                    Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <!-- Search Box -->
+            <TextBox
+                Grid.Column="0"
+                PlaceholderText="Tìm kiếm theo khách hàng"
+                VerticalContentAlignment="Center"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <ComboBox 
-                    Width="150"
-                    ItemsSource="{Binding StatusList}"
-                    SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
-                    DisplayMemberPath="DisplayName"
-                    PlaceholderText="Status"
-                    SelectionChanged="StatusFilter_SelectionChanged"/>
+            <!-- Status Filter -->
+            <ComboBox 
+                Grid.Column="1"
+                ItemsSource="{Binding StatusList}"
+                SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
+                DisplayMemberPath="DisplayName"
+                PlaceholderText="Trạng thái"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                SelectionChanged="StatusFilter_SelectionChanged"/>
 
-                <CalendarDatePicker
-                    Width="150"
-                    Date="{Binding FromDate, Mode=TwoWay}"
-                    PlaceholderText="From Date (Today)"
-                    DateChanged="FromDate_DateChanged"/>
+            <!-- From Date -->
+            <CalendarDatePicker
+                Grid.Column="2"
+                Date="{Binding FromDate, Mode=TwoWay}"
+                PlaceholderText="Từ ngày"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                DateChanged="FromDate_DateChanged"/>
 
-                <CalendarDatePicker
-                    Width="150"
-                    Date="{Binding ToDate, Mode=TwoWay}"
-                    PlaceholderText="To Date (Today)"
-                    DateChanged="ToDate_DateChanged"/>
+            <!-- To Date -->
+            <CalendarDatePicker
+                Grid.Column="3"
+                Date="{Binding ToDate, Mode=TwoWay}"
+                PlaceholderText="Đến ngày"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                DateChanged="ToDate_DateChanged"/>
 
-                <Button 
-                    Content="Search"
-                    Command="{Binding SearchCommand}"
-                    Background="#0D47A1"
-                    Foreground="White"
-                    CornerRadius="5"
-                    Height="40"/>
+            <!-- Search Button -->
+            <Button 
+                Grid.Column="4"
+                Content="Tìm"
+                Command="{Binding SearchCommand}"
+                Background="{StaticResource TH.PrimaryBrush}"
+                Foreground="White"
+                FontWeight="SemiBold"
+                CornerRadius="8"
+                Height="40"
+                HorizontalAlignment="Stretch"/>
 
-                <Button 
-                    Content="Clear Filters"
-                    Command="{Binding ClearFilterCommand}"
-                    Background="#757575"
-                    Foreground="White"
-                    CornerRadius="5"
-                    Height="40"/>
-            </StackPanel>
-
-            <!-- Row 2: Add Order Button -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
-                <Button
-                    Content="Create Order"
-                    Click="CreateOrder_Click"
-                    Background="#0D47A1"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    CornerRadius="5"
-                    Height="40"
-                    Width="200"/>
-            </StackPanel>
+            <!-- Create Order Button -->
+            <Button
+                Grid.Column="7"
+                Click="CreateOrder_Click"
+                Background="{StaticResource TH.PrimaryBrush}"
+                Foreground="White"
+                FontWeight="SemiBold"
+                CornerRadius="8"
+                Height="40"
+                HorizontalAlignment="Stretch"
+                Padding="12,8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE710;" FontSize="14"/>
+                    <TextBlock Text="Tạo Đơn Hàng" VerticalAlignment="Center" FontSize="13"/>
+                </StackPanel>
+            </Button>
         </Grid>
 
-        <!-- ORDERS LIST -->
-        <ListView
-            Grid.Row="2"
-            x:Name="OrdersListView"
-            ItemsSource="{Binding Orders}"
-            SelectionMode="None"
-            IsItemClickEnabled="True"
-            ItemClick="OrdersList_ItemClick"
-            Padding="0">
-            
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
+        <!-- Orders List Card -->
+        <Border Grid.Row="2" 
+                Style="{StaticResource CardStyle}" 
+                VerticalAlignment="Stretch">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <ListView.Header>
-                <Grid Padding="0,6">
+                <TextBlock Grid.Row="0" 
+                           Text="Danh sách đơn hàng" 
+                           FontWeight="SemiBold" 
+                           FontSize="16"
+                           Margin="0,0,0,12" 
+                           Foreground="{StaticResource TH.TextPrimary}"/>
+
+                <!-- Header -->
+                <Grid Grid.Row="1" 
+                      Margin="0,0,0,8" 
+                      Padding="12,8"
+                      CornerRadius="8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.5*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="20*"/>
+                        <ColumnDefinition Width="20*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="ID" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="1" Text="Order Date" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="2" Text="Customer" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="3" Text="Status" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="4" Text="Products" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="5" Text="Total Amount" FontWeight="SemiBold" TextAlignment="Left"/>
-                    <TextBlock Grid.Column="6" Text="Notes" FontWeight="SemiBold" TextAlignment="Left"/>
+                    <TextBlock Grid.Column="0" Text="Ngày Đặt" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="1" Text="Khách Hàng" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="2" Text="Trạng Thái" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="3" Text="Sản Phẩm" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="4" Text="Tổng Tiền" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <TextBlock Grid.Column="5" Text="Ghi Chú" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
                 </Grid>
-            </ListView.Header>
 
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="vm:OrderItemViewModel">
-                    <Grid Padding="0,6">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.5*"/>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="2*"/>
-                        </Grid.ColumnDefinitions>
+                <ListView
+                    Grid.Row="2"
+                    x:Name="OrdersListView"
+                    ItemsSource="{Binding Orders}"
+                    SelectionMode="None"
+                    IsItemClickEnabled="True"
+                    ItemClick="OrdersList_ItemClick"
+                    Padding="0"
+                    HorizontalContentAlignment="Stretch"
+                    ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
 
-                        <!-- Order ID -->
-                        <TextBlock Grid.Column="0" 
-                                   Text="{x:Bind Order.OrderId}" 
-                                   TextAlignment="Left"
-                                   VerticalAlignment="Center"/>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:OrderItemViewModel">
+                            <Grid HorizontalAlignment="Stretch" Margin="0" Padding="12,8">
+                                <!-- Use same star ratios as header -->
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="15*"/>
+                                    <ColumnDefinition Width="20*"/>
+                                    <ColumnDefinition Width="20*"/>
+                                </Grid.ColumnDefinitions>
 
-                        <!-- Order Date -->
-                        <TextBlock Grid.Column="1" 
-                                   Text="{x:Bind OrderDateDisplay}" 
-                                   TextAlignment="Left"
-                                   VerticalAlignment="Center"/>
+                                <!-- Order Date -->
+                                <TextBlock Grid.Column="0" 
+                                           Text="{x:Bind OrderDateDisplay}" 
+                                           TextAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TH.TextPrimary}"/>
 
-                        <!-- Customer Name -->
-                        <TextBlock Grid.Column="2" 
-                                   Text="{x:Bind CustomerDisplay}" 
-                                   TextAlignment="Left"
-                                   TextTrimming="CharacterEllipsis"
-                                   VerticalAlignment="Center"/>
+                                <!-- Customer Name -->
+                                <TextBlock Grid.Column="1" 
+                                           Text="{x:Bind CustomerDisplay}" 
+                                           TextAlignment="Left"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource TH.TextPrimary}"/>
 
-                        <!-- Status Badge -->
-                        <Border Grid.Column="3"
-                                CornerRadius="12"
-                                Padding="8,2"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Center">
-                            <Border.Background>
-                                <SolidColorBrush Color="{x:Bind StatusColor}"/>
-                            </Border.Background>
-                            <TextBlock Text="{x:Bind StatusDisplay}"
-                                       Foreground="White"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"/>
-                        </Border>
+                                <!-- Status Badge -->
+                                <Border Grid.Column="2"
+                                        CornerRadius="12"
+                                        Padding="10,4"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="{x:Bind StatusColor}"/>
+                                    </Border.Background>
+                                    <TextBlock Text="{x:Bind StatusDisplay}"
+                                               Foreground="White"
+                                               FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"/>
+                                </Border>
 
-                        <!-- Products Count -->
-                        <TextBlock Grid.Column="4" 
-                                   Text="{x:Bind ProductsCountDisplay}" 
-                                   TextAlignment="Left"
-                                   VerticalAlignment="Center"/>
+                                <!-- Products Count -->
+                                <TextBlock Grid.Column="3" 
+                                           Text="{x:Bind ProductsCountDisplay}" 
+                                           TextAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TH.TextSecondary}"/>
 
-                        <!-- Total Amount -->
-                        <TextBlock Grid.Column="5" 
-                                   Text="{x:Bind TotalAmountDisplay}" 
-                                   FontWeight="SemiBold"
-                                   TextAlignment="Left"
-                                   VerticalAlignment="Center"/>
+                                <!-- Total Amount -->
+                                <TextBlock Grid.Column="4" 
+                                           Text="{x:Bind TotalAmountDisplay}" 
+                                           FontWeight="Bold"
+                                           TextAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TH.TextPrimary}" />
 
-                        <!-- Notes -->
-                        <TextBlock Grid.Column="6" 
-                                   Text="{x:Bind Order.Notes}" 
-                                   TextAlignment="Left"
-                                   TextTrimming="CharacterEllipsis"
-                                   VerticalAlignment="Center"/>
+                                <!-- Notes -->
+                                <TextBlock Grid.Column="5" 
+                                           Text="{x:Bind Order.Notes}" 
+                                           TextAlignment="Left"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TH.TextSecondary}"
+                                           MinWidth="120"/>
 
-                        <!-- Context Menu -->
-                        <Grid.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem 
-                                    Text="View Details"
-                                    Click="ViewDetails_Click">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE7C3;"/>
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem 
-                                    Text="Update Status"
-                                    Click="UpdateStatus_Click">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE70F;"/>
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutSeparator/>
-                                <MenuFlyoutItem 
-                                    Text="Delete Order"
-                                    Click="DeleteOrder_Click">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE74D;" Foreground="Red"/>
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                            </MenuFlyout>
-                        </Grid.ContextFlyout>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                                <!-- Context Menu -->
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem 
+                                            Text="Xem Chi Tiết"
+                                            Click="ViewDetails_Click">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE7C3;"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutItem 
+                                            Text="Cập Nhật Trạng Thái"
+                                            Click="UpdateStatus_Click">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE70F;"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem
+                                            Text="In Đơn Hàng"
+                                            Click="PrintOrder_Click">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE8A7;"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem 
+                                            Text="Xóa Đơn Hàng"
+                                            Click="DeleteOrder_Click">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE74D;" Foreground="{StaticResource TH.DangerBrush}"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
 
-        <!-- PAGINATION -->
+        <!-- Pagination -->
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,8,0,0"
-                    Spacing="8">
+                    Margin="0,16,0,0"
+                    Spacing="12">
 
             <Button 
-                Content="Previous"
                 Command="{Binding PreviousPageCommand}"
-                IsEnabled="{Binding CanGoPrevious}"/>
-            
+                IsEnabled="{Binding CanGoPrevious}"
+                ToolTipService.ToolTip="Trang trước"
+                Width="40" 
+                Height="40"
+                CornerRadius="8"
+                Background="{StaticResource TH.CardBackground}"
+                BorderBrush="{StaticResource TH.BorderBrush}"
+                BorderThickness="1">
+                <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+            </Button>
+
             <TextBlock 
                 VerticalAlignment="Center" 
-                Text="{Binding PageInfo}"/>
-            
+                Text="{Binding PageInfo}"
+                Foreground="{StaticResource TH.TextPrimary}"
+                FontWeight="SemiBold"/>
+
             <Button 
-                Content="Next"
                 Command="{Binding NextPageCommand}"
-                IsEnabled="{Binding CanGoNext}"/>
+                IsEnabled="{Binding CanGoNext}"
+                ToolTipService.ToolTip="Trang sau"
+                Width="40" 
+                Height="40"
+                CornerRadius="8"
+                Background="{StaticResource TH.CardBackground}"
+                BorderBrush="{StaticResource TH.BorderBrush}"
+                BorderThickness="1">
+                <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+            </Button>
 
             <TextBlock 
                 VerticalAlignment="Center"
                 Margin="12,0,0,0"
-                Text="Items per page:"/>
+                Text="Items per page:"
+                Foreground="{StaticResource TH.TextSecondary}"/>
 
             <ComboBox 
-                Width="80"
+                Height="40"
+                MinWidth="80"
                 SelectedValue="{Binding PageSize, Mode=TwoWay}"
                 SelectedValuePath="Content">
                 <ComboBoxItem Content="5"/>

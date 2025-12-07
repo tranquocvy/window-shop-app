@@ -1,0 +1,13 @@
+{
+    "ProductName": "Xiaomi Redmi Note 13 Pro Plus 5G 8GB 256GB",
+    "BrandName": "Xiaomi",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "Mediatek Dimensity 7200 Ultra (4 nm)",
+    "ScreenSize": 6.67,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "xiaomi-redmi-note-13-pro-plus_main.jpg",
+    "ImageGalleryJson": "[\"xiaomi-redmi-note-13-pro-plus_gallery_1.jpg\", \"xiaomi-redmi-note-13-pro-plus_gallery_2.jpg\"]",
+    "SellPrice": 780000.0,
+    "Description": "Tần số quét 120Hz"
+}

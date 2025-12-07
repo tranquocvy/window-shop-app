@@ -9,74 +9,96 @@
     mc:Ignorable="d"
     Title="ShellWindow">
 
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
+    <Grid x:Name="rootGrid" Background="{ThemeResource TH.SurfaceBackground}">
+        <Grid.Resources>
+            <Style TargetType="IconElement">
+                <Setter Property="Foreground" Value="{ThemeResource TH.TextPrimary}" />
+            </Style>
 
-    <Grid>
+            <Style TargetType="Button" x:Key="NavToggleButtonStyle">
+                <Setter Property="Foreground" Value="{ThemeResource TH.TextPrimary}" />
+                <Setter Property="Background" Value="{ThemeResource TH.NavBackground}" />
+            </Style>
+        </Grid.Resources>
+
         <NavigationView
             x:Name="navView"
+            OpenPaneLength="220"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Auto"
             SelectionFollowsFocus="Enabled"
             Loaded="navView_Loaded"
             ItemInvoked="navView_ItemInvoked"
-            Background="#0A2E8C"
-            Foreground="White">
+            Background="{ThemeResource TH.NavBackground}"
+            Foreground="{ThemeResource TH.TextPrimary}">
 
             <!-- Header logo -->
             <NavigationView.PaneHeader>
                 <StackPanel Orientation="Horizontal" 
-                Padding="12,12,0,12" 
-                Margin="0,20,0,0">
-                    <PersonPicture ProfilePicture="ms-appx:///Assets/avatar.jpg" DisplayName="User"/>
+                            Padding="12,12,0,12" 
+                            Margin="0,20,0,0">
+                    <Ellipse Width="40" Height="40">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="ms-appx:///Assets/avatar.jpg" Stretch="UniformToFill" />
+                        </Ellipse.Fill>
+                    </Ellipse>
+
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock 
                             x:Name="currentUserFullNameText" 
                             Text="Loading..." 
                             Style="{ThemeResource BaseTextBlockStyle}"
-                            FontWeight="SemiBold"/>
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TH.TextPrimary}"/>
                         <TextBlock 
                             x:Name="currentUserRoleText" 
                             Text="Loading role..." 
-                            Style="{ThemeResource CaptionTextBlockStyle}"/>
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TH.TextSecondary}"/>
                     </StackPanel>
                 </StackPanel>
             </NavigationView.PaneHeader>
+
             <!-- Menu items -->
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Dashboard" Tag="dashboard">
+                <NavigationViewItem Content="Dashboard" Tag="dashboard" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Products" Tag="product">
+
+                <NavigationViewItem Content="Products" Tag="product" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE719;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Orders" Tag="order">
+
+                <NavigationViewItem Content="Orders" Tag="order" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE14C;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Customers" Tag="customer">
+
+                <NavigationViewItem Content="Customers" Tag="customer" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE716;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Report" Tag="report">
+
+                <NavigationViewItem Content="Report" Tag="report" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE9F9;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Settings" Tag="setting">
+
+                <NavigationViewItem Content="Settings" Tag="setting" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Log Out" Tag="logout">
+
+                <NavigationViewItem Content="Log Out" Tag="logout" Foreground="{ThemeResource TH.TextSecondary}">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE7E8;" />
                     </NavigationViewItem.Icon>

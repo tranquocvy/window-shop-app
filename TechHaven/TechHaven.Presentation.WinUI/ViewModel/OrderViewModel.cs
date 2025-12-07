@@ -5,27 +5,37 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Orders;
 using Windows.UI;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using System.Net.Http;
+using TechHaven.Presentation.WinUI.Services.Http;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class OrderViewModel : ObservableObject
     {
-        private readonly IOrderService _orderService = new MockOrderService();
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
+        private readonly IOrderService _orderService = new HttpOrderService(SharedHttpClient);
+        private readonly IOrderPdfService _orderPdfService;
 
         public ObservableCollection<OrderItemViewModel> Orders { get; } = new();
 
+        public IAsyncRelayCommand<OrderItemViewModel> PrintOrderCommand { get; }
+
+        // Observable properties
         [ObservableProperty]
         private string? _searchKeyword;
 
         [ObservableProperty]
-        private DateTimeOffset? _fromDate = null;  // No default filter - show all orders
+        private DateTimeOffset? _fromDate = DateTimeOffset.Now;
 
         [ObservableProperty]
-        private DateTimeOffset? _toDate = null;    // No default filter - show all orders
+        private DateTimeOffset? _toDate = DateTimeOffset.Now;
 
         [ObservableProperty]
         private OrderStatusItem? _selectedStatusItem;
@@ -54,7 +64,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool _isLoading;
 
-        // Status list for ComboBox
         public ObservableCollection<OrderStatusItem> StatusList { get; } = new()
         {
             new OrderStatusItem { DisplayName = "All", Status = null },
@@ -65,12 +74,64 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             new OrderStatusItem { DisplayName = "Returned", Status = OrderStatus.Returned }
         };
 
-        public OrderViewModel()
+        // Parameterless ctor chains to default OrderPdfService
+        public OrderViewModel() : this(new OrderPdfService()) { }
+
+        public OrderViewModel(IOrderPdfService orderPdfService)
         {
+            _orderPdfService = orderPdfService; // ensure field initialized
+
+            PrintOrderCommand = new AsyncRelayCommand<OrderItemViewModel>(PrintOrderAsync);
+
             // Set default selected status to "All"
             SelectedStatusItem = StatusList[0];
+
             // Load initial data
             _ = LoadOrdersAsync();
+        }
+
+        private async Task PrintOrderAsync(OrderItemViewModel item)
+        {
+            if (item == null) return;
+
+            try
+            {
+                var resp = await _orderService.GetOrderByIdAsync(item.Order.OrderId);
+                if (!resp.Success || resp.Data == null)
+                {
+                    await ShowDialogAsync("Export Error", "Failed to load order details.");
+                    return;
+                }
+
+                var bytes = await _orderPdfService.GenerateOrderPdfAsync(resp.Data);
+                if (bytes == null || bytes.Length == 0)
+                {
+                    await ShowDialogAsync("Export Error", "PDF generator returned no data.");
+                    return;
+                }
+
+                var fileName = $"Order_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                var path = await FileSaveHelper.SavePdfToDownloadsAsync(bytes, fileName);
+                FileSaveHelper.OpenFile(path);
+
+                await ShowDialogAsync("Exported", $"PDF saved to: {path}");
+            }
+            catch (Exception ex)
+            {
+                await ShowDialogAsync("Export Error", ex.ToString());
+            }
+        }
+
+        private async Task ShowDialogAsync(string title, string message)
+        {
+            var dlg = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "Close",
+                XamlRoot = App.MainWindow.Content.XamlRoot
+            };
+            await dlg.ShowAsync();
         }
 
         // Auto-reload when search keyword changes
@@ -209,23 +270,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-        // New public update method matching IOrderService.UpdateOrderAsync
-        public async Task UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
+        public async Task<ResponseWrapper<OrderDto>?> UpdateOrderAsync(int orderId, OrderUpsertRequestDto dto)
         {
-            if (dto == null) return;
+            if (dto == null) return null;
 
             try
             {
                 var response = await _orderService.UpdateOrderAsync(orderId, dto);
-                if (response.Success)
-                {
-                    // Optionally refresh orders
-                }
+                return response;
             }
             catch (Exception)
             {
-                // swallow for now
+                return null;
             }
+        }
+
+        public async Task<OrderDto?> GetOrderByIdAsync(int orderId)
+        {
+            try
+            {
+                var resp = await _orderService.GetOrderByIdAsync(orderId);
+                if (resp != null && resp.Success && resp.Data != null)
+                    return resp.Data;
+            }
+            catch
+            {
+                // ignore
+            }
+            return null;
         }
 
         [RelayCommand]
@@ -296,8 +368,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             get
             {
                 var count = Order.Details?.Count ?? 0;
-                var totalQty = Order.Details?.Sum(d => d.Quantity) ?? 0;
-                return $"{count} items ({totalQty} qty)";
+                return $"{count} items";
             }
         }
     }

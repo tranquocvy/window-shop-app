@@ -4,30 +4,55 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Width="600" Height="Auto">
 
-    <ScrollViewer MaxHeight="520">
-        <StackPanel Spacing="12" Padding="12">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12" Padding="16">
 
+            <!-- Ảnh sản phẩm -->
+            <TextBlock Text="Ảnh sản phẩm" FontWeight="SemiBold"/>
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="8" Height="200" Width="200">
+                <Image x:Name="ProductImage" Stretch="UniformToFill"/>
+            </Border>
+            <Button Content="Chọn ảnh..." Click="OnSelectImageClick" Width="120" Margin="0,4,0,0"/>
+
+            <!-- Image Gallery JSON -->
+            <TextBlock Text="Image Gallery (JSON)" FontWeight="SemiBold" />
+            <TextBox x:Name="ImageGalleryJsonBox" 
+                 TextWrapping="Wrap" 
+                 AcceptsReturn="True"
+                 Height="100"
+                 PlaceholderText='["img1.png","img2.png"]' />
+
+            <!-- Tên sản phẩm -->
             <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold"/>
             <TextBox x:Name="ProductNameBox" 
                      PlaceholderText="Nhập tên sản phẩm..." 
                      TextChanged="OnInputChanged"/>
-
             <TextBlock x:Name="ProductNameErrorText"
                        Text="Vui lòng nhập tên sản phẩm."
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
 
-
+            <!-- Thương hiệu -->
             <TextBlock Text="Thương hiệu" FontWeight="SemiBold"/>
-            <TextBox x:Name="BrandNameBox" PlaceholderText="Nhập thương hiệu..." />
-            
-            <TextBlock x:Name="BrandNameErrorText"
-                       Text="Phải nhập tên thương hiệu."
-                       Foreground="Red" FontSize="12"
-                       Visibility="Collapsed" Margin="0,-8,0,0"/>   
 
+            <ComboBox x:Name="BrandComboBox" 
+                      PlaceholderText="Chọn thương hiệu..."
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="OnBrandSelectionChanged">
+                <ComboBoxItem Content="Apple"/>
+                <ComboBoxItem Content="Samsung"/>
+                <ComboBoxItem Content="Xiaomi"/>
+            </ComboBox>
+
+            <TextBlock x:Name="BrandNameErrorText"
+                       Text="Phải chọn tên thương hiệu."
+                       Foreground="Red" FontSize="12"
+                       Visibility="Collapsed" Margin="0,-8,0,0"/>
+
+            <!-- Mô tả -->
             <TextBlock Text="Mô tả" FontWeight="SemiBold"/>
             <TextBox x:Name="DescriptionBox"
                      AcceptsReturn="True"
@@ -35,28 +60,27 @@
                      Height="120"
                      PlaceholderText="Mô tả chi tiết sản phẩm..." />
 
-            <TextBlock Text="Giá bán *" FontWeight="SemiBold"/>
-            <NumberBox x:Name="SellPriceBox" 
-                       PlaceholderText="0" 
-                       ValueChanged="OnNumberChanged"/>
+            <!-- Giá nhập -->
+            <TextBlock Text="Giá nhập" FontWeight="SemiBold"/>
+            <NumberBox x:Name="CostPriceBox" PlaceholderText="0" ValueChanged="OnNumberChanged"/>
 
+            <!-- Giá bán -->
+            <TextBlock Text="Giá bán *" FontWeight="SemiBold"/>
+            <NumberBox x:Name="SellPriceBox" PlaceholderText="0" ValueChanged="OnNumberChanged"/>
             <TextBlock x:Name="SellPriceErrorText"
                        Text="Giá bán phải lớn hơn 0."
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
 
-
+            <!-- Số lượng tồn -->
             <TextBlock Text="Số lượng tồn *" FontWeight="SemiBold"/>
-            <NumberBox x:Name="StockQuantityBox" 
-                       PlaceholderText="0" 
-                       ValueChanged="OnNumberChanged"/>
-
+            <NumberBox x:Name="StockQuantityBox" PlaceholderText="0" ValueChanged="OnNumberChanged"/>
             <TextBlock x:Name="StockQuantityErrorText"
                        Text="Số lượng tồn không được âm."
                        Foreground="Red" FontSize="12"
                        Visibility="Collapsed" Margin="0,-8,0,0"/>
 
-
+            <!-- Các thông số khác -->
             <TextBlock Text="Màu sắc" FontWeight="SemiBold"/>
             <TextBox x:Name="ColorBox" PlaceholderText="VD: Đen, Trắng..." />
 
@@ -71,16 +95,6 @@
 
             <TextBlock Text="Dung lượng pin (mAh)" FontWeight="SemiBold"/>
             <NumberBox x:Name="BatteryCapacityBox" PlaceholderText="4000 / 5000..." />
-
-            <TextBlock Text="ImageUrl (ảnh chính)" FontWeight="SemiBold"/>
-            <TextBox x:Name="ImageUrlBox" PlaceholderText="https://..." />
-
-            <TextBlock Text="Image Gallery (JSON)" FontWeight="SemiBold"/>
-            <TextBox x:Name="ImageGalleryJsonBox" 
-                     TextWrapping="Wrap" 
-                     AcceptsReturn="True"
-                     Height="100"
-                     PlaceholderText='["img1.png","img2.png"]' />
 
         </StackPanel>
     </ScrollViewer>

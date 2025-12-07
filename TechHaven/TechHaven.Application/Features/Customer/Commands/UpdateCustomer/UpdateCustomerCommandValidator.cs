@@ -5,12 +5,8 @@ using System.Text.RegularExpressions;
 
 public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCommand>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateCustomerCommandValidator(IUnitOfWork unitOfWork)
+    public UpdateCustomerCommandValidator()
     {
-        _unitOfWork = unitOfWork;
-
         RuleFor(x => x.CustomerName)
             .NotEmpty().WithMessage("Customer name is required.")
             .MaximumLength(150).WithMessage("Customer name cannot exceed 150 characters.");

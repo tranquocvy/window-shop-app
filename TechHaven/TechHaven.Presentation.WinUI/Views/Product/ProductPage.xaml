@@ -3,17 +3,27 @@
     x:Class="TechHaven.Presentation.WinUI.Views.ProductPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TechHaven.Presentation.WinUI.Views"
+    xmlns:conv="using:TechHaven.Presentation.WinUI.Views"
     xmlns:vm="using:TechHaven.Presentation.WinUI.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
+    x:Name="RootPage"
     mc:Ignorable="d"
     Background="White"
     Foreground="#0A2E8C">
 
+
     <Page.DataContext>
         <vm:ProductViewModel/>
     </Page.DataContext>
+
+    <Page.Resources>
+        <converters:UrlToImageConverter x:Key="UrlToImageConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:PriceFormatConverter x:Key="PriceFormatConverter"/>
+    </Page.Resources>
+
 
     <Grid Padding="16" RequestedTheme="Light">
         <Grid.RowDefinitions>
@@ -30,37 +40,70 @@
                    Margin="0,0,0,12"
                    Foreground="#0A2E8C"/>
 
-        <!-- SEARCH + ADD + DELETE -->
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    Margin="0,0,0,12"
-                    Spacing="8">
+        <Grid Grid.Row="1"
+      Margin="0,0,0,12"
+      ColumnSpacing="8">
 
-            <TextBox
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" Grid.ColumnSpan="3"
                 PlaceholderText="Tìm kiếm theo tên, danh mục..."
-                Width="300"
                 Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Button Content="Thêm Sản Phẩm"
-                    Margin="12,0,0,0"
+            <ComboBox Grid.Column="3"
+                ItemsSource="{x:Bind ViewModel.BrandNameFilter}"
+                SelectedItem="{x:Bind ViewModel.SelectedBrandName, Mode=TwoWay}"
+                HorizontalAlignment="Stretch"
+                Height="40"
+                PlaceholderText="Hãng"/>
+
+            <ComboBox Grid.Column="4"
+                  ItemsSource="{x:Bind ViewModel.PriceRangeOptions}"
+                  SelectedItem="{x:Bind ViewModel.SelectedPriceRange, Mode=TwoWay}"
+                  PlaceholderText="Khoảng giá"
+                  HorizontalAlignment="Stretch"
+                  Height="40"/>
+
+            <ComboBox Grid.Column="5" 
+                  ItemsSource="{x:Bind ViewModel.StatusFilter}"
+                  SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
+                  HorizontalAlignment="Stretch"
+                  Height="40"
+                  PlaceholderText="Trạng thái"/>
+
+
+            <StackPanel Grid.Column="6" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
+                <Button Content="Thêm"
                     Background="#0D47A1"
                     Foreground="White"
                     FontWeight="Bold"
                     CornerRadius="5"
                     Height="40"
-                    Width="200"
-                    Click="AddProduct_Click" 
-                    />
+                    Click="AddProduct_Click"/>
 
-            <!--  NÚT XÓA  -->
-            <Button Content="Xóa sản phẩm đã chọn"
-                    Background="Red"
+                <Button Content="Xóa"
+                    Background="#D7292A"
                     Foreground="White"
+                    FontWeight="Bold"
                     CornerRadius="5"
-                    Command="{Binding DeleteSelectedCommand}"
                     Height="40"
-                    Width="220"/>
-        </StackPanel>
+                    Command="{Binding DeleteSelectedCommand}"
+                    Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </StackPanel>
+        </Grid>
+
+
+
 
         <!-- LIST -->
         <ListView Grid.Row="2"
@@ -70,67 +113,89 @@
           ItemClick="ProductsList_ItemClick"
           x:Name="ProductsListView">
 
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="MinHeight" Value="48"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+
             <ListView.Header>
-                <Grid Padding="0,6">
+                <Grid Padding="12,10" Background="#F3F4F6" CornerRadius="4">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50"/>
-                        <ColumnDefinition Width="0.5*"/>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="60"/>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="0.6*"/>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- CHECK ALL -->
-                    <CheckBox Grid.Column="0"
-                      IsChecked="{Binding IsAllSelected, Mode=TwoWay}"
-                      Margin="16 0 0 0"/>
-
-                    <TextBlock Grid.Column="1" Text="ID" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="3" Text="Giá" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="4" Text="SL" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="5" Text="Danh Mục" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="6" Text="Trạng Thái" FontWeight="SemiBold"/>
+                    <CheckBox Grid.Column="0" IsChecked="{Binding IsAllSelected, Mode=TwoWay}" MinWidth="0" Margin="0"/>
+                    <TextBlock Grid.Column="1" Text="Ảnh" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="4" Text="Giá Bán" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="SL" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="6" Text="Hãng" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="7" Text="Trạng Thái" FontWeight="Bold" VerticalAlignment="Center"/>
                 </Grid>
             </ListView.Header>
 
+
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ProductItemViewModel">
-                    <Grid Padding="0,6">
+                    <Grid Padding="12,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40"/>
-                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="0.6*"/>
                             <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- CHECKBOX ITEM -->
-                        <CheckBox Grid.Column="0"
-                          IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" MinWidth="0" Margin="0"/>
 
-                        <TextBlock Grid.Column="1" Text="{Binding Product.ProductId}"/>
-                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}"/>
-                        <TextBlock Grid.Column="3" Text="{Binding Product.SellPrice}"/>
-                        <TextBlock Grid.Column="4" Text="{Binding Product.StockQuantity}"/>
-                        <TextBlock Grid.Column="5" Text="{Binding Product.BrandName}"/>
-                        <TextBlock Grid.Column="6" 
-                            Text="{Binding StatusText}" 
-                            Foreground="{Binding StatusColor}"/>     
+                        <Border Grid.Column="1" CornerRadius="4" Width="40" Height="40" HorizontalAlignment="Left" Margin="0,0,10,0">
+                            <Image Source="{Binding Product.ImageUrl, Converter={StaticResource UrlToImageConverter}}" Stretch="UniformToFill"/>
+                        </Border>
 
-                        <!-- Context Menu -->
+                        <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="3"
+                           Text="{Binding Product.CostPrice, Converter={StaticResource PriceFormatConverter}}"
+                           VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="4"
+                           Text="{Binding Product.SellPrice, Converter={StaticResource PriceFormatConverter}}"
+                           VerticalAlignment="Center"/>     
+    
+
+
+                        <TextBlock Grid.Column="5" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="6" Text="{Binding Product.BrandName}" VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Column="7" Text="{Binding StatusText}" Foreground="{Binding StatusColor}" VerticalAlignment="Center"/>
+
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem Text="Xem chi tiết" Click="ViewDetails_Click"/>
-                                <MenuFlyoutItem
-                            Text="Xóa sản phẩm"
-                            Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
-                            CommandParameter="{Binding}" />
+                                <MenuFlyoutItem 
+                                    Text="Xóa sản phẩm"
+                                    Command="{Binding DataContext.DeleteProductContextCommand, ElementName=ProductsListView}"
+                                    CommandParameter="{Binding}"
+                                    Visibility="{Binding DataContext.IsAdmin, ElementName=RootPage, Converter={StaticResource BoolToVisibilityConverter}}"/>
                             </MenuFlyout>
+
+
                         </Grid.ContextFlyout>
 
                     </Grid>
@@ -140,16 +205,12 @@
         </ListView>
 
 
-        <!-- PAGINATION -->
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,8,0,0"
-                    Spacing="8">
 
-            <Button Content="Previous"/>
-            <TextBlock VerticalAlignment="Center" Text="Page 1 / 10"/>
-            <Button Content="Next"/>
+        <!-- PAGINATION -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="8">
+            <Button Content="Previous" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding CanGoPrevious}"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding PageInfo}"/>
+            <Button Content="Next" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoNext}"/>
 
             <TextBlock VerticalAlignment="Center"
                        Margin="12,0,0,0"

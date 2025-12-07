@@ -61,15 +61,8 @@ public class GetCurrentUserQueryHandler : IQueryHandler<GetCurrentUserQuery, Res
             ErrorType.NotFound);
       }
 
-      // Map sang DTO
-      var userInfo = new UserInfoDto
-      {
-        UserName = user.UserName ?? string.Empty,
-        UserFullName = user.UserFullName ?? string.Empty,
-        Email = user.Email ?? string.Empty,
-        RoleId = user.RoleId,
-        RoleName = role.RoleName ?? string.Empty
-      };
+      var userInfo = _mapper.Map<UserInfoDto>(user);
+      userInfo.RoleName = role.RoleName ?? string.Empty;
 
       return Result<UserInfoDto>.Success(userInfo);
     }

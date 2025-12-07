@@ -164,7 +164,6 @@ namespace TechHaven.Presentation.WinUI.Helpers
                 var resp = await client.PostAsJsonAsync("api/Auth/refresh-token", dto).ConfigureAwait(false);
                 var content = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Debug.WriteLine($"TryRestoreSessionAsync: refresh endpoint returned status {resp.StatusCode}");
-                Debug.WriteLine($"TryRestoreSessionAsync: refresh endpoint body: {content}");
                 if (!resp.IsSuccessStatusCode) { Debug.WriteLine("TryRestoreSessionAsync: refresh failed, removing persisted token"); RemoveRefreshToken(); TokenStore.RefreshToken = null; return false; }
 
                 var wrapper = await resp.Content.ReadFromJsonAsync<ResponseWrapper<RefreshTokenResponseDto>>().ConfigureAwait(false);

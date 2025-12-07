@@ -1,9 +1,10 @@
 using TechHaven.Application.Interfaces;
 using TechHaven.Shared.DTOs.Products;
+using TechHaven.Domain.Common;
 
 namespace TechHaven.Application.Features.Product.Commands.UpdateProduct;
 
-public record UpdateProductCommand() : ICommand<ProductDto>
+public record UpdateProductCommand() : ICommand<Result<ProductDto>>
 {
   public int ProductId { get; init; }
   public string ProductName { get; init; } = string.Empty;

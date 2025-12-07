@@ -1,0 +1,13 @@
+{
+    "ProductName": "TECNO POVA 5 8GB 128GB",
+    "BrandName": "Tecno",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "Mediatek MT8781 Helio G99 (6nm)",
+    "ScreenSize": 6.78,
+    "BatteryCapacity": 6000,
+    "ImageUrl": "tecno-pova-5_main.jpg",
+    "ImageGalleryJson": "[\"tecno-pova-5_gallery_1.jpg\", \"tecno-pova-5_gallery_2.jpg\"]",
+    "SellPrice": 0,
+    "Description": "Tần số quét 120Hz, tần số cảm ứng 240Hz, 580 nits"
+}
