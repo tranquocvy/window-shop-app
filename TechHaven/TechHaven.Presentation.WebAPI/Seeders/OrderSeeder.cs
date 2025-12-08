@@ -77,35 +77,35 @@ public class OrderSeeder
         {
             await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-            // 1. Remove old seeded demo orders (and related details/payments)
-            var oldSeedOrders = await _context.Orders
-                .Where(o => o.Notes != null && o.Notes.StartsWith(SeedNotePrefix))
-                .ToListAsync(cancellationToken);
+            // // 1. Remove old seeded demo orders (and related details/payments)
+            // var oldSeedOrders = await _context.Orders
+            //     .Where(o => o.Notes != null && o.Notes.StartsWith(SeedNotePrefix))
+            //     .ToListAsync(cancellationToken);
 
-            if (oldSeedOrders.Count > 0)
-            {
-                var oldOrderIds = oldSeedOrders
-                    .Select(o => o.OrderId)
-                    .ToList();
+            // if (oldSeedOrders.Count > 0)
+            // {
+            //     var oldOrderIds = oldSeedOrders
+            //         .Select(o => o.OrderId)
+            //         .ToList();
 
-                var oldOrderDetails = await _context.OrderDetails
-                    .Where(od => oldOrderIds.Contains(od.OrderId))
-                    .ToListAsync(cancellationToken);
+            //     var oldOrderDetails = await _context.OrderDetails
+            //         .Where(od => oldOrderIds.Contains(od.OrderId))
+            //         .ToListAsync(cancellationToken);
 
-                var oldPayments = await _context.Payments
-                    .Where(p => oldOrderIds.Contains(p.OrderId))
-                    .ToListAsync(cancellationToken);
+            //     var oldPayments = await _context.Payments
+            //         .Where(p => oldOrderIds.Contains(p.OrderId))
+            //         .ToListAsync(cancellationToken);
 
-                _context.OrderDetails.RemoveRange(oldOrderDetails);
-                _context.Payments.RemoveRange(oldPayments);
-                _context.Orders.RemoveRange(oldSeedOrders);
+            //     _context.OrderDetails.RemoveRange(oldOrderDetails);
+            //     _context.Payments.RemoveRange(oldPayments);
+            //     _context.Orders.RemoveRange(oldSeedOrders);
 
-                await _context.SaveChangesAsync(cancellationToken);
+            //     await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation(
-                    "Removed {OrderCount} previously seeded demo orders.",
-                    oldSeedOrders.Count);
-            }
+            //     _logger.LogInformation(
+            //         "Removed {OrderCount} previously seeded demo orders.",
+            //         oldSeedOrders.Count);
+            // }
 
             // 2. Generate fresh demo orders
             var newOrders = new List<Order>();
