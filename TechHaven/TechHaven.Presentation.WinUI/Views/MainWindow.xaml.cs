@@ -99,6 +99,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Navigate to ShellWindow
             var shellWindow = new ShellWindow();
+
+            // [BẮT BUỘC] Cập nhật biến Static để Picker hoạt động
+            TechHaven.Presentation.WinUI.App.MainWindow = shellWindow;
             App.MainWindow = shellWindow;
             shellWindow.Activate();
 
