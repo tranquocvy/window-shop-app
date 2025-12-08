@@ -90,12 +90,12 @@
                     Height="40"
                     Click="AddProduct_Click"/>
                 <Button Content="Thêm Danh Mục"
-                    Background="#0D47A1"
+                    Background="#e36f02"
                     Foreground="White"
                     FontWeight="Bold"
                     CornerRadius="5"
                     Height="40"
-                    Click="AddProduct_Click"/>
+                    Click="AddBrand_Click"/>
 
                 <Button Content="Xóa"
                     Background="#D7292A"
