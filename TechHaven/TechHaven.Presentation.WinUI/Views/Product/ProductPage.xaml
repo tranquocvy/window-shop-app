@@ -44,13 +44,13 @@
           Margin="0,0,0,12"
           ColumnSpacing="8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40"/>
-                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="0"/>
+                <ColumnDefinition Width="0"/>
+                <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="1.2*"/>
-                <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1.2*"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1.8*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
@@ -82,7 +82,14 @@
 
 
             <StackPanel Grid.Column="6" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
-                <Button Content="Thêm"
+                <Button Content="Thêm Sản Phẩm"
+                    Background="#0D47A1"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    CornerRadius="5"
+                    Height="40"
+                    Click="AddProduct_Click"/>
+                <Button Content="Thêm Danh Mục"
                     Background="#0D47A1"
                     Foreground="White"
                     FontWeight="Bold"
@@ -99,15 +106,15 @@
                     Command="{Binding DeleteSelectedCommand}"
                     Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                    <Button Height="40"
-                        Padding="12,0"
-                        Background="#2E7D32"
-                        Foreground="White"
-                        CornerRadius="6"
-                        Click="ImportExcel_Click">
+                <Button Height="40"
+                    Padding="12,0"
+                    Background="#2E7D32"
+                    Foreground="White"
+                    CornerRadius="6"
+                    Click="ImportExcel_Click">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE8B5;" />
-                        <TextBlock Text="Import" VerticalAlignment="Center"/>
+                        <TextBlock Text="Import" VerticalAlignment="Center" FontWeight="Bold"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
