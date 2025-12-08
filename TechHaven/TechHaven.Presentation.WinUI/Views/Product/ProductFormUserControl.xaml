@@ -87,11 +87,7 @@
             <ComboBox x:Name="BrandComboBox" 
                       PlaceholderText="Chọn thương hiệu..."
                       HorizontalAlignment="Stretch"
-                      SelectionChanged="OnBrandSelectionChanged">
-                <ComboBoxItem Content="Apple"/>
-                <ComboBoxItem Content="Samsung"/>
-                <ComboBoxItem Content="Xiaomi"/>
-            </ComboBox>
+                      SelectionChanged="OnBrandSelectionChanged"/>
 
             <TextBlock x:Name="BrandNameErrorText"
                        Text="Phải chọn tên thương hiệu."

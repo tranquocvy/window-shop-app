@@ -5,11 +5,15 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net.Http.Json;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
+using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Shared.DTOs.Brands;
 using TechHaven.Shared.DTOs.Products;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -26,19 +30,61 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private List<string?> _galleryUrls = new List<string?> { null, null, null };
         public string? OriginalImageUrl => _originalImageUrl;
 
+        private Task? _brandsLoadingTask;
+
         public ProductFormUserControl()
         {
             this.InitializeComponent();
 
             // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
             _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+            
+            // Load brands from API
+            _brandsLoadingTask = LoadBrandsAsync();
+        }
+
+        /// <summary>
+        /// Ensure brands are loaded before accessing them
+        /// </summary>
+        private async Task EnsureBrandsLoadedAsync()
+        {
+            if (_brandsLoadingTask != null)
+            {
+                await _brandsLoadingTask;
+            }
+        }
+
+        /// <summary>
+        /// Load danh sách thương hiệu từ API
+        /// </summary>
+        private async Task LoadBrandsAsync()
+        {
+            try
+            {
+                var httpClient = ApiClientFactory.GetHttpClient();
+                var response = await httpClient.GetFromJsonAsync<TechHaven.Shared.DTOs.Common.ResponseWrapper<List<BrandDto>>>("api/Brand");
+                
+                if (response?.Success == true && response.Data != null)
+                {
+                    var brandNames = response.Data
+                        .Where(b => !string.IsNullOrWhiteSpace(b.BrandName))
+                        .Select(b => b.BrandName)
+                        .ToList();
+                    
+                    BrandComboBox.ItemsSource = brandNames;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to load brands: {ex.Message}");
+            }
         }
 
 
         /// <summary>
         /// Đổ dữ liệu từ ProductDto vào form (Edit mode)
         /// </summary>
-        public void LoadData(ProductDto product)
+        public async void LoadData(ProductDto product)
         {
             if (product == null) return;
 
@@ -47,20 +93,21 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             SelectedImagePath = null;
             _originalImageUrl = product.ImageUrl;
 
+            // Wait for brands to load first
+            await EnsureBrandsLoadedAsync();
+
             ProductNameBox.Text = product.ProductName ?? string.Empty;
-            BrandComboBox.SelectedItem = null;
-            if (!string.IsNullOrEmpty(product.BrandName))
+            
+            // Set brand selection (now using ItemsSource instead of ComboBoxItem)
+            if (!string.IsNullOrEmpty(product.BrandName) && BrandComboBox.ItemsSource != null)
             {
-                // Duyệt qua các item trong ComboBox để tìm item trùng tên
-                foreach (ComboBoxItem item in BrandComboBox.Items)
-                {
-                    if (item.Content?.ToString() == product.BrandName)
-                    {
-                        BrandComboBox.SelectedItem = item;
-                        break;
-                    }
-                }
+                BrandComboBox.SelectedItem = product.BrandName;
             }
+            else
+            {
+                BrandComboBox.SelectedItem = null;
+            }
+            
             DescriptionBox.Text = product.Description ?? string.Empty;
 
             CostPriceBox.Value = product.CostPrice > 0 ? (double)product.CostPrice : double.NaN;
@@ -140,11 +187,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             bool isValid = true;
 
             string rawName = ProductNameBox.Text?.Trim();
-            string? brandName = null;
-            if (BrandComboBox.SelectedItem is ComboBoxItem selectedItem)
-            {
-                brandName = selectedItem.Content.ToString();
-            }
+            string? brandName = BrandComboBox.SelectedItem as string;
             double sellPrice = GetDoubleSafe(SellPriceBox.Value);
             double stockQty = GetDoubleSafe(StockQuantityBox.Value);
 
