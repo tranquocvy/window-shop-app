@@ -140,8 +140,8 @@ public class CreateProductsBulkCommandHandler
       }
 
       // Step 3: Insert products in a transaction
-      await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
+      // Removed manual transaction - let EF Core handle it with retry strategy
+      
       try
       {
         var createdProducts = new List<Domain.Entities.Product>();
@@ -157,9 +157,7 @@ public class CreateProductsBulkCommandHandler
             await _unitOfWork.Products.AddAsync(product, cancellationToken);
             createdProducts.Add(product);
 
-            _logger.LogDebug(
-                "Row {Row}: Successfully created product '{Name}'",
-                rowIndex, product.ProductName);
+            // Chuyển log xuống sau khi SaveChanges thành công
           }
           catch (Exception ex)
           {
@@ -176,13 +174,21 @@ public class CreateProductsBulkCommandHandler
 
             if (request.ValidateBeforeInsert)
             {
-              throw; // Rollback transaction if atomic mode
+              throw; // Rollback if atomic mode
             }
           }
         }
 
+        // Save all changes at once
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        await _unitOfWork.CommitTransactionAsync(cancellationToken);
+
+        // Log success chỉ sau khi save thành công
+        foreach (var product in createdProducts)
+        {
+          _logger.LogDebug(
+              "Successfully created product '{Name}'",
+              product.ProductName);
+        }
 
         // Map created products to DTOs
         response.CreatedProducts = _mapper.Map<List<ProductDto>>(createdProducts);
@@ -196,9 +202,9 @@ public class CreateProductsBulkCommandHandler
 
         return Result<ProductBulkCreateResponseDto>.Success(response);
       }
-      catch
+      catch (Exception ex)
       {
-        await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+        _logger.LogError(ex, "Failed to save products to database");
         throw;
       }
     }
