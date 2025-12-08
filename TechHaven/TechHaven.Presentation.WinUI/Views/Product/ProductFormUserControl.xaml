@@ -10,64 +10,66 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="12" Padding="16">
 
-            <!-- Ảnh sản phẩm -->
+            <!-- Ảnh sản phẩm - Carousel với nút trái/phải -->
             <TextBlock Text="Ảnh sản phẩm" FontWeight="SemiBold"/>
-            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="8" 
-                    Height="200" Width="200"
-                    Background="WhiteSmoke"
-                    Tapped="OnSelectImageTapped"
-                    ToolTipService.ToolTip="Nhấn để thay đổi ảnh đại diện">
-                
-                <Grid>
-                    <FontIcon Glyph="&#xE958;" FontFamily="Segoe MDL2 Assets" 
-                              FontSize="48" Foreground="Silver"
-                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    
-                    <Image x:Name="ProductImage" Stretch="UniformToFill"/>
+            <StackPanel Spacing="8">
+                <!-- Ảnh chính -->
+                <Grid Width="400" Height="250">
+                    <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="8" 
+                            Background="WhiteSmoke"
+                            Tapped="OnSelectImageTapped"
+                            ToolTipService.ToolTip="Nhấn để thêm/thay đổi ảnh">
+                        <Grid>
+                            <FontIcon Glyph="&#xE958;" FontFamily="Segoe MDL2 Assets" 
+                                      FontSize="48" Foreground="Silver"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            
+                            <Image x:Name="CurrentImage" Stretch="Uniform"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Nút chuyển trái -->
+                    <Button x:Name="PrevButton"
+                            Click="OnPreviousImage"
+                            Width="40" Height="40"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Margin="8,0,0,0"
+                            Background="#80000000"
+                            CornerRadius="20"
+                            ToolTipService.ToolTip="Ảnh trước">
+                        <FontIcon Glyph="&#xE76B;" FontSize="16" Foreground="White"/>
+                    </Button>
+
+                    <!-- Nút chuyển phải -->
+                    <Button x:Name="NextButton"
+                            Click="OnNextImage"
+                            Width="40" Height="40"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Margin="0,0,8,0"
+                            Background="#80000000"
+                            CornerRadius="20"
+                            ToolTipService.ToolTip="Ảnh sau">
+                        <FontIcon Glyph="&#xE76C;" FontSize="16" Foreground="White"/>
+                    </Button>
+
+                    <!-- Chỉ số ảnh hiện tại -->
+                    <Border Background="#80000000" 
+                            CornerRadius="12"
+                            Padding="8,4"
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,0,12">
+                        <TextBlock x:Name="ImageIndexText" 
+                                   Text="1 / 4" 
+                                   Foreground="White" 
+                                   FontSize="12"/>
+                    </Border>
                 </Grid>
-            </Border>
 
-            <!-- Ảnh phụ (Gallery) -->
-            <TextBlock Text="Ảnh sưu tập (Gallery)" FontWeight="SemiBold" Margin="0,12,0,0"/>
-            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
-
-                <Border Width="70" Height="70" 
-                        BorderThickness="1" BorderBrush="LightGray" CornerRadius="4"
-                        Background="WhiteSmoke"
-                        Tag="0" Tapped="OnGalleryImageTapped" 
-                        ToolTipService.ToolTip="Nhấn để thêm/sửa ảnh 1">
-                    <Grid>
-                        <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="Gray" 
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                        <Image x:Name="GalleryImg1" Stretch="UniformToFill"/>
-                    </Grid>
-                </Border>
-
-                <Border Width="70" Height="70" 
-                        BorderThickness="1" BorderBrush="LightGray" CornerRadius="4"
-                        Background="WhiteSmoke"
-                        Tag="1" Tapped="OnGalleryImageTapped" 
-                        ToolTipService.ToolTip="Nhấn để thêm/sửa ảnh 2">
-                    <Grid>
-                        <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="Gray" 
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <Image x:Name="GalleryImg2" Stretch="UniformToFill"/>
-                    </Grid>
-                </Border>
-
-                <Border Width="70" Height="70" 
-                        BorderThickness="1" BorderBrush="LightGray" CornerRadius="4"
-                        Background="WhiteSmoke"
-                        Tag="2" Tapped="OnGalleryImageTapped" 
-                        ToolTipService.ToolTip="Nhấn để thêm/sửa ảnh 3">
-                    <Grid>
-                        <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="Gray" 
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <Image x:Name="GalleryImg3" Stretch="UniformToFill"/>
-                    </Grid>
-                </Border>
-
+                <!-- Thumbnails ảnh phía dưới -->
+                <StackPanel x:Name="ThumbnailsPanel" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <!-- Thumbnails sẽ được thêm động từ code-behind -->
+                </StackPanel>
             </StackPanel>
 
 
