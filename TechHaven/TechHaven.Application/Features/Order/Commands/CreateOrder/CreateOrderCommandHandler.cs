@@ -5,7 +5,8 @@ using TechHaven.Domain.Common;      //  Result, ErrorType
 using TechHaven.Domain.Enums;       
 using AutoMapper;
 using TechHaven.Domain.Entities;
-using OrderStatus = TechHaven.Domain.Enums.OrderStatus;    // use entity Order, Product...
+using OrderStatus = TechHaven.Domain.Enums.OrderStatus;
+using System.Net.WebSockets;    // use entity Order, Product...
 
 namespace TechHaven.Application.Features.Order.Commands.CreateOrder;
 
@@ -100,7 +101,15 @@ public class CreateOrderCommandHandler
             // 4. Tính toán tổng tiền cuối cùng
             order.SubtotalAmount = calculatedSubTotal;
             //TODO: Discount tạm thời là %?
-            order.TotalAmount = (order.SubtotalAmount - order.SubtotalAmount * order.Discount); 
+            //Lấy cả 2 bên để tránh lỗi bất kể Discount ở dạng % hay dạng tiền
+            var subtractedAmount = (decimal)0;
+            if (order.Discount < 1)
+            {
+                subtractedAmount = (order.SubtotalAmount * order.Discount);
+            }
+            else { subtractedAmount = (order.SubtotalAmount - order.Discount); }
+
+            order.TotalAmount = order.SubtotalAmount - subtractedAmount; 
 
             // Validation logic: Không để tổng tiền âm
             if (order.TotalAmount < 0) order.TotalAmount = 0;
