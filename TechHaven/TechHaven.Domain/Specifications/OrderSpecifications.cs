@@ -14,28 +14,25 @@ public static class OrderFilterBuilder
   /// </summary>
   public static Expression<Func<Order, bool>> Build(OrderSearchCriteria criteria)
   {
-    // Xử lý Time Component cho ToDate
-    // Nếu có ToDate, ta dịch nó về giây cuối cùng của ngày đó (hoặc so sánh nhỏ hơn ngày hôm sau)
-    DateTime? toDateEndOfDay = criteria.ToDate.HasValue
-        ? criteria.ToDate.Value.Date.AddDays(1).AddTicks(-1) // 23:59:59.9999
-        : null;
+        DateTime? toDateEndOfDay = null;
 
-    // FromDate thường không cần sửa nếu mặc định là 00:00:00
+        if (criteria.ToDate.HasValue)
+        {
+            // Lấy phần ngày (00:00) -> Cộng 1 ngày -> Trừ 1 Tick -> 23:59:59.9999
+            var calculatedDate = criteria.ToDate.Value.Date.AddDays(1).AddTicks(-1);
+            toDateEndOfDay = DateTime.SpecifyKind(calculatedDate, DateTimeKind.Utc); // ép kiểu về Utc
+        }
+        return x =>
+            (string.IsNullOrEmpty(criteria.CustomerKeyword) ||
+             (x.Customer != null && x.Customer.CustomerName.Contains(criteria.CustomerKeyword))) &&
 
-    return x =>
-        // Truy cập vào Navigation Property: x.Customer.CustomerName
-        (string.IsNullOrEmpty(criteria.CustomerKeyword) ||
-         (x.Customer != null && x.Customer.CustomerName.Contains(criteria.CustomerKeyword))) &&
+            (!criteria.CustomerId.HasValue || x.CustomerId == criteria.CustomerId) &&
 
-        (!criteria.CustomerId.HasValue || x.CustomerId == criteria.CustomerId) &&
+            (!criteria.Status.HasValue || x.Status == criteria.Status) &&
 
-        (!criteria.Status.HasValue || x.Status == criteria.Status) &&
-
-        (!criteria.FromDate.HasValue || x.OrderDate >= criteria.FromDate) &&
-        (!criteria.ToDate.HasValue || x.OrderDate <= criteria.ToDate);
-    // &&(!criteria.MinTotalAmount.HasValue || x.TotalAmount >= criteria.MinTotalAmount) 
-    // &&(!criteria.MaxTotalAmount.HasValue || x.TotalAmount <= criteria.MaxTotalAmount);
-  }
+            (!criteria.FromDate.HasValue || x.OrderDate >= criteria.FromDate) &&
+            (!toDateEndOfDay.HasValue || x.OrderDate <= toDateEndOfDay);
+    }
 }
 
 
@@ -48,7 +45,8 @@ public class OrderSearchSpecification : BaseSpecification<Order>
   {
     // Chỉ Include cấp 1 những bảng cần hiện lên Grid
     AddInclude(o => o.Customer!);
-    AddInclude(o => o.User!);
+    AddInclude(o => o.User!);       
+    AddInclude(o => o.OrderDetails!);//load OrderDetails để tính tổng số lượng
 
     ApplySorting(criteria.SortBy, criteria.SortDescending);
     ApplyPaging((criteria.PageNumber - 1) * criteria.PageSize, criteria.PageSize);
