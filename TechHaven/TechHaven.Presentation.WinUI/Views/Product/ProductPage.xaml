@@ -106,12 +106,15 @@
                     Command="{Binding DeleteSelectedCommand}"
                     Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
+
                 <Button Height="40"
-                    Padding="12,0"
-                    Background="#2E7D32"
-                    Foreground="White"
-                    CornerRadius="6"
-                    Click="ImportExcel_Click">
+                        Padding="12,0"
+                        Background="#2E7D32"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        CornerRadius="6"
+                        Click="ImportExcel_Click">
+                    
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE8B5;" />
                         <TextBlock Text="Import" VerticalAlignment="Center" FontWeight="Bold"/>
