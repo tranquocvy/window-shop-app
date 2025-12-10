@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Common;
 using TechHaven.Domain.Interfaces;
@@ -35,6 +35,8 @@ public class GetAppSettingByKeyQueryHandler : IQueryHandler<GetAppSettingByKeyQu
 
         var dto = _mapper.Map<AppSettingDto>(entity);
 
+        // Đảm bảo UserId và IsSystem được set đúng
+        dto.UserId = entity.UserId;
         dto.IsSystem = entity.UserId == null;
 
         return Result<AppSettingDto>.Success(dto);

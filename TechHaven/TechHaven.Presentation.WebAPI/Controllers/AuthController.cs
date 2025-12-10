@@ -11,6 +11,7 @@ using TechHaven.Application.Features.Auth.VerifyOtp;
 using TechHaven.Application.Features.Auth.RefreshToken;
 using TechHaven.Application.Features.Auth.ResendOtp;
 using TechHaven.Application.Features.Auth.Queries.GetCurrentUser;
+using TechHaven.Application.Features.Auth.Signup;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -246,5 +247,75 @@ public class AuthController : ControllerBase
       Message = "User information retrieved successfully.",
       Data = result.Data
     });
+  }
+
+  /// <summary>
+  /// Register a new user account
+  /// </summary>
+  [HttpPost("signup")]
+  [ProducesResponseType(typeof(ResponseWrapper<SignupResponseDto>), StatusCodes.Status201Created)]
+  [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<ResponseWrapper<SignupResponseDto>>> Signup(
+    [FromBody] SignupRequestDto request,
+    CancellationToken cancellationToken)
+  {
+    try
+    {
+      _logger.LogInformation(
+        "Signup attempt for username {UserName}, email {Email}",
+        request.UserName,
+        request.Email);
+
+      var command = new SignupCommand(
+        request.UserFullName,
+        request.Email,
+        request.UserName,
+        request.Password,
+      // request.ConfirmPassword
+        request.RoleId
+      );
+
+      var result = await _mediator.Send(command, cancellationToken);
+
+      _logger.LogInformation(
+        "Signup succeeded for user {UserName}. UserId: {UserId}",
+        result.UserName,
+        result.UserId);
+
+      return StatusCode(StatusCodes.Status201Created, new ResponseWrapper<SignupResponseDto>
+      {
+        Success = true,
+        Message = "Account created successfully",
+        Data = result
+      });
+    }
+    catch (ValidationException vex)
+    {
+      _logger.LogWarning(
+        vex,
+        "Validation failed during signup for username {UserName}",
+        request.UserName);
+
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Signup failed",
+        Errors = vex.Errors.SelectMany(kvp => kvp.Value).ToList()
+      });
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(
+        ex,
+        "Signup failed for username {UserName}",
+        request.UserName);
+
+      return BadRequest(new ResponseWrapper<object>
+      {
+        Success = false,
+        Message = "Signup failed",
+        Errors = new List<string> { ex.Message }
+      });
+    }
   }
 }

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Common;
 using TechHaven.Domain.Entities;
@@ -37,14 +37,12 @@ public class GetAppSettingsQueryHandler : IQueryHandler<GetAppSettingsQuery, Res
 
         var dtos = _mapper.Map<List<AppSettingDto>>(entities);
 
-        // 4. Xử lý logic hiển thị bổ sung (Optional)
-        // Ví dụ: Đánh dấu IsSystem trong DTO
-        //foreach (var dto in dtos)
-        //{
-        // Nếu entity gốc có UserId null -> Là System Setting
-        // (Lưu ý: Logic này nên làm trong AutoMapper Profile thì gọn hơn)
-        // dto.IsSystem = ... (Đã xử lý trong Mapper ở bước trước)
-        //}
+        // Set IsSystem and UserId for each DTO
+        for (int i = 0; i < dtos.Count; i++)
+        {
+            dtos[i].IsSystem = entities[i].UserId == null;
+            dtos[i].UserId = entities[i].UserId;
+        }
 
         // Response wrapping
         var response = new PagingResponse<AppSettingDto>

@@ -73,8 +73,9 @@ public class AppSettingAccessRequirement : IAuthorizationRequirement
 /// <summary>
 /// Handler kiểm tra quyền truy cập AppSetting
 /// Rule: 
-/// - User chỉ được xem/sửa setting của mình
-/// - Admin được xem/sửa tất cả setting (bao gồm system setting)
+/// - Admin: có thể xem/sửa tất cả setting (bao gồm system setting)
+/// - Seller: có thể xem system settings và xem/sửa setting của mình
+/// - System settings: Tất cả users đều có thể đọc, chỉ Admin mới được sửa
 /// </summary>
 public class AppSettingAuthorizationHandler
     : AuthorizationHandler<AppSettingAccessRequirement>
@@ -90,6 +91,7 @@ public class AppSettingAuthorizationHandler
     }
 
     var roleClaim = context.User.FindFirst(ClaimTypes.Role);
+    var currentUserIdValue = userIdClaim.Value;
 
     // Admin có full quyền
     if (roleClaim?.Value == Roles.Admin)
@@ -98,19 +100,21 @@ public class AppSettingAuthorizationHandler
       return Task.CompletedTask;
     }
 
-    // Seller chỉ được truy cập setting của mình
     // Resource được truyền vào context.Resource
     if (context.Resource is AppSettingAuthorizationContext settingContext)
     {
-      // Nếu là system setting (UserId = null) -> Chỉ Admin mới được truy cập
+      // Nếu là system setting (UserId = null) -> Tất cả users đều có thể đọc
+      // (Việc kiểm tra quyền sửa sẽ được xử lý ở controller level)
       if (settingContext.TargetUserId == null)
       {
-        // Fail - đã check Admin ở trên rồi
+        // Cho phép đọc system settings
+        context.Succeed(requirement);
         return Task.CompletedTask;
       }
 
       // Nếu là user setting -> chỉ được truy cập setting của mình
-      if (settingContext.TargetUserId.ToString() == userIdClaim.Value)
+      var targetUserIdString = settingContext.TargetUserId.Value.ToString();
+      if (targetUserIdString == currentUserIdValue)
       {
         context.Succeed(requirement);
       }

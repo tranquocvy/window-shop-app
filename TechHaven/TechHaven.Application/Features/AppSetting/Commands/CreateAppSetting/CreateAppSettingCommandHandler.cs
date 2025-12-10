@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Common;
 using TechHaven.Domain.Interfaces;
@@ -59,7 +59,7 @@ public class CreateAppSettingCommandHandler : ICommandHandler<CreateAppSettingCo
 
             // Handle IsSystem for returned DTO (since Entity does not have IsSystem column)
             dto.IsSystem = entity.UserId == null;
-            dto.IsSystem = entity.UserId == null;
+            dto.UserId = entity.UserId;
 
             return Result<AppSettingDto>.Success(dto);
         }

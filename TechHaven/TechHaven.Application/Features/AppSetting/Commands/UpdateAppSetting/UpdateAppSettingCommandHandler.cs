@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Common;
 using TechHaven.Domain.Interfaces;
@@ -53,7 +53,8 @@ public class UpdateAppSettingCommandHandler : ICommandHandler<UpdateAppSettingCo
 
             
             var dto = _mapper.Map<AppSettingDto>(setting);
-            dto.IsSystem = request.IsSystem;
+            dto.IsSystem = setting.UserId == null;
+            dto.UserId = setting.UserId;
 
             return Result<AppSettingDto>.Success(dto);
         }

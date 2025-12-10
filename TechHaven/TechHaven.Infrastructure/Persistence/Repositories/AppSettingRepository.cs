@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Supabase.Gotrue;
 using TechHaven.Domain.Entities;
@@ -81,14 +81,25 @@ public class AppSettingRepository : GenericRepository<AppSetting>, IAppSettingRe
             "GetByKeyWithFallback",
             async () =>
             {
-                var query = _dbSet
-                    .Where(s => s.Key == key && (s.UserId == userId || s.UserId == null));
+                // Ưu tiên tìm user setting trước
+                if (userId.HasValue)
+                {
+                    var userSetting = await _dbSet
+                        .Where(s => s.Key == key && s.UserId == userId)
+                        .FirstOrDefaultAsync(cancellationToken);
+                    
+                    if (userSetting != null)
+                    {
+                        return userSetting;
+                    }
+                }
 
-                var result = await query
-                    .OrderByDescending(s => s.UserId) // Order by userId -> Ưu tiên UserId không null
+                // Nếu không có user setting, fallback về system setting
+                var systemSetting = await _dbSet
+                    .Where(s => s.Key == key && s.UserId == null)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                return result;
+                return systemSetting;
             },
             //Metadata for loggings
             new { Key = key, UserId = userId }

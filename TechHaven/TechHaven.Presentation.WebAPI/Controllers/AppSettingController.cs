@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -110,13 +110,20 @@ public class AppSettingController : BaseApiController
 
         var result = await _mediator.Send(query, cancellationToken);
 
-        if (result.IsSuccess)
+        if (result.IsSuccess && result.Data != null)
         {
             // Authorization check: User chỉ được xem setting của mình hoặc system
-            var settingUserId = result.Data!.IsSystem ? null : (int?)currentUserId.Value;
+            // Sử dụng UserId thực tế từ setting, không phải currentUserId
+            // Nếu UserId là null -> system setting, nếu không null -> user setting
+            var settingUserId = result.Data.UserId; // null = system, có giá trị = user setting
+            
+            _logger.LogDebug(
+                "Authorization check for setting '{Key}': IsSystem={IsSystem}, SettingUserId={SettingUserId}, CurrentUserId={CurrentUserId}",
+                key, result.Data.IsSystem, settingUserId, currentUserId);
+            
             var authContext = new AppSettingAuthorizationContext
             {
-                TargetUserId = settingUserId,
+                TargetUserId = settingUserId, // null cho system setting, UserId cho user setting
                 Key = key
             };
 
@@ -128,8 +135,8 @@ public class AppSettingController : BaseApiController
             if (!authResult.Succeeded)
             {
                 _logger.LogWarning(
-                    "User {UserId} unauthorized to access setting '{Key}'",
-                    currentUserId, key);
+                    "User {UserId} unauthorized to access setting '{Key}'. IsSystem={IsSystem}, SettingUserId={SettingUserId}, Role={Role}",
+                    currentUserId, key, result.Data.IsSystem, settingUserId, User.GetCurrentUserRole());
 
                 return StatusCode(StatusCodes.Status403Forbidden, new ResponseWrapper<object>
                 {
@@ -139,8 +146,8 @@ public class AppSettingController : BaseApiController
             }
 
             _logger.LogInformation(
-                "Setting '{Key}' found. IsSystem: {IsSystem}",
-                key, result.Data!.IsSystem);
+                "Setting '{Key}' found. IsSystem: {IsSystem}, UserId: {UserId}",
+                key, result.Data.IsSystem, result.Data.UserId);
         }
 
         return HandleResult(result);
