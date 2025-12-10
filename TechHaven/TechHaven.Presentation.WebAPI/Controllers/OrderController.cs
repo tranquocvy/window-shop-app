@@ -1,18 +1,20 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Crypto.Modes;
 using System.Security.Claims;
 using TechHaven.Application.Features.Order.Commands.CreateOrder;
 using TechHaven.Application.Features.Order.Commands.DeleteOrder;
 using TechHaven.Application.Features.Order.Commands.UpdateOrder;
 using TechHaven.Application.Features.Order.Queries.GetOrderById;
 using TechHaven.Application.Features.Order.Queries.GetOrders;
+using TechHaven.Infrastructure.Authorization;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Orders;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
-//[Authorize] -> Bỏ để cho phép truy cập công khai (nếu cần thiết)
+[Authorize(Policy = AuthorizationPolicies.ManageOrders)]
 public class OrderController : BaseApiController
 {
     private readonly IMediator _mediator;
@@ -24,22 +26,22 @@ public class OrderController : BaseApiController
         _logger = logger;
     }
 
-    /// <summary>
-    /// Helper: Lấy UserId từ Access Token
-    /// </summary>
-    private int GetUserIdFromToken()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
+    // /// <summary>
+    // /// Helper: Lấy UserId từ Access Token
+    // /// </summary>
+    // private int GetUserIdFromToken()
+    // {
+    //     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
 
-        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-        {
-            return userId;
-        }
+    //     if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+    //     {
+    //         return userId;
+    //     }
 
-        // Log warning nếu không lấy được UserID (có thể do cấu hình Token sai hoặc Auth middleware lỏng lẻo)
-        _logger.LogWarning("Security Alert: Could not extract UserID from Token in OrderController.");
-        return 0;
-    }
+    //     // Log warning nếu không lấy được UserID (có thể do cấu hình Token sai hoặc Auth middleware lỏng lẻo)
+    //     _logger.LogWarning("Security Alert: Could not extract UserID from Token in OrderController.");
+    //     return 0;
+    // }
 
     /// <summary>
     /// GET api/Order
@@ -112,7 +114,15 @@ public class OrderController : BaseApiController
         [FromBody] OrderUpsertRequestDto request,
         CancellationToken cancellationToken)
     {
-        var currentUserId = GetUserIdFromToken();
+        var currentUserId = User.GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            return Unauthorized(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Invalid token. User ID not found."
+            });
+        }
 
         // Log quan trọng: Ai đang cố tạo đơn, cho khách hàng nào, bao nhiêu món?
         _logger.LogInformation(
@@ -121,7 +131,7 @@ public class OrderController : BaseApiController
 
         var command = new CreateOrderCommand
         {
-            UserId = currentUserId,
+            UserId = currentUserId.Value,
             CustomerId = request.CustomerId,
             Status = (Domain.Enums.OrderStatus)request.Status,
             Discount = request.Discount,
@@ -168,7 +178,43 @@ public class OrderController : BaseApiController
         [FromBody] OrderUpsertRequestDto request,
         CancellationToken cancellationToken)
     {
-        var currentUserId = GetUserIdFromToken();
+        var currentUserId = User.GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            return Unauthorized(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Invalid token. User ID not found."
+            });
+        }
+
+        // Authorization check: Kiểm tra order có thuộc về user hiện tại không
+        var existingOrderQuery = new GetOrderByIdQuery(id);
+        var existingOrderResult = await _mediator.Send(existingOrderQuery, cancellationToken);
+
+        if (!existingOrderResult.IsSuccess || existingOrderResult.Data == null)
+        {
+            _logger.LogWarning("Order {OrderId} not found for deletion by User {UserId}", id, currentUserId);
+            return NotFound(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = $"Order with ID {id} not found."
+            });
+        }
+
+        // Chỉ Admin hoặc chính user tạo order mới được xóa
+        if (!User.IsAdmin() && existingOrderResult.Data.UserId != currentUserId.Value)
+        {
+            _logger.LogWarning(
+                "User {UserId} unauthorized to delete order {OrderId}. Order belongs to User {OwnerId}",
+                currentUserId, id, existingOrderResult.Data.UserId);
+
+            return StatusCode(StatusCodes.Status403Forbidden, new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "You can only delete orders that you created."
+            });
+        }
 
         _logger.LogInformation(
             "User {UserId} updating order ID: {OrderId}. New ItemCount: {ItemCount}",
@@ -205,12 +251,50 @@ public class OrderController : BaseApiController
     [ProducesResponseType(typeof(ResponseWrapper<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> DeleteOrder(
         int id,
         CancellationToken cancellationToken)
     {
-        var currentUserId = GetUserIdFromToken();
+        var currentUserId = User.GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            return Unauthorized(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Invalid token. User ID not found."
+            });
+        }
+
         _logger.LogInformation("User {UserId} requesting to delete order ID: {OrderId}", currentUserId, id);
+
+        // Authorization check: Kiểm tra order có thuộc về user hiện tại không
+        var existingOrderQuery = new GetOrderByIdQuery(id);
+        var existingOrderResult = await _mediator.Send(existingOrderQuery, cancellationToken);
+
+        if (!existingOrderResult.IsSuccess || existingOrderResult.Data == null)
+        {
+            _logger.LogWarning("Order {OrderId} not found for deletion by User {UserId}", id, currentUserId);
+            return NotFound(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = $"Order with ID {id} not found."
+            });
+        }
+
+        // Chỉ Admin hoặc chính user tạo order mới được xóa
+        if (!User.IsAdmin() && existingOrderResult.Data.UserId != currentUserId.Value)
+        {
+            _logger.LogWarning(
+                "User {UserId} unauthorized to delete order {OrderId}. Order belongs to User {OwnerId}",
+                currentUserId, id, existingOrderResult.Data.UserId);
+
+            return StatusCode(StatusCodes.Status403Forbidden, new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "You can only delete orders that you created."
+            });
+        }
 
         var command = new DeleteOrderCommand(id);
         var result = await _mediator.Send(command, cancellationToken);

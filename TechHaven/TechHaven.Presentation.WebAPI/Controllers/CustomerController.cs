@@ -10,9 +10,12 @@ using TechHaven.Application.Features.Customer.Commands.UpdateCustomer;
 using TechHaven.Application.Features.Customer.Commands.DeleteCustomer;
 using TechHaven.Application.Common.Exceptions;
 using TechHaven.Domain.SearchCriteria;
+using Microsoft.AspNetCore.Authorization;
+using TechHaven.Infrastructure.Authorization;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
+[Authorize(Policy = AuthorizationPolicies.ManageCustomers)]
 public class CustomerController : BaseApiController
 {
   private readonly IMediator _mediator;
@@ -112,7 +115,7 @@ public class CustomerController : BaseApiController
     };
 
     var result = await _mediator.Send(command, cancellationToken);
-    
+
     if (result.IsSuccess)
     {
       _logger.LogInformation(
@@ -183,10 +186,10 @@ public class CustomerController : BaseApiController
       CancellationToken cancellationToken)
   {
     _logger.LogInformation("Deleting customer ID: {CustomerId}", id);
-    
+
     var command = new DeleteCustomerCommand(id);
     var result = await _mediator.Send(command, cancellationToken);
-    
+
     if (result.IsSuccess)
     {
       _logger.LogInformation("Customer deleted successfully: ID {CustomerId}", id);

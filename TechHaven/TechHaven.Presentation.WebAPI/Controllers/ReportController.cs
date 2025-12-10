@@ -1,6 +1,7 @@
 using System.Reflection.Metadata;
 using ClosedXML.Excel;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Crypto.Modes;
 using TechHaven.Application.Features.Reports.Queries.GetCommissionReport;
@@ -9,11 +10,13 @@ using TechHaven.Application.Features.Reports.Queries.GetProductsTrend;
 using TechHaven.Application.Features.Reports.Queries.GetSalesReport;
 using TechHaven.Application.Features.Reports.Queries.GetSalesTrend;
 using TechHaven.Application.Features.Reports.Queries.GetTopSellingProducts;
+using TechHaven.Infrastructure.Authorization;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Reports;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
+[Authorize(Policy = AuthorizationPolicies.ViewReports)]
 public class ReportController : BaseApiController
 {
   private readonly IMediator _mediator;
@@ -42,6 +45,7 @@ public class ReportController : BaseApiController
   /// - Phân bố trạng thái đơn hàng
   /// </remarks>
   [HttpGet("dashboard")]
+  [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
   [ProducesResponseType(typeof(ResponseWrapper<DashboardSummaryDto>), StatusCodes.Status200OK)]
   public async Task<IActionResult> GetDashboard(CancellationToken cancellationToken)
   {
@@ -180,6 +184,7 @@ public class ReportController : BaseApiController
   /// <param name="userId">ID nhân viên (optional)</param>
   /// <param name="cancellationToken"></param>
   [HttpGet("commission")]
+  [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
   [ProducesResponseType(typeof(ResponseWrapper<List<CommissionReportDto>>), StatusCodes.Status200OK)]
   public async Task<IActionResult> GetCommissionReport(
       [FromQuery] CommissionQueryDto request,
@@ -341,6 +346,7 @@ public class ReportController : BaseApiController
   /// Export báo cáo ra Excel
   /// </summary>
   [HttpPost("export/commission")]
+  [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
   [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
   public async Task<IActionResult> ExportCommissionReport(
     [FromBody] CommissionQueryDto query,
