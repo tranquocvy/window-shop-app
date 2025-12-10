@@ -103,6 +103,7 @@
                         Padding="12,0"
                         Background="#2E7D32"
                         Foreground="White"
+                        FontWeight="Bold"
                         CornerRadius="6"
                         Click="ImportExcel_Click">
                     <StackPanel Orientation="Horizontal" Spacing="6">
