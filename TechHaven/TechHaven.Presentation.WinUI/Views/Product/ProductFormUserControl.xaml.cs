@@ -40,7 +40,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
 
             // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
             _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
-            
+            var isAdmin = AppState.CurrentUser?.RoleName == "Admin";
+            CostPricePanel.Visibility = isAdmin ? Visibility.Visible : Visibility.Collapsed;
             // Load brands from API
             _brandsLoadingTask = LoadBrandsAsync();
 

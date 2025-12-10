@@ -105,8 +105,10 @@
                      PlaceholderText="Mô tả chi tiết sản phẩm..." />
 
             <!-- Giá nhập -->
-            <TextBlock Text="Giá nhập" FontWeight="SemiBold"/>
-            <NumberBox x:Name="CostPriceBox" PlaceholderText="0" ValueChanged="OnNumberChanged"/>
+            <StackPanel x:Name="CostPricePanel">
+                <TextBlock Text="Giá nhập" FontWeight="SemiBold"/>
+                <NumberBox x:Name="CostPriceBox" PlaceholderText="0" ValueChanged="OnNumberChanged"/>
+            </StackPanel>
 
             <!-- Giá bán -->
             <TextBlock Text="Giá bán *" FontWeight="SemiBold"/>
