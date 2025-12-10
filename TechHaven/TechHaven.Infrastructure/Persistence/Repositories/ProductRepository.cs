@@ -73,4 +73,68 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
                 .Where(p => p.IsDraft == false)
                 .CountAsync(cancellationToken));
     }
+
+    public async Task<List<BrandInfo>> GetBrandsAsync(
+        string searchTerm,
+        bool? inStockOnly,
+        string? sortBy,
+        bool sortDescending = false,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteOperationAsync(
+            "GetBrandsAsync",
+            async () =>
+            {
+                var query = _dbSet.AsQueryable();
+
+                // Lọc theo searchTerm nếu có
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    query = query.Where(p => p.BrandName.ToLower().Contains(searchTerm.ToLower()));
+                }
+
+                // Lọc theo tồn kho nếu cần
+                if (inStockOnly == true)
+                {
+                    query = query.Where(p => p.StockQuantity > 0);
+                }
+
+                var grouped = query
+                    .GroupBy(p => p.BrandName)
+                    .Select(g => new BrandInfo
+                    {
+                        BrandName = g.Key,
+                        ProductCount = g.Count(),
+                        MinPrice = g.Min(p => p.SellPrice),
+                        MaxPrice = g.Max(p => p.SellPrice),
+                        TotalStock = g.Sum(p => p.StockQuantity)
+                    });
+
+                // Sắp xếp nếu có yêu cầu
+                if (!string.IsNullOrEmpty(sortBy))
+                {
+                    switch (sortBy.ToLower())
+                    {
+                        case "productcount":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.ProductCount) : grouped.OrderBy(b => b.ProductCount);
+                            break;
+                        case "minprice":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.MinPrice) : grouped.OrderBy(b => b.MinPrice);
+                            break;
+                        case "maxprice":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.MaxPrice) : grouped.OrderBy(b => b.MaxPrice);
+                            break;
+                        case "totalstock":
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.TotalStock) : grouped.OrderBy(b => b.TotalStock);
+                            break;
+                        default:
+                            grouped = sortDescending ? grouped.OrderByDescending(b => b.BrandName) : grouped.OrderBy(b => b.BrandName);
+                            break;
+                    }
+                }
+
+                return await grouped.ToListAsync(cancellationToken);
+            }
+        );
+    }
 }

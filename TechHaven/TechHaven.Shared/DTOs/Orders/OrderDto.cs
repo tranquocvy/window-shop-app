@@ -16,6 +16,8 @@ public class OrderDto
 
     public OrderStatus Status { get; set; }
 
+    public int TotalItems { get; set; }
+
     public decimal SubtotalAmount { get; set; }
 
     public decimal Discount { get; set; }

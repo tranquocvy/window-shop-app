@@ -36,7 +36,8 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
         //Validate Discount
         RuleFor(x => x.Discount)
             .GreaterThanOrEqualTo(0).WithMessage("Discount cannot be negative.")
-            .LessThanOrEqualTo(1).WithMessage("Discount cannot exceed 100%.");
+            //.LessThanOrEqualTo(1).WithMessage("Discount cannot exceed 100%."); -> Khoan lấy cái này vì đang dùng Discount có thể 2 kiểu (% hoặc tiền mặt)
+            ;
 
         // không validate UnitPrice ở đây vì ta sẽ lấy giá từ DB trong Handler
     }

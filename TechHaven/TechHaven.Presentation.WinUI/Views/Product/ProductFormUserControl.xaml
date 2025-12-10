@@ -12,18 +12,64 @@
 
             <!-- Ảnh sản phẩm -->
             <TextBlock Text="Ảnh sản phẩm" FontWeight="SemiBold"/>
-            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="8" Height="200" Width="200">
-                <Image x:Name="ProductImage" Stretch="UniformToFill"/>
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="8" 
+                    Height="200" Width="200"
+                    Background="WhiteSmoke"
+                    Tapped="OnSelectImageTapped"
+                    ToolTipService.ToolTip="Nhấn để thay đổi ảnh đại diện">
+                
+                <Grid>
+                    <FontIcon Glyph="&#xE958;" FontFamily="Segoe MDL2 Assets" 
+                              FontSize="48" Foreground="Silver"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    
+                    <Image x:Name="ProductImage" Stretch="UniformToFill"/>
+                </Grid>
             </Border>
-            <Button Content="Chọn ảnh..." Click="OnSelectImageClick" Width="120" Margin="0,4,0,0"/>
 
-            <!-- Image Gallery JSON -->
-            <TextBlock Text="Image Gallery (JSON)" FontWeight="SemiBold" />
-            <TextBox x:Name="ImageGalleryJsonBox" 
-                 TextWrapping="Wrap" 
-                 AcceptsReturn="True"
-                 Height="100"
-                 PlaceholderText='["img1.png","img2.png"]' />
+            <!-- Ảnh phụ (Gallery) -->
+            <TextBlock Text="Ảnh sưu tập (Gallery)" FontWeight="SemiBold" Margin="0,12,0,0"/>
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+
+                <Border Width="70" Height="70" 
+                        BorderThickness="1" BorderBrush="LightGray" CornerRadius="4"
+                        Background="WhiteSmoke"
+                        Tag="0" Tapped="OnGalleryImageTapped" 
+                        ToolTipService.ToolTip="Nhấn để thêm/sửa ảnh 1">
+                    <Grid>
+                        <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="Gray" 
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                        <Image x:Name="GalleryImg1" Stretch="UniformToFill"/>
+                    </Grid>
+                </Border>
+
+                <Border Width="70" Height="70" 
+                        BorderThickness="1" BorderBrush="LightGray" CornerRadius="4"
+                        Background="WhiteSmoke"
+                        Tag="1" Tapped="OnGalleryImageTapped" 
+                        ToolTipService.ToolTip="Nhấn để thêm/sửa ảnh 2">
+                    <Grid>
+                        <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="Gray" 
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Image x:Name="GalleryImg2" Stretch="UniformToFill"/>
+                    </Grid>
+                </Border>
+
+                <Border Width="70" Height="70" 
+                        BorderThickness="1" BorderBrush="LightGray" CornerRadius="4"
+                        Background="WhiteSmoke"
+                        Tag="2" Tapped="OnGalleryImageTapped" 
+                        ToolTipService.ToolTip="Nhấn để thêm/sửa ảnh 3">
+                    <Grid>
+                        <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="Gray" 
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Image x:Name="GalleryImg3" Stretch="UniformToFill"/>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+
 
             <!-- Tên sản phẩm -->
             <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold"/>
@@ -41,11 +87,7 @@
             <ComboBox x:Name="BrandComboBox" 
                       PlaceholderText="Chọn thương hiệu..."
                       HorizontalAlignment="Stretch"
-                      SelectionChanged="OnBrandSelectionChanged">
-                <ComboBoxItem Content="Apple"/>
-                <ComboBoxItem Content="Samsung"/>
-                <ComboBoxItem Content="Xiaomi"/>
-            </ComboBox>
+                      SelectionChanged="OnBrandSelectionChanged"/>
 
             <TextBlock x:Name="BrandNameErrorText"
                        Text="Phải chọn tên thương hiệu."

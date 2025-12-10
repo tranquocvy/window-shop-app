@@ -21,7 +21,11 @@ public class OrderProfile : Profile
 				opt => opt.MapFrom(src => src.User != null ? src.User.UserFullName : null))
 			.ForMember(dest => dest.Details,
 				opt => opt.MapFrom(src => src.OrderDetails != null ? src.OrderDetails : Array.Empty<OrderDetail>()))
-			.AfterMap((src, dest) =>
+            //Calculate TotalItems 
+            .ForMember(dest => dest.TotalItems, opt => opt.MapFrom(
+					src => src.OrderDetails != null ? src.OrderDetails.Sum(x => x.Quantity) : 0)
+						)
+            .AfterMap((src, dest) =>
 			{
 				// Ensure Details is never null
 				if (dest.Details == null)

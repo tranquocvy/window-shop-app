@@ -8,11 +8,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Shared.DTOs.Brands;
 using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
@@ -23,6 +25,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private readonly IProductService _productService = new HttpProductService(SharedHttpClient);
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
+
+        public ObservableCollection<string> BrandNameFilter { get; } = new ObservableCollection<string>();
 
         // Search
         [ObservableProperty]
@@ -65,16 +69,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private string _selectedPriceRange;
 
-
-
-        public ObservableCollection<string> BrandNameFilter { get; } = new()
-        {
-            "Không",
-            "Iphone",
-            "Apple",
-            "Nokia"
-        };
-
         public ObservableCollection<string> StatusFilter { get; } = new()
         {
             "Không",
@@ -98,6 +92,49 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private string _selectedStatus = "Không";
 
+        public ProductViewModel()
+        {
+            // Load brands when ViewModel is created
+            _ = LoadBrandsAsync();
+        }
+
+        // ========================
+        // Load Brands from API
+        // ========================
+        private async Task LoadBrandsAsync()
+        {
+            try
+            {
+                var response = await SharedHttpClient.GetFromJsonAsync<TechHaven.Shared.DTOs.Common.ResponseWrapper<System.Collections.Generic.List<BrandDto>>>("api/Brand");
+                
+                if (response?.Success == true && response.Data != null)
+                {
+                    BrandNameFilter.Clear();
+                    BrandNameFilter.Add("Không"); // Default option
+                    
+                    foreach (var brand in response.Data)
+                    {
+                        if (!string.IsNullOrWhiteSpace(brand.BrandName))
+                        {
+                            BrandNameFilter.Add(brand.BrandName);
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback if API fails
+                    BrandNameFilter.Clear();
+                    BrandNameFilter.Add("Không");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to load brands: {ex.Message}");
+                // Fallback if API fails
+                BrandNameFilter.Clear();
+                BrandNameFilter.Add("Không");
+            }
+        }
 
         // ========================
         // Helper: Build Query

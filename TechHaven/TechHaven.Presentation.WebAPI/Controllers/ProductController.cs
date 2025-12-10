@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Application.Features.Product.Commands.CreateProduct;
+using TechHaven.Application.Features.Product.Commands.CreateProductsBulk;
 using TechHaven.Application.Features.Product.Commands.DeleteProduct;
 using TechHaven.Application.Features.Product.Commands.UpdateProduct;
 using TechHaven.Application.Features.Product.Queries.GetProductById;
@@ -67,8 +68,8 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<IActionResult> GetProductById(
-      int id,
-      CancellationToken cancellationToken)
+    int id,
+    CancellationToken cancellationToken)
   {
     _logger.LogInformation("Getting product with ID: {ProductId}", id);
 
@@ -94,8 +95,8 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<ProductDto>), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   public async Task<IActionResult> CreateProduct(
-      [FromBody] ProductUpsertRequest request,
-      CancellationToken cancellationToken)
+    [FromBody] ProductUpsertRequest request,
+    CancellationToken cancellationToken)
   {
     _logger.LogInformation(
       "Creating product: {ProductName} - Brand: {BrandName}",
@@ -150,9 +151,9 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<IActionResult> UpdateProduct(
-      int id,
-      [FromBody] ProductUpsertRequest request,
-      CancellationToken cancellationToken)
+    int id,
+    [FromBody] ProductUpsertRequest request,
+    CancellationToken cancellationToken)
   {
     _logger.LogInformation(
       "Updating product ID: {ProductId} - New name: {ProductName}",
@@ -195,8 +196,8 @@ public class ProductController : BaseApiController
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status204NoContent)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<IActionResult> DeleteProduct(
-      int id,
-      CancellationToken cancellationToken)
+    int id,
+    CancellationToken cancellationToken)
   {
     _logger.LogInformation("Deleting product ID: {ProductId}", id);
 
@@ -211,5 +212,74 @@ public class ProductController : BaseApiController
     return result.IsSuccess
       ? NoContent()
       : HandleResult(result);
+  }
+
+  [HttpPost("bulk")]
+  [ProducesResponseType(typeof(ResponseWrapper<ProductBulkCreateResponseDto>), StatusCodes.Status201Created)]
+  [ProducesResponseType(typeof(ResponseWrapper<ProductBulkCreateResponseDto>), StatusCodes.Status400BadRequest)]
+  public async Task<IActionResult> CreateProductBulk(
+    [FromBody] ProductBulkCreateRequestDto request,
+    CancellationToken cancellationToken
+  )
+  {
+    _logger.LogInformation(
+      "Bulk product import requested: {Count} products",
+      request.Products.Count);
+
+    var command = new CreateProductsBulkCommand()
+    {
+      Products = request.Products,
+      SkipDuplicates = request.SkipDuplicates,
+      ValidateBeforeInsert = request.ValidateBeforeInsert
+    };
+
+    var result = await _mediator.Send(command, cancellationToken);
+
+    if (result.IsSuccess && result.Data != null)
+    {
+      // Nếu có lỗi validation, trả về BadRequest
+      if (result.Data.FailedCount > 0 && result.Data.SuccessCount == 0)
+      {
+        _logger.LogWarning(
+          "Bulk import validation failed: {Failed} errors",
+          result.Data.FailedCount);
+
+        return BadRequest(new ResponseWrapper<ProductBulkCreateResponseDto>
+        {
+          Success = false,
+          Message = "Bulk import validation failed",
+          Data = result.Data,
+          Errors = result.Data.Errors.SelectMany(e => e.ErrorMessages).ToList()
+        });
+      }
+
+      _logger.LogInformation(
+        "Bulk import completed: {Success}/{Total} products created",
+        result.Data.SuccessCount, result.Data.TotalProducts);
+
+      return StatusCode(StatusCodes.Status201Created, new ResponseWrapper<ProductBulkCreateResponseDto>
+      {
+        Success = true,
+        Message = $"Successfully imported {result.Data.SuccessCount} out of {result.Data.TotalProducts} products",
+        Data = result.Data
+      });
+    }
+    else if (result.Data != null)
+    {
+      // Validation failed but we have partial results
+      _logger.LogWarning(
+        "Bulk import validation failed: {Failed} errors",
+        result.Data.FailedCount);
+
+      return BadRequest(new ResponseWrapper<ProductBulkCreateResponseDto>
+      {
+        Success = false,
+        Message = result.ErrorMessage ?? "Bulk import validation failed",
+        Data = result.Data,
+        Errors = result.Data.Errors.SelectMany(e => e.ErrorMessages).ToList()
+      });
+    }
+
+    return HandleResult(result);
   }
 }
