@@ -101,7 +101,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // ========================
         // Load Brands from API
         // ========================
-        private async Task LoadBrandsAsync()
+        public async Task LoadBrandsAsync()
         {
             try
             {
@@ -157,7 +157,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 FromPrice = PriceFrom,
                 ToPrice = PriceTo,
-
+                IsDraft = false,
                 Status = statusFilter
             };
         }
@@ -253,7 +253,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Main load function
         // ========================
         [RelayCommand]
-        private async Task LoadProductsAsync(ProductListQueryDto query = null)
+        public async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
             // Nếu không truyền query (null), tự động dùng BuildQuery lấy state hiện tại
             query ??= BuildQuery();

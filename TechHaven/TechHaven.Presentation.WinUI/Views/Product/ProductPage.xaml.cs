@@ -470,5 +470,93 @@ namespace TechHaven.Presentation.WinUI.Views
             var trimmed = value.Trim().ToLowerInvariant();
             return trimmed == "true" || trimmed == "1" || trimmed == "yes" || trimmed == "có";
         }
+
+        private async void AddBrand_Click(object sender, RoutedEventArgs e)
+        {
+            // Tạo TextBox để nhập tên hãng
+            var brandInput = new TextBox
+            {
+                PlaceholderText = "Nhập tên hãng mới...",
+                Width = 300
+            };
+
+            // Tạo dialog
+            var dialog = new ContentDialog
+            {
+                Title = "Thêm thương hiệu mới",
+                Content = brandInput,
+                PrimaryButtonText = "Lưu",
+                CloseButtonText = "Hủy",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            var result = await dialog.ShowAsync();
+
+            // Nếu người dùng bấm Lưu
+            if (result == ContentDialogResult.Primary)
+            {
+                string brandName = brandInput.Text?.Trim();
+
+                if (string.IsNullOrEmpty(brandName))
+                {
+                    // Hiển thị thông báo lỗi
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Lỗi",
+                        Content = "Tên hãng không được để trống",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                    return;
+                }
+
+                // Tạo sản phẩm ảo với IsDraft = true
+                var draftProduct = new ProductUpsertRequest
+                {
+                    ProductName = $"_DRAFT_{brandName}_{DateTime.Now:yyyyMMddHHmmss}",
+                    BrandName = brandName,
+                    SellPrice = 0,
+                    CostPrice = 0,
+                    StockQuantity = 0,
+                    ImageUrl = string.Empty,
+                    IsDraft = true
+                };
+
+                try
+                {
+                    // Gọi API tạo sản phẩm
+                    await ViewModel.CreateProductAsync(draftProduct);
+
+                    // Reload danh sách brands trong filter dropdown
+                    await ViewModel.LoadBrandsAsync();
+
+                    // Hiển thị thông báo thành công
+                    var successDialog = new ContentDialog
+                    {
+                        Title = "Thành công",
+                        Content = $"Đã thêm thương hiệu '{brandName}' vào hệ thống",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+                    await successDialog.ShowAsync();
+
+                    // Reload danh sách sản phẩm
+                    await ViewModel.LoadProductsAsync();
+                }
+                catch (Exception ex)
+                {
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Lỗi",
+                        Content = $"Không thể thêm thương hiệu: {ex.Message}",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
+            }
+        }
     }
 }
