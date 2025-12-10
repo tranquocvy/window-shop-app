@@ -157,6 +157,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 FromPrice = PriceFrom,
                 ToPrice = PriceTo,
+                IsDraft = false,
 
                 Status = statusFilter
             };
