@@ -10,6 +10,9 @@ using TechHaven.Infrastructure.Persistence;
 using TechHaven.Infrastructure.Persistence.Repositories;
 using TechHaven.Infrastructure.Services;
 using TechHaven.Infrastructure.Configuration;
+using TechHaven.Infrastructure.Authorization;
+using TechHaven.Infrastructure.Authorization.Handlers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TechHaven.Infrastructure;
 
@@ -121,7 +124,58 @@ public static class DependencyInjection
             };
         });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            // Role-based policies
+            options.AddPolicy(AuthorizationPolicies.AdminOnly, policy =>
+                policy.RequireRole(Roles.Admin));
+
+            options.AddPolicy(AuthorizationPolicies.SellerOnly, policy =>
+                policy.RequireRole(Roles.Seller));
+
+            options.AddPolicy(AuthorizationPolicies.AdminOrSeller, policy =>
+                policy.RequireRole(Roles.Admin, Roles.Seller));
+
+            // Permission-based policies
+            options.AddPolicy(AuthorizationPolicies.ManageProducts, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(Roles.Admin) ||
+                    context.User.IsInRole(Roles.Seller)));
+
+            options.AddPolicy(AuthorizationPolicies.ManageOrders, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(Roles.Admin) ||
+                    context.User.IsInRole(Roles.Seller)));
+
+            options.AddPolicy(AuthorizationPolicies.ManageCustomers, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(Roles.Admin) ||
+                    context.User.IsInRole(Roles.Seller)));
+
+            options.AddPolicy(AuthorizationPolicies.ManageUsers, policy =>
+                policy.RequireRole(Roles.Admin));
+
+            options.AddPolicy(AuthorizationPolicies.ViewReports, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(Roles.Admin) ||
+                    context.User.IsInRole(Roles.Seller)));
+
+            options.AddPolicy(AuthorizationPolicies.ManageSettings, policy =>
+                policy.RequireAssertion(context =>
+                    context.User.IsInRole(Roles.Admin) ||
+                    context.User.IsInRole(Roles.Seller)));
+
+            // Resource-based policy
+            options.AddPolicy("SameUserPolicy", policy =>
+                policy.Requirements.Add(new SameUserRequirement()));
+
+            options.AddPolicy("AppSettingAccess", policy =>
+                policy.Requirements.Add(new AppSettingAccessRequirement()));
+        });
+
+        // Register Authorization Handlers
+        services.AddScoped<IAuthorizationHandler, SameUserAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, AppSettingAuthorizationHandler>();
 
         services.AddAutoMapper(typeof(DependencyInjection).Assembly);
 

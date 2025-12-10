@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using TechHaven.Application.Interfaces;
 using TechHaven.Domain.Common;
+using TechHaven.Domain.Entities;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
 using TechHaven.Shared.DTOs.AppSettings;
@@ -29,10 +30,9 @@ public class GetAppSettingsQueryHandler : IQueryHandler<GetAppSettingsQuery, Res
             PageNumber = request.PageNumber,
             PageSize = request.PageSize,
             SearchTerm = request.SearchKeyword,
-            UserId = request.CurrentUserId 
+            UserId = request.CurrentUserId
         };
 
-        
         var (entities, totalCount) = await _unitOfWork.AppSettings.SearchWithPaginationAsync(criteria, cancellationToken);
 
         var dtos = _mapper.Map<List<AppSettingDto>>(entities);
@@ -41,9 +41,9 @@ public class GetAppSettingsQueryHandler : IQueryHandler<GetAppSettingsQuery, Res
         // Ví dụ: Đánh dấu IsSystem trong DTO
         //foreach (var dto in dtos)
         //{
-            // Nếu entity gốc có UserId null -> Là System Setting
-            // (Lưu ý: Logic này nên làm trong AutoMapper Profile thì gọn hơn)
-            // dto.IsSystem = ... (Đã xử lý trong Mapper ở bước trước)
+        // Nếu entity gốc có UserId null -> Là System Setting
+        // (Lưu ý: Logic này nên làm trong AutoMapper Profile thì gọn hơn)
+        // dto.IsSystem = ... (Đã xử lý trong Mapper ở bước trước)
         //}
 
         // Response wrapping
