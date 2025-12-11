@@ -165,6 +165,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         private async Task LoadOrdersAsync()
         {
+            if (IsLoading) return;
             IsLoading = true;
             Orders.Clear();
 
@@ -190,8 +191,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 if (response.Success && response.Data != null)
                 {
+                    var existingIds = Orders.Select(o => o.Order.OrderId).ToHashSet();
                     foreach (var order in response.Data.Items)
                     {
+                        if (existingIds.Contains(order.OrderId))
+                            continue;
+
                         Orders.Add(new OrderItemViewModel(order));
                     }
 
