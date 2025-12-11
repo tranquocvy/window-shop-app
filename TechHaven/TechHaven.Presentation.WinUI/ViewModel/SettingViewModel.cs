@@ -53,6 +53,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (pDto?.Value != null && int.TryParse(pDto.Value, out var parsedSize))
             {
                 PageSize = parsedSize;
+                AppState.SetPageSize(parsedSize);
             }
 
             var lDto = await _settingService.GetByKeyAsync("LastVisitedPage");
@@ -95,6 +96,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!ok) return false;
 
             PageSize = size;
+            AppState.SetPageSize(size);
             return true;
         }
 

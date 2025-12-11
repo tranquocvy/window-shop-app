@@ -16,6 +16,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Shared.DTOs.Customers;
+using TechHaven.Presentation.WinUI.Helpers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -82,11 +83,16 @@ namespace TechHaven.Presentation.WinUI.Views
         // 4. Khi trang được tải, gọi Command để load dữ liệu
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedTo(e); 
+            base.OnNavigatedTo(e);
 
-            // Force default page size and page number before initial load so request includes PageSize=10
-            ViewModel.SelectedPageSize = 10;
-            ViewModel.PageNumber = 1;
+            // Always refresh PageSize from global AppState and reload data
+            try
+            {
+                ViewModel.PageSize = AppState.PageSize;
+            }
+            catch { }
+
+            // Trigger load using current state
             ViewModel.LoadCustomersCommand.Execute(null);
         }
 
