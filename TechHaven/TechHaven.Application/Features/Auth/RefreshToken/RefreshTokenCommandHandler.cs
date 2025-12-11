@@ -52,12 +52,12 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
       });
     }
 
-    // 4. Check if user is still active
-    if (!user.IsActive)
+        // 4. Check if user is still active - thêm: check Date.UtcNow - user.createdAt >= 15 days
+     if (!user.IsActive && (DateTime.UtcNow - user.CreatedAt).TotalDays >= 15)
     {
       throw new ValidationException(new[]
       {
-        new FluentValidation.Results.ValidationFailure("User", "User account is deactivated")
+        new FluentValidation.Results.ValidationFailure("User", "User account is deactivated after 15 days of trial mode")
       });
     }
 
