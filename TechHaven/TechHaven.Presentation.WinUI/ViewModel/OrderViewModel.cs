@@ -9,11 +9,11 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Orders;
-using Windows.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using System.Net.Http;
 using TechHaven.Presentation.WinUI.Services.Http;
+using Windows.UI;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -173,7 +173,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 var query = new OrderListQueryDto
                 {
                     PageNumber = PageNumber,
-                    PageSize = PageSize,
+                    PageSize = AppState.PageSize,
                     CustomerKeyword = SearchKeyword,
                     Status = SelectedStatusItem?.Status,
                     OrderDate = (FromDate.HasValue || ToDate.HasValue)
