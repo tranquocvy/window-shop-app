@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using TechHaven.Domain.Interfaces;
 
 namespace TechHaven.Application.Features.Product.Commands.CreateProduct;
@@ -7,21 +7,19 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 {
   public CreateProductCommandValidator()
   {
+      // QUY TẮC CHUNG (Data Integrity) - Áp dụng cho cả Draft == false || true
     RuleFor(x => x.ProductName)
       .NotEmpty().WithMessage("Product name is required.")
       .MaximumLength(200).WithMessage("Product name cannot exceed 200 characters.");
 
     RuleFor(x => x.BrandName)
-      .NotEmpty().WithMessage("Brand name is required.")
       .MaximumLength(100).WithMessage("Brand name cannot exceed 100 characters.");
 
     RuleFor(x => x.CostPrice)
       .GreaterThanOrEqualTo(0).WithMessage("Cost price cannot be negative.");
 
     RuleFor(x => x.SellPrice)
-    .GreaterThanOrEqualTo(0).WithMessage("Sell price cannot be negative.")
-    .GreaterThanOrEqualTo(x => x.CostPrice)
-    .WithMessage("Sell price must be greater than or equal to cost price.");
+      .GreaterThanOrEqualTo(0).WithMessage("Sell price cannot be negative.");
 
     RuleFor(x => x.StockQuantity)
     .GreaterThanOrEqualTo(0).WithMessage("Stock quantity cannot be negative.");
@@ -45,5 +43,20 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
     RuleFor(x => x.BatteryCapacity)
       .GreaterThan(0).WithMessage("Battery capacity must be greater than 0.")
       .When(x => x.BatteryCapacity.HasValue);
-  }
+
+
+        //  QUY TẮC CHẶT CHẼ - Chỉ áp dụng khi PUBLISH (IsDraft = false)
+        When(x => x.IsDraft == false, () =>
+        {
+            RuleFor(x => x.BrandName)
+                .NotEmpty().WithMessage("Brand name is required for published products.");
+
+            // Logic giá bán phải lời hơn giá vốn (Chỉ check khi chính thức bán)
+            // Khi là Draft, lỡ user nhập giá vốn trước, giá bán sau thì không nên chặn
+            RuleFor(x => x.SellPrice)
+                .GreaterThanOrEqualTo(x => x.CostPrice)
+                .WithMessage("Sell price must be greater than or equal to cost price.");
+
+        });
+    }
 }
