@@ -49,21 +49,54 @@ namespace TechHaven.Presentation.WinUI
                 // ignore license assignment failures
             }
 
-            // Try to load persisted theme from settings service so the app starts with user's choice
+            // Default theme
             ThemeManager.ThemeType initialTheme = ThemeManager.ThemeType.Midnight;
+
+            // Ensure token restore runs BEFORE loading user-specific settings so API calls include auth token
+            TokenPersistence.UseMock = false;
+
             try
             {
-                var vm = new SettingViewModel();
-                await vm.InitializeAsync();
-                if (!string.IsNullOrWhiteSpace(vm.CurrentTheme) &&
-                    Enum.TryParse<ThemeManager.ThemeType>(vm.CurrentTheme, true, out var parsed))
+                var restored = await TokenPersistence.TryRestoreSessionAsync();
+                if (restored && AppState.IsLoggedIn)
                 {
-                    initialTheme = parsed;
+                    try
+                    {
+                        var vm = new SettingViewModel();
+                        await vm.InitializeAsync();
+                        if (!string.IsNullOrWhiteSpace(vm.CurrentTheme) &&
+                            Enum.TryParse<ThemeManager.ThemeType>(vm.CurrentTheme, true, out var parsed))
+                        {
+                            initialTheme = parsed;
+                        }
+                    }
+                    catch
+                    {
+                        // ignore and fall back to default
+                    }
+                }
+                else
+                {
+                    // Not restored: attempt to load system default theme (no auth)
+                    try
+                    {
+                        var vm = new SettingViewModel();
+                        await vm.InitializeAsync();
+                        if (!string.IsNullOrWhiteSpace(vm.CurrentTheme) &&
+                            Enum.TryParse<ThemeManager.ThemeType>(vm.CurrentTheme, true, out var parsed))
+                        {
+                            initialTheme = parsed;
+                        }
+                    }
+                    catch
+                    {
+                        // ignore
+                    }
                 }
             }
             catch
             {
-                // ignore and fall back to default
+                // ignore
             }
 
             // Initialize theme manager with the persisted or fallback theme
@@ -75,9 +108,6 @@ namespace TechHaven.Presentation.WinUI
             {
                 // ignore theme init failures
             }
-
-            // Use mock restore for offline testing
-            TokenPersistence.UseMock = false;
 
             try
             {

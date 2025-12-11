@@ -5,14 +5,18 @@ using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Shared.DTOs.AppSettings;
+using System.Net.Http;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class SettingViewModel : ObservableObject
     {
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAppSettingService _settingService;
 
-        public SettingViewModel() : this(new MockSettingService()) { }
+        public SettingViewModel() : this(new HttpSettingService(SharedHttpClient)) { }
 
         public SettingViewModel(IAppSettingService settingService)
         {

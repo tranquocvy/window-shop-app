@@ -226,10 +226,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             TokenStore.RefreshToken = otpData.RefreshToken;
 
             // persist refresh token if requested
-            if (rememberMe && !string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
+            try
             {
-                TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken);
+                if (!string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
+                {
+                    TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken);
+                }
             }
+            catch { }
 
             Helpers.AppState.CurrentUser = new UserDto
             {

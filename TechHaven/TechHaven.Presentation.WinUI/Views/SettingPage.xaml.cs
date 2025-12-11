@@ -31,7 +31,11 @@ namespace TechHaven.Presentation.WinUI.Views
             this.Unloaded += SettingPage_Unloaded;
 
             pageSizeCombo.ItemsSource = new int[] { 5, 10, 20, 50 };
-            try { pageSizeCombo.SelectedItem = _viewModel.PageSize; } catch { }
+
+            // Do NOT set SelectedItem here — wait until viewmodel is initialized to avoid triggering change handler
+            // try { pageSizeCombo.SelectedItem = _viewModel.PageSize; } catch { }
+
+            _ = InitializeViewModelAsync();
         }
 
         private void SettingPage_Unloaded(object? sender, RoutedEventArgs e)
@@ -224,6 +228,39 @@ namespace TechHaven.Presentation.WinUI.Views
                 UpdateThemeStatus();
                 ApplyThemeBrushes();
             });
+        }
+
+        private async Task InitializeViewModelAsync()
+        {
+            _isInitializing = true;
+            try
+            {
+                try
+                {
+                    await _viewModel.InitializeAsync();
+                }
+                catch
+                {
+                    // ignore init failures (keep UI responsive)
+                }
+
+                // Update UI with loaded values
+                try
+                {
+                    UpdateThemeStatus();
+                }
+                catch { }
+
+                try
+                {
+                    pageSizeCombo.SelectedItem = _viewModel.PageSize;
+                }
+                catch { }
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
         }
     }
 }
