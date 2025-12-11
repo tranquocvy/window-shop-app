@@ -35,6 +35,13 @@ namespace TechHaven.Presentation.WinUI.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+
+            try
+            {
+                ViewModel.PageSize = AppState.PageSize;
+            }
+            catch { }
+
             if (ViewModel.Products.Count == 0)
             {
                 ViewModel.LoadProductsCommand.Execute(null);

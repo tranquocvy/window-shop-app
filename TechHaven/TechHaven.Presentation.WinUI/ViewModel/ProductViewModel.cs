@@ -42,8 +42,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private int _pageNumber = 1;
 
+        // local cache but queries will use AppState.PageSize
         [ObservableProperty]
-        private int _pageSize = 10;
+        private int _pageSize = AppState.PageSize;
 
         [ObservableProperty]
         private int _totalPages;
@@ -94,6 +95,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public ProductViewModel()
         {
+            // Initialize local page size from global AppState
+            _pageSize = AppState.PageSize;
+
             // Load brands when ViewModel is created
             _ = LoadBrandsAsync();
         }
@@ -152,7 +156,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             {
                 SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim().ToLower(),
                 PageNumber = PageNumber,
-                PageSize = PageSize,
+                // use global AppState.PageSize
+                PageSize = AppState.PageSize,
                 Brand = SelectedBrandName == "Không" ? null : SelectedBrandName,
 
                 FromPrice = PriceFrom,
@@ -309,8 +314,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             TotalCount = totalCount;
 
-            TotalPages = PageSize > 0
-                ? (int)Math.Ceiling((double)totalCount / PageSize)
+            var pageSize = AppState.PageSize;
+            TotalPages = pageSize > 0
+                ? (int)Math.Ceiling((double)totalCount / pageSize)
                 : 1;
 
             if (TotalPages == 0) TotalPages = 1;

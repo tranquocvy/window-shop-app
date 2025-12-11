@@ -8,6 +8,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml.Input;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
+using System.Diagnostics;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -95,6 +96,18 @@ namespace TechHaven.Presentation.WinUI.Views
             if (!success)
             {
                 return;
+            }
+
+            // Persist last visited page setting immediately after login for debugging
+            try
+            {
+                var settingsVm = new SettingViewModel();
+                var ok = await settingsVm.SetLastVisitedPageAsync("shell");
+                Debug.WriteLine($"SetLastVisitedPageAsync called after login -> success={ok}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error calling SetLastVisitedPageAsync after login: {ex}");
             }
 
             // Navigate to ShellWindow

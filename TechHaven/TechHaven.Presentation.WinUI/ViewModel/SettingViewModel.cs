@@ -5,14 +5,18 @@ using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Presentation.WinUI.Services.Mock;
 using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Shared.DTOs.AppSettings;
+using System.Net.Http;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class SettingViewModel : ObservableObject
     {
+        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAppSettingService _settingService;
 
-        public SettingViewModel() : this(new MockSettingService()) { }
+        public SettingViewModel() : this(new HttpSettingService(SharedHttpClient)) { }
 
         public SettingViewModel(IAppSettingService settingService)
         {
@@ -49,6 +53,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (pDto?.Value != null && int.TryParse(pDto.Value, out var parsedSize))
             {
                 PageSize = parsedSize;
+                AppState.SetPageSize(parsedSize);
             }
 
             var lDto = await _settingService.GetByKeyAsync("LastVisitedPage");
@@ -91,6 +96,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (!ok) return false;
 
             PageSize = size;
+            AppState.SetPageSize(size);
             return true;
         }
 

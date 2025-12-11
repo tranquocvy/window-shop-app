@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Shared.DTOs.Orders;
+using TechHaven.Presentation.WinUI.Helpers;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -28,6 +29,20 @@ namespace TechHaven.Presentation.WinUI.Views
             InitializeComponent();
             // Use production PDF service
             DataContext = new OrderViewModel(new TechHaven.Presentation.WinUI.Helpers.OrderPdfService());
+        }
+
+        protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            try
+            {
+                ViewModel.PageSize = AppState.PageSize;
+            }
+            catch { }
+
+            // Trigger load using current state
+            _ = ViewModel.LoadOrdersCommand.ExecuteAsync(null);
         }
 
         private async void OrdersList_ItemClick(object sender, ItemClickEventArgs e)

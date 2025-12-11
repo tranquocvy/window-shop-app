@@ -361,22 +361,6 @@
                 <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
             </Button>
 
-            <TextBlock 
-                VerticalAlignment="Center"
-                Margin="12,0,0,0"
-                Text="Items per page:"
-                Foreground="{StaticResource TH.TextSecondary}"/>
-
-            <ComboBox 
-                Height="40"
-                MinWidth="80"
-                SelectedValue="{Binding PageSize, Mode=TwoWay}"
-                SelectedValuePath="Content">
-                <ComboBoxItem Content="5"/>
-                <ComboBoxItem Content="10" IsSelected="True"/>
-                <ComboBoxItem Content="20"/>
-                <ComboBoxItem Content="50"/>
-            </ComboBox>
         </StackPanel>
     </Grid>
 </Page>

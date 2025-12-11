@@ -42,9 +42,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             "Giảm dần"
         };
 
-        // Page size options
-        public ObservableCollection<int> PageSizeOptions { get; } = new() { 5, 10, 15, 20 };
-
         // Collection of customers for data binding
         public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
 
@@ -83,20 +80,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             set => SetProperty(ref _createdAtEnd, value);
         }
 
-        // Selected page size (bind to UI selection) - explicit property
-        private int _selectedPageSize = 10;
-        public int SelectedPageSize
-        {
-            get => _selectedPageSize;
-            set => SetProperty(ref _selectedPageSize, value);
-        }
-
         // PAGING PROPERTIES
         [ObservableProperty]
         private int _pageNumber = 1;
 
         [ObservableProperty]
-        private int _pageSize = 10;
+        private int _pageSize = AppState.PageSize;
 
         [ObservableProperty]
         private bool _canGoNext;
@@ -112,9 +101,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             // Use injected service or create HttpCustomerService with default HttpClient
             _customerService = customerService ?? CreateDefaultHttpCustomerService();
 
-            // Initialize selected page size
-            SelectedPageSize = 10;
-            PageSize = SelectedPageSize;
+            // Initialize local page size from global AppState
+            _pageSize = AppState.PageSize;
 
             // Subscribe to property changed to react to filter changes
             this.PropertyChanged += CustomerViewModel_PropertyChanged;
@@ -136,12 +124,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 return;
             }
 
-            // Page size selection changed
-            if (e.PropertyName == nameof(SelectedPageSize))
+            // Page number changed -> reload
+            if (e.PropertyName == nameof(PageNumber))
             {
-                PageNumber = 1;
-                // Keep PageSize in sync when user explicitly changes page size
-                PageSize = SelectedPageSize;
                 _ = LoadCustomersAsync();
                 return;
             }
@@ -177,8 +162,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     : null,
                 Sorting = GetSorting(),
                 PageNumber = PageNumber,
-                // Use current PageSize (do not overwrite user's selection when searching)
-                PageSize = PageSize > 0 ? PageSize : SelectedPageSize
+                // Use global AppState PageSize
+                PageSize = AppState.PageSize
             };
         }
 
@@ -332,9 +317,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Ensure initial load uses default page size
         public async Task EnsureInitialLoadAsync()
         {
-            SelectedPageSize = 10;
             PageNumber = 1;
-            PageSize = SelectedPageSize;
+            PageSize = AppState.PageSize;
             await LoadCustomersAsync();
         }
 
