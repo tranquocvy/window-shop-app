@@ -22,6 +22,20 @@
             <Style TargetType="FontIcon">
                 <Setter Property="FontSize" Value="16"/>
             </Style>
+
+            <!-- Fallback CardStyle so pages can reference it before theme dictionaries load -->
+            <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource TH.CardBackground}" />
+                <Setter Property="CornerRadius" Value="{ThemeResource TH.Radius.Medium}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource TH.BorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="Margin" Value="0" />
+            </Style>
+
+            <!-- Fallback on-primary text color used on PrimaryBrush buttons -->
+            <SolidColorBrush x:Key="TH.TextOnPrimary" Color="#FFFFFFFF" />
+
             <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>

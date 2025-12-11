@@ -37,5 +37,11 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OtpResendResponseDto>("Failed to resend OTP");
         }
+
+        public async Task<ResponseWrapper<SignupResponseDto>> SignupAsync(SignupRequestDto dto)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/signup", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<SignupResponseDto>("Failed to signup user");
+        }
     }
 }

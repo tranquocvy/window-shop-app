@@ -1,10 +1,16 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using System.Net.Http.Json;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Presentation.WinUI.ViewModel;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Shared.DTOs.Common;
 using System;
+using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TechHaven.Presentation.WinUI.Views
@@ -62,6 +68,19 @@ namespace TechHaven.Presentation.WinUI.Views
                 currentUserUserNameText.Text = string.Empty;
                 currentUserEmailText.Text = string.Empty;
             }
+
+            // Only show add-user section for admins
+            try
+            {
+                if (AppState.CurrentUser != null && AppState.CurrentUser.RoleId == 1)
+                    addUserBorder.Visibility = Visibility.Visible;
+                else
+                    addUserBorder.Visibility = Visibility.Collapsed;
+            }
+            catch
+            {
+                // ignore if element not present
+            }
         }
 
         private void UpdateThemeStatus()
@@ -81,7 +100,7 @@ namespace TechHaven.Presentation.WinUI.Views
             if (appRes == null) return;
 
             // Helper to safely get brush
-            Brush? GetBrush(string key) => appRes.ContainsKey(key) ? appRes[key] as Brush : null;
+            Brush? GetBrush(String key) => appRes.ContainsKey(key) ? appRes[key] as Brush : null;
 
             // Page background
             var pageBg = GetBrush("TH.SurfaceBackground");
@@ -260,6 +279,195 @@ namespace TechHaven.Presentation.WinUI.Views
             finally
             {
                 _isInitializing = false;
+            }
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return false;
+            try
+            {
+                // simple regex for email validation
+                var pattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
+                return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private (bool ok, string message) EvaluatePassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return (false, "Password is required.");
+
+            if (password.Length < 8)
+                return (false, "Password must be at least 8 characters.");
+
+            bool hasUpper = false, hasLower = false, hasDigit = false, hasSpecial = false;
+            foreach (var c in password)
+            {
+                if (char.IsUpper(c)) hasUpper = true;
+                else if (char.IsLower(c)) hasLower = true;
+                else if (char.IsDigit(c)) hasDigit = true;
+                else hasSpecial = true;
+            }
+
+            if (!hasUpper || !hasLower || !hasDigit || !hasSpecial)
+            {
+                return (false, "Password must contain uppercase, lowercase, digit and special character.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private void ClearInlineErrors()
+        {
+            newUserEmailErrorText.Visibility = Visibility.Collapsed;
+            newUserUserNameErrorText.Visibility = Visibility.Collapsed;
+            newUserPasswordErrorText.Visibility = Visibility.Collapsed;
+            newUserConfirmErrorText.Visibility = Visibility.Collapsed;
+        }
+
+        private async void AddUserButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClearInlineErrors();
+
+            // Collect values from UI
+            var fullName = newUserFullNameBox.Text?.Trim() ?? string.Empty;
+            var email = newUserEmailBox.Text?.Trim() ?? string.Empty;
+            var username = newUserUserNameBox.Text?.Trim() ?? string.Empty;
+            var password = newUserPasswordBox.Password ?? string.Empty;
+            var confirm = newUserConfirmPasswordBox.Password ?? string.Empty;
+
+            int roleId = 1; // default Admin
+            try
+            {
+                if (newUserRoleCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag != null)
+                    roleId = int.Parse(cbi.Tag.ToString() ?? "1");
+            }
+            catch { roleId = 1; }
+
+            bool hasError = false;
+
+            // Email validation
+            if (!IsValidEmail(email))
+            {
+                newUserEmailErrorText.Text = "Invalid email format.";
+                newUserEmailErrorText.Visibility = Visibility.Visible;
+                hasError = true;
+            }
+
+            // Username validation
+            if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
+            {
+                newUserUserNameErrorText.Text = "Username must be at least 3 characters.";
+                newUserUserNameErrorText.Visibility = Visibility.Visible;
+                hasError = true;
+            }
+
+            // Password validation
+            var pwdEval = EvaluatePassword(password);
+            if (!pwdEval.ok)
+            {
+                newUserPasswordErrorText.Text = pwdEval.message;
+                newUserPasswordErrorText.Visibility = Visibility.Visible;
+                hasError = true;
+            }
+
+            // Confirm password
+            if (password != confirm)
+            {
+                newUserConfirmErrorText.Text = "Passwords do not match.";
+                newUserConfirmErrorText.Visibility = Visibility.Visible;
+                hasError = true;
+            }
+
+            if (hasError)
+            {
+                return; // show inline errors only
+            }
+
+            // Build signup DTO
+            var signupDto = new SignupRequestDto
+            {
+                UserFullName = fullName,
+                Email = email,
+                UserName = username,
+                Password = password,
+                RoleId = roleId
+            };
+
+            // Disable button while processing
+            addUserButton.IsEnabled = false;
+            addUserButton.Content = "Creating...";
+
+            try
+            {
+                var authService = new TechHaven.Presentation.WinUI.Services.Http.HttpAuthService(ApiClientFactory.GetHttpClient());
+                ResponseWrapper<SignupResponseDto>? wrapper = null;
+                try
+                {
+                    wrapper = await authService.SignupAsync(signupDto);
+                }
+                catch (HttpRequestException hx)
+                {
+                    var dlgErr = new ContentDialog
+                    {
+                        Title = "Network error",
+                        Content = $"Unable to reach server: {hx.Message}",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+
+                    await dlgErr.ShowAsync();
+                    return;
+                }
+
+                if (wrapper != null && wrapper.Success)
+                {
+                    var done = new ContentDialog
+                    {
+                        Title = "Success",
+                        Content = wrapper.Message ?? "User created.",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+
+                    await done.ShowAsync();
+
+                    // Clear inputs
+                    newUserFullNameBox.Text = string.Empty;
+                    newUserEmailBox.Text = string.Empty;
+                    newUserUserNameBox.Text = string.Empty;
+                    newUserPasswordBox.Password = string.Empty;
+                    newUserConfirmPasswordBox.Password = string.Empty;
+                    newUserRoleCombo.SelectedIndex = 0;
+                }
+                else
+                {
+                    var message = wrapper?.Message ?? "Unable to create user.";
+                    if (wrapper?.Errors != null && wrapper.Errors.Count > 0)
+                    {
+                        message += "\n" + string.Join("\n", wrapper.Errors);
+                    }
+
+                    var fail = new ContentDialog
+                    {
+                        Title = "Failed",
+                        Content = message,
+                        CloseButtonText = "OK",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+
+                    await fail.ShowAsync();
+                }
+            }
+            finally
+            {
+                addUserButton.IsEnabled = true;
+                addUserButton.Content = "Add user";
             }
         }
     }
