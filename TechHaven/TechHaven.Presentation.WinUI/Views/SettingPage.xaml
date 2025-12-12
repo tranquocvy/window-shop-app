@@ -86,11 +86,11 @@
                             <TextBlock x:Name="newUserUserNameErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
 
                             <TextBlock Text="Password" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,8,0,0"/>
-                            <PasswordBox x:Name="newUserPasswordBox" PlaceholderText="Password"/>
+                            <PasswordBox x:Name="newUserPasswordBox" PlaceholderText="Password" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
                             <TextBlock x:Name="newUserPasswordErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
 
                             <TextBlock Text="Confirm password" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,8,0,0"/>
-                            <PasswordBox x:Name="newUserConfirmPasswordBox" PlaceholderText="Confirm password"/>
+                            <PasswordBox x:Name="newUserConfirmPasswordBox" PlaceholderText="Confirm password" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
                             <TextBlock x:Name="newUserConfirmErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
                         </StackPanel>
 
@@ -98,7 +98,7 @@
                             <TextBlock Text="Role" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
                             <ComboBox x:Name="newUserRoleCombo" SelectedIndex="0" Width="160">
                                 <ComboBoxItem Tag="1">Admin</ComboBoxItem>
-                                <ComboBoxItem Tag="2">User</ComboBoxItem>
+                                <ComboBoxItem Tag="2">Seller</ComboBoxItem>
                             </ComboBox>
 
                             <Button x:Name="addUserButton" Content="Add user" Click="AddUserButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="{ThemeResource TH.TextOnPrimary}" Padding="8,6" Width="160" CornerRadius="6" />

@@ -25,7 +25,7 @@ namespace TechHaven.Presentation.WinUI.Views
             this.InitializeComponent();
 
             // Register this page root so ThemeManager can apply brushes to named elements
-            ThemeManager.RegisterRoot(this);
+            ThemeManager.RegisterRoot(this.Content as FrameworkElement ?? this);
 
             _viewModel = new SettingViewModel();
 
@@ -170,6 +170,64 @@ namespace TechHaven.Presentation.WinUI.Views
             // Status text
             if (secondary != null)
                 themeStatusText.Foreground = secondary;
+
+            var cardBg = GetBrush("TH.CardBackground");
+            try
+            {
+                if (cardBg != null && addUserBorder != null)
+                    addUserBorder.Background = cardBg;
+            }
+            catch { }
+
+            // Apply brushes recursively to children so unnamed TextBlocks and controls update immediately
+            try
+            {
+                var root = this.Content as DependencyObject;
+                if (root != null)
+                {
+                    void Walk(DependencyObject parent)
+                    {
+                        int cnt = VisualTreeHelper.GetChildrenCount(parent);
+                        for (int i = 0; i < cnt; i++)
+                        {
+                            var child = VisualTreeHelper.GetChild(parent, i);
+                            if (child is TextBlock tb)
+                            {
+                                if (primary != null) tb.Foreground = primary;
+                            }
+                            else if (child is TextBox tbx)
+                            {
+                                if (primary != null) tbx.Foreground = primary;
+                                if (cardBg != null) tbx.Background = cardBg;
+                            }
+                            else if (child is PasswordBox pb)
+                            {
+                                if (primary != null) pb.Foreground = primary;
+                                if (cardBg != null) pb.Background = cardBg;
+                            }
+                            else if (child is ComboBox cb)
+                            {
+                                if (primary != null) cb.Foreground = primary;
+                                if (cardBg != null) cb.Background = cardBg;
+                            }
+                            else if (child is Border bd)
+                            {
+                                if (cardBg != null) bd.Background = cardBg;
+                            }
+                            else if (child is Button btn)
+                            {
+                                if (primaryBrush != null) btn.Background = primaryBrush;
+                            }
+
+                            // recurse
+                            try { Walk(child); } catch { }
+                        }
+                    }
+
+                    Walk(root);
+                }
+            }
+            catch { }
         }
 
         private async void ThemeButton_Click(object sender, RoutedEventArgs e)
@@ -188,6 +246,8 @@ namespace TechHaven.Presentation.WinUI.Views
                     if (ok)
                     {
                         ThemeManager.ApplyTheme(theme);
+                        try { ThemeManager.ApplyTo(this.Content as FrameworkElement ?? this); } catch { }
+                        try { ThemeManager.ApplyTo(this); } catch { }
                         ApplyThemeBrushes();
                         UpdateThemeStatus();
                     }
