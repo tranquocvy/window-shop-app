@@ -58,6 +58,55 @@
 
             <TextBlock x:Name="themeStatusText" Foreground="{ThemeResource TH.TextSecondary}"/>
 
+            <!-- Add user form (horizontal dashboard-style card) -->
+            <Border x:Name="addUserBorder" Style="{ThemeResource CardStyle}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Create new user" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}" />
+                    <TextBlock Text="Quickly add an account from here" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,4,0,12"/>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="200" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Text="Full name" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <TextBox x:Name="newUserFullNameBox" PlaceholderText="Full name" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
+
+                            <TextBlock Text="Email" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,8,0,0"/>
+                            <TextBox x:Name="newUserEmailBox" PlaceholderText="Email" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
+                            <TextBlock x:Name="newUserEmailErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="Username" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <TextBox x:Name="newUserUserNameBox" PlaceholderText="Username" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
+                            <TextBlock x:Name="newUserUserNameErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
+
+                            <TextBlock Text="Password" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,8,0,0"/>
+                            <PasswordBox x:Name="newUserPasswordBox" PlaceholderText="Password" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
+                            <TextBlock x:Name="newUserPasswordErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
+
+                            <TextBlock Text="Confirm password" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,8,0,0"/>
+                            <PasswordBox x:Name="newUserConfirmPasswordBox" PlaceholderText="Confirm password" Foreground="{ThemeResource TH.TextPrimary}" Background="{ThemeResource TH.CardBackground}"/>
+                            <TextBlock x:Name="newUserConfirmErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="12" Visibility="Collapsed" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="Role" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <ComboBox x:Name="newUserRoleCombo" SelectedIndex="0" Width="160">
+                                <ComboBoxItem Tag="1">Admin</ComboBoxItem>
+                                <ComboBoxItem Tag="2">Seller</ComboBoxItem>
+                            </ComboBox>
+
+                            <Button x:Name="addUserButton" Content="Add user" Click="AddUserButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="{ThemeResource TH.TextOnPrimary}" Padding="8,6" Width="160" CornerRadius="6" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </Grid>
 </Page>
