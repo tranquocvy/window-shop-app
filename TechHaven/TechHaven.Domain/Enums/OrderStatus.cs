@@ -6,10 +6,6 @@ namespace TechHaven.Domain.Enums;
 public enum OrderStatus
 {
     /// <summary>
-    /// Indicates that the order is a draft and not finalized yet.
-    /// </summary>
-    Draft = 0,
-    /// <summary>
     /// Order is pending and awaiting processing.
     /// </summary>
     Pending = 1,

@@ -37,7 +37,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponseDt
       throw new NotFoundException("Invalid username or password");
     }
 
-        // 3. Check if user is active - thêm: check Date.UtcNow - user.createdAt >= 15 days
+     // 3. Check if user is active - thêm: check Date.UtcNow - user.createdAt >= 15 days
     if (!user.IsActive && (DateTime.UtcNow - user.CreatedAt).TotalDays >= 15)
     {
       throw new ValidationException(new[]
