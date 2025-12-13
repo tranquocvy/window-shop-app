@@ -81,8 +81,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             "Tất cả",
             "Dưới 5 triệu",
-            "Từ 5 đến 10 triệu",
-            "Trên 10 triệu"
+            "Từ 5 đến 15 triệu",
+            "Từ 15 đến 30 triệu",
+            "Từ 30 đến 50 triệu",
+            "Trên 50 triệu"
         };
 
 
@@ -231,13 +233,23 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     PriceTo = 5000000;
                     break;
 
-                case "Từ 5 đến 10 triệu":
+                case "Từ 5 đến 15 triệu":
                     PriceFrom = 5000000;
-                    PriceTo = 10000000;
+                    PriceTo = 15000000;
                     break;
 
-                case "Trên 10 triệu":
-                    PriceFrom = 10000000;
+                case "Từ 15 đến 30 triệu":
+                    PriceFrom = 15000000;
+                    PriceTo = 30000000;
+                    break;
+
+                case "Từ 30 đến 50 triệu":
+                    PriceFrom = 30000000;
+                    PriceTo = 50000000;
+                    break;
+
+                case "Trên 50 triệu":
+                    PriceFrom = 50000000;
                     PriceTo = null;
                     break;
 
