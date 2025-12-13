@@ -13,6 +13,11 @@ using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using System.Drawing;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Json;
+using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Shared.DTOs.Common;
+using System.Diagnostics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -136,6 +141,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 // Navigate frame
                 contentFrame.Navigate(pageType);
+
+                // After navigation, check trial status
+                _ = CheckTrialAsync();
             }
             catch
             {
@@ -143,6 +151,84 @@ namespace TechHaven.Presentation.WinUI.Views
                 try { contentFrame.Navigate(typeof(DashboardPage)); } catch { }
             }
         }
+
+        private async Task CheckTrialAsync()
+        {
+            try
+            {
+                if (AppState.CurrentUser == null) return;
+                if (string.IsNullOrWhiteSpace(TokenStore.AccessToken)) return;
+
+                var client = ApiClientFactory.GetHttpClient();
+
+                // prepare request without mutating shared DefaultRequestHeaders (set per-request)
+                using var req = new HttpRequestMessage(HttpMethod.Get, "api/Auth/isActive");
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenStore.AccessToken);
+
+                HttpResponseMessage resp;
+                try
+                {
+                    resp = await client.SendAsync(req).ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                 if (!resp.IsSuccessStatusCode) return;
+
+                 var wrapper = await resp.Content.ReadFromJsonAsync<ResponseWrapper<IsActiveResponseDto>>().ConfigureAwait(false);
+                 if (wrapper == null || !wrapper.Success || wrapper.Data == null) return;
+
+                 var dto = wrapper.Data;
+                 Debug.WriteLine(dto.IsActive ? "True" : "False");
+
+                if (!dto.IsActive)
+                 {
+                     _ = this.DispatcherQueue.TryEnqueue(async () =>
+                     {
+                         string message = "Your trial period has expired.";
+                         if (dto.DaysRemain > 0)
+                         {
+                             message = $"Trial will expire in {dto.DaysRemain} day(s).";
+                         }
+
+                         var dialog = new ContentDialog
+                         {
+                             Title = "Trial Mode",
+                             Content = message,
+                             PrimaryButtonText = "Log Out",
+                             CloseButtonText = "Close",
+                             XamlRoot = this.Content.XamlRoot
+                         };
+
+                         var result = await dialog.ShowAsync();
+                         if (result == ContentDialogResult.Primary)
+                         {
+                             try { TokenPersistence.RemoveRefreshToken(); } catch { }
+                             try { TokenStore.RefreshToken = null; } catch { }
+                             try { TokenStore.AccessToken = null; } catch { }
+
+                             AppState.CurrentUser = null;
+
+                             var loginWindow = new MainWindow();
+                             App.MainWindow = loginWindow;
+                             loginWindow.Activate();
+
+                             this.Close();
+                         }
+                     });
+                 }
+             }
+             catch
+             {
+                 // ignore trial check failures
+             }
+         }
 
         private void ThemeManager_ThemeChanged_ForTitlebar(ThemeManager.ThemeType obj)
         {
@@ -338,7 +424,6 @@ namespace TechHaven.Presentation.WinUI.Views
                         // 3. Đóng cửa sổ chính này lại
                         this.Close();
                     }
-                    // Nếu người dùng nhấn "Hủy", dialog tự đóng và không làm gì cả
 
                     return;
 
