@@ -82,32 +82,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             // Cập nhật thumbnails
             UpdateThumbnails();
 
-            // Cập nhật text index (1 / N)
-            int totalImages = _imageUrls.Count(url => !string.IsNullOrWhiteSpace(url));
-            if (totalImages == 0)
-            {
-                ImageIndexText.Text = $"0 / {MaxImageCount}";
-            }
-            else
-            {
-                // Tính vị trí thực của ảnh hiện tại trong danh sách ảnh có dữ liệu
-                int actualPosition = 1;
-                for (int i = 0; i < _currentImageIndex; i++)
-                {
-                    if (!string.IsNullOrWhiteSpace(_imageUrls[i]))
-                    {
-                        actualPosition++;
-                    }
-                }
-                if (string.IsNullOrWhiteSpace(currentUrl))
-                {
-                    ImageIndexText.Text = $"0 / {totalImages}";
-                }
-                else
-                {
-                    ImageIndexText.Text = $"{actualPosition} / {totalImages}";
-                }
-            }
+            
 
             // Vô hiệu hóa nút nếu cần
             PrevButton.IsEnabled = _currentImageIndex > 0;
