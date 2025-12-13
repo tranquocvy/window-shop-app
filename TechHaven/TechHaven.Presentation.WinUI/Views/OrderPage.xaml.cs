@@ -211,7 +211,12 @@ namespace TechHaven.Presentation.WinUI.Views
             var addProductBtn = new Button { Content = "Thêm sản phẩm", HorizontalAlignment = HorizontalAlignment.Stretch };
             var cartPanel = new StackPanel { Spacing = 8 };
             var subtotalText = new TextBlock { Text = "Subtotal: 0 ₫", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
-            var discountBox = new TextBox { PlaceholderText = "Discount", Text = "0", Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
+            var discountCombo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 0) };
+            for (int p = 0; p <= 100; p++)
+            {
+                discountCombo.Items.Add(new ComboBoxItem { Content = $"{p}%", Tag = p });
+            }
+            discountCombo.SelectedIndex = 0;
             var totalText = new TextBlock { Text = "Total: 0 ₫", FontWeight = Microsoft.UI.Text.FontWeights.Bold };
             var notesBox = new TextBox { PlaceholderText = "Notes (optional)", AcceptsReturn = true, TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap, Height = 80 };
 
@@ -289,10 +294,12 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 subtotalText.Text = $"Subtotal: {subtotal:N0} ₫";
 
-                if (!decimal.TryParse(discountBox.Text, out var discount) || discount < 0)
-                    discount = 0;
+                var pct = 0;
+                if (discountCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag is int t)
+                    pct = t;
+                var discFraction = Math.Max(0, Math.Min(100, pct)) / 100m;
 
-                var total = Math.Max(0, subtotal - discount);
+                var total = Math.Max(0, subtotal - (subtotal * discFraction));
                 totalText.Text = $"Total: {total:N0} ₫";
             }
 
@@ -304,10 +311,12 @@ namespace TechHaven.Presentation.WinUI.Views
             panel.Children.Add(cartPanel);
             panel.Children.Add(subtotalText);
             panel.Children.Add(new TextBlock { Text = "Discount:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            panel.Children.Add(discountBox);
+            panel.Children.Add(discountCombo);
             panel.Children.Add(totalText);
             panel.Children.Add(new TextBlock { Text = "Notes:", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
             panel.Children.Add(notesBox);
+
+            discountCombo.SelectionChanged += (_, _) => RefreshCartUI();
 
             var dialog = new ContentDialog
             {
@@ -380,9 +389,10 @@ namespace TechHaven.Presentation.WinUI.Views
                         return;
                     }
 
-                    // parse discount
-                    if (!decimal.TryParse(discountBox.Text, out var discount) || discount < 0)
-                        discount = 0;
+                    var selPct = 0;
+                    if (discountCombo.SelectedItem is ComboBoxItem sc && sc.Tag is int tagPct)
+                        selPct = tagPct;
+                    var parsedDiscount = Math.Max(0, Math.Min(100, selPct)) / 100m;
 
                     // build DTO
                     var items = cart.Select(ci => new OrderUpsertItemDto
@@ -395,7 +405,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     var createDto = new OrderUpsertRequestDto
                     {
                         CustomerId = selectedCustomer?.CustomerId,
-                        Discount = discount,
+                        Discount = parsedDiscount,
                         Notes = string.IsNullOrWhiteSpace(notesBox.Text) ? null : notesBox.Text.Trim(),
                         Items = items
                     };
