@@ -27,7 +27,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private readonly IProductService _productService;
         private string? _originalImageUrl = null;
 
-        private List<string?> _imageUrls = new List<string?> { null, null, null, null };
+        private const int MaxImageCount = 10; // Số lượng ảnh tối đa
+        private List<string?> _imageUrls = new List<string?>();
         private int _currentImageIndex = 0;
         
         public string? OriginalImageUrl => _originalImageUrl;
@@ -37,6 +38,12 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         public ProductFormUserControl()
         {
             this.InitializeComponent();
+
+            // Initialize image list with MaxImageCount slots
+            for (int i = 0; i < MaxImageCount; i++)
+            {
+                _imageUrls.Add(null);
+            }
 
             // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
             _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
@@ -75,11 +82,11 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             // Cập nhật thumbnails
             UpdateThumbnails();
 
-            // Cập nhật text index (1 / 4)
+            // Cập nhật text index (1 / N)
             int totalImages = _imageUrls.Count(url => !string.IsNullOrWhiteSpace(url));
             if (totalImages == 0)
             {
-                ImageIndexText.Text = "0 / 4";
+                ImageIndexText.Text = $"0 / {MaxImageCount}";
             }
             else
             {
@@ -154,9 +161,9 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 }
             }
 
-            // Thêm nút "+" để thêm ảnh mới (nếu chưa đủ 4 ảnh)
+            // Thêm nút "+" để thêm ảnh mới (luôn hiện sau ảnh cuối cùng nếu chưa đủ MaxImageCount ảnh)
             int totalImages = _imageUrls.Count(url => !string.IsNullOrWhiteSpace(url));
-            if (totalImages < 4)
+            if (totalImages < MaxImageCount)
             {
                 var addBorder = new Border
                 {
@@ -181,7 +188,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
 
                 addBorder.Child = icon;
                 addBorder.Tapped += OnAddImageTapped;
-                ToolTipService.SetToolTip(addBorder, "Thêm ảnh mới");
+                ToolTipService.SetToolTip(addBorder, $"Thêm ảnh mới ({totalImages}/{MaxImageCount})");
 
                 ThumbnailsPanel.Children.Add(addBorder);
             }
@@ -299,8 +306,12 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             _originalImageUrl = product.ImageUrl;
             _currentImageIndex = 0;
 
-            // Reset image list
-            _imageUrls = new List<string?> { null, null, null, null };
+            // Reset image list with MaxImageCount
+            _imageUrls.Clear();
+            for (int i = 0; i < MaxImageCount; i++)
+            {
+                _imageUrls.Add(null);
+            }
 
             // Load main image
             if (!string.IsNullOrWhiteSpace(product.ImageUrl))
@@ -316,7 +327,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                     var list = JsonSerializer.Deserialize<List<string>>(product.ImageGalleryJson);
                     if (list != null)
                     {
-                        for (int i = 0; i < list.Count && i < 3; i++)
+                        // Load gallery images up to (MaxImageCount - 1) to account for main image
+                        for (int i = 0; i < list.Count && i < (MaxImageCount - 1); i++)
                         {
                             _imageUrls[i + 1] = list[i];
                         }

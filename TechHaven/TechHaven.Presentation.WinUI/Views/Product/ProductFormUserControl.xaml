@@ -66,10 +66,12 @@
                     </Border>
                 </Grid>
 
-                <!-- Thumbnails ảnh phía dưới -->
-                <StackPanel x:Name="ThumbnailsPanel" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                    <!-- Thumbnails sẽ được thêm động từ code-behind -->
-                </StackPanel>
+                <!-- Thumbnails ảnh phía dưới với ScrollView -->
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="ThumbnailsPanel" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left">
+                        <!-- Thumbnails sẽ được thêm động từ code-behind -->
+                    </StackPanel>
+                </ScrollViewer>
             </StackPanel>
 
 
