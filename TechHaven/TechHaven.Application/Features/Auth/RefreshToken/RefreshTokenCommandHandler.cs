@@ -52,8 +52,8 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
       });
     }
 
-        // 4. Check if user is still active - thêm: check Date.UtcNow - user.createdAt >= 15 days
-     if (!user.IsActive && (DateTime.UtcNow - user.CreatedAt).TotalDays >= 15)
+        // 4. Check if user is still active
+        if (!user.IsActive)
     {
       throw new ValidationException(new[]
       {

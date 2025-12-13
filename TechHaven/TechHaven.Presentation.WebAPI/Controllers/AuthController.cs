@@ -12,6 +12,8 @@ using TechHaven.Application.Features.Auth.RefreshToken;
 using TechHaven.Application.Features.Auth.ResendOtp;
 using TechHaven.Application.Features.Auth.Queries.GetCurrentUser;
 using TechHaven.Application.Features.Auth.Signup;
+using TechHaven.Application.Features.Auth.Activate;
+using TechHaven.Application.Features.Auth.Queries.IsActive;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -318,4 +320,79 @@ public class AuthController : ControllerBase
       });
     }
   }
+    /// <summary>
+    /// Check user active status and remaining trial days
+    /// </summary>
+    [HttpGet("isActive")]
+    [Authorize] // Bắt buộc phải có Token để biết check cho ai
+    [ProducesResponseType(typeof(ResponseWrapper<IsActiveResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ResponseWrapper<IsActiveResponseDto>>> IsActive(CancellationToken cancellationToken)
+    {
+        // Lấy UserId từ Token (sử dụng logic ClaimTypes.NameIdentifier)
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+        {
+            return Unauthorized(new ResponseWrapper<object> { Success = false, Message = "Invalid Token" });
+        }
+
+        var query = new IsActiveQuery(userId);
+        var result = await _mediator.Send(query, cancellationToken);
+
+        return Ok(new ResponseWrapper<IsActiveResponseDto>
+        {
+            Success = true,
+            Data = result
+        });
+    }
+
+    /// <summary>
+    /// Activate user account with a key code
+    /// </summary>
+    [HttpPost("activate")]
+    [Authorize] // Bắt buộc phải có Token
+    [ProducesResponseType(typeof(ResponseWrapper<ActivateResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ResponseWrapper<ActivateResponseDto>>> Activate(
+        [FromBody] ActivateRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Lấy UserId từ Token
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new ResponseWrapper<object> { Success = false, Message = "Invalid Token" });
+            }
+
+            var command = new ActivateCommand(userId, request.Key);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.IsValid)
+            {
+                return BadRequest(new ResponseWrapper<object>
+                {
+                    Success = false,
+                    Message = "Invalid activation key."
+                });
+            }
+
+            return Ok(new ResponseWrapper<ActivateResponseDto>
+            {
+                Success = true,
+                Message = "Account activated successfully.",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Activation failed");
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Activation failed",
+                Errors = new List<string> { ex.Message }
+            });
+        }
+    }
 }

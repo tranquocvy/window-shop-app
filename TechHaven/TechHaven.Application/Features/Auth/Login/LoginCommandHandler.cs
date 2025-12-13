@@ -37,12 +37,12 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponseDt
       throw new NotFoundException("Invalid username or password");
     }
 
-     // 3. Check if user is active - thêm: check Date.UtcNow - user.createdAt >= 15 days
-    if (!user.IsActive && (DateTime.UtcNow - user.CreatedAt).TotalDays >= 15)
+     // 3. Check if user is active
+    if (!user.IsActive)
     {
       throw new ValidationException(new[]
       {
-        new FluentValidation.Results.ValidationFailure("UserName", "User account is deactivated after 15 days of trial mode")
+        new FluentValidation.Results.ValidationFailure("UserName", "User account is deactivated")
       });
     }
 
