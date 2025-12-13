@@ -1,4 +1,4 @@
-using TechHaven.Application.Interfaces;
+﻿using TechHaven.Application.Interfaces;
 using TechHaven.Application.Common.Exceptions;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
@@ -37,17 +37,31 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponseDt
       throw new NotFoundException("Invalid username or password");
     }
 
-     // 3. Check if user is active
-    if (!user.IsActive)
-    {
-      throw new ValidationException(new[]
-      {
-        new FluentValidation.Results.ValidationFailure("UserName", "User account is deactivated")
-      });
-    }
+        // 3. Check if user is active
+        /*
+          Tạm thời bỏ qua người dùng có là isActive hay ko, vì ta vẫn sẽ để người dùng đăng nhập thành công. Nhưng sẽ chặn các hành động khác trừ khi họ nâng cấp tài khoản.
+        //TODO: có 2 hướng dể xử lý
+         
+        1. Coi is_active là trường để thể hiện free trial hay official account ?
+          -> thì  ta sẽ cần một trường mới là isValidAccount để kiểm tra tài khoản có bị ban bởi admin không ?
+          --> cái này tạm thời có thể chưa cần  trong đồ án này
+          --> Ở TH1 thì ta không cần giữ logic bên dưới hđ, (do FE đề xuất) vì nhằm mục đích để user log vào hệ thống kiểm tra tài khoản có còn trong thời gian dùng thử hay không 
+         2. Coi is_active là trường để thể hiện tài khoản có bị ban hay không ?
+          -> thì ta sẽ cần một trường mới là accountType để phân biệt tài khoản free trial hay official account ?
+          --> Như này thì ta buộc phải cài thêm và Db migration -> hơi mất thời gian xíu
+          -> ở TH2 thì ta hoàn toàn có thể giữ logic bên dưới hoạt động - vì acc bị ban thì ko cho đăng nhập
+        */
+        
+        //if (!user.IsActive)
+        //{
+        //  throw new ValidationException(new[]
+        //  {
+        //    new FluentValidation.Results.ValidationFailure("UserName", "User account is deactivated")
+        //  });
+        //}
 
-    // 4. Generate OTP and get both session ID and code
-    var (otpSessionId, otpCode) = _otpService.GenerateOtp(user.UserId);
+        // 4. Generate OTP and get both session ID and code
+        var (otpSessionId, otpCode) = _otpService.GenerateOtp(user.UserId);
 
     // 5. Send OTP via email
     try
