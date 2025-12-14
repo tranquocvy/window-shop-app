@@ -11,13 +11,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Windowing;
 using WinRT.Interop;
-using System.Drawing;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.Net.Http.Json;
-using TechHaven.Shared.DTOs.Auth;
-using TechHaven.Shared.DTOs.Common;
-using System.Diagnostics;
 using Windows.System;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -33,6 +27,7 @@ namespace TechHaven.Presentation.WinUI.Views
         private AppWindow? _appWindow;
         private readonly SettingViewModel _settingViewModel;
         private readonly TrialModeManager _trialModeManager;
+        private ChatBotManager? _chatBotManager;
 
         public ShellWindow()
         {
@@ -114,8 +109,31 @@ namespace TechHaven.Presentation.WinUI.Views
 
             }
 
+            // Initialize ChatBot
+            InitializeChatBot();
+
             // Initialize settings and navigate to last visited page (or dashboard)
             _ = InitializeSettingsAndNavigateAsync();
+        }
+
+        private void InitializeChatBot()
+        {
+            try
+            {
+                _chatBotManager = new ChatBotManager(
+                    ChatMinimizedButton,
+                    ChatExpandedWindow,
+                    ChatMessageInputBox,
+                    ChatSendButton,
+                    ChatCloseButton,
+                    ChatMessagesPanel,
+                    ChatMessageScrollViewer
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to initialize ChatBot: {ex.Message}");
+            }
         }
 
         private async Task InitializeSettingsAndNavigateAsync()
