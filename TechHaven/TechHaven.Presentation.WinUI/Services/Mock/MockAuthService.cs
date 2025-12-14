@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -99,39 +100,27 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return new ResponseWrapper<OtpResendResponseDto> { Success = true, Message = "OTP resent", Data = resp };
         }
 
-        // Implement SignupAsync
-        public async Task<ResponseWrapper<SignupResponseDto>> SignupAsync(SignupRequestDto dto)
+        public Task<ResponseWrapper<SignupResponseDto>> SignupAsync(SignupRequestDto dto)
         {
-            if (dto == null)
-                return new ResponseWrapper<SignupResponseDto> { Success = false, Message = "Invalid payload" };
+            throw new NotImplementedException();
+        }
 
-            var createDto = new UserCreateUpdateDto
+        public Task<ResponseWrapper<ActivateResponseDto>> ActivateAsync(ActivateRequestDto dto)
+        {
+            return Task.FromResult(new ResponseWrapper<ActivateResponseDto>
             {
-                UserFullName = dto.UserFullName,
-                UserName = dto.UserName,
-                RoleId = dto.RoleId,
-                IsActive = true
-            };
+                Success = true,
+                Data = new ActivateResponseDto { IsValid = true }
+            });
+        }
 
-            // Attempt to create user via mock user service
-            var result = await _userService.CreateUserAsync(createDto);
-            if (!result.Success || result.Data == null)
+        public Task<ResponseWrapper<IsActiveResponseDto>> CheckTrialStatusAsync()
+        {
+            return Task.FromResult(new ResponseWrapper<IsActiveResponseDto>
             {
-                return new ResponseWrapper<SignupResponseDto> { Success = false, Message = "Failed to create user" };
-            }
-
-            var created = result.Data;
-            var resp = new SignupResponseDto
-            {
-                UserId = created.UserId,
-                UserFullName = created.UserFullName ?? string.Empty,
-                UserName = created.UserName ?? string.Empty,
-                Email = dto.Email ?? string.Empty,
-                RoleId = created.RoleId,
-                Message = "User created (mock)"
-            };
-
-            return new ResponseWrapper<SignupResponseDto> { Success = true, Message = "User created", Data = resp };
+                Success = true,
+                Data = new IsActiveResponseDto { IsActive = true, DaysRemain = 30 }
+            });
         }
     }
 }
