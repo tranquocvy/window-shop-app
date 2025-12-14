@@ -152,6 +152,11 @@ namespace TechHaven.Presentation.WinUI.Views
             }
         }
 
+        public Task TriggerTrialCheckAsync()
+        {
+            return CheckTrialAsync();
+        }
+
         private async Task CheckTrialAsync()
         {
             try

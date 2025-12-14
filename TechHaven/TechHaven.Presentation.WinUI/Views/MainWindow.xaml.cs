@@ -110,6 +110,8 @@ namespace TechHaven.Presentation.WinUI.Views
                 Debug.WriteLine($"Error calling SetLastVisitedPageAsync after login: {ex}");
             }
 
+            try { ApiClientFactory.ResetClient(); } catch { }
+
             // Navigate to ShellWindow
             var shellWindow = new ShellWindow();
 
@@ -117,6 +119,8 @@ namespace TechHaven.Presentation.WinUI.Views
             TechHaven.Presentation.WinUI.App.MainWindow = shellWindow;
             App.MainWindow = shellWindow;
             shellWindow.Activate();
+
+            _ = shellWindow.TriggerTrialCheckAsync();
 
             // Close login window
             this.Close();

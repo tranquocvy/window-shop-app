@@ -23,7 +23,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         #region Fields
 
-        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IDashboardService _service;
 
         #endregion
@@ -33,7 +32,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         /// <summary>
         /// Initializes a new instance of DashboardViewModel with default HTTP service
         /// </summary>
-        public DashboardViewModel() : this(new HttpDashboardService(SharedHttpClient)) { }
+        public DashboardViewModel() : this(new HttpDashboardService(ApiClientFactory.GetHttpClient())) { }
 
         /// <summary>
         /// Initializes a new instance of DashboardViewModel with specified service
