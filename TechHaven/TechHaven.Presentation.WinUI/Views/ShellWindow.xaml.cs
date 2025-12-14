@@ -13,6 +13,12 @@ using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using System.Drawing;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Json;
+using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Shared.DTOs.Common;
+using System.Diagnostics;
+using Windows.System;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,12 +32,14 @@ namespace TechHaven.Presentation.WinUI.Views
     {
         private AppWindow? _appWindow;
         private readonly SettingViewModel _settingViewModel;
+        private readonly TrialModeManager _trialModeManager;
 
         public ShellWindow()
         {
             this.InitializeComponent();
 
             _settingViewModel = new SettingViewModel();
+            _trialModeManager = new TrialModeManager(this, new Services.Http.HttpAuthService(ApiClientFactory.GetHttpClient()));
 
             // Extend content into title bar so we can use a custom title area
             try
@@ -58,9 +66,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
                         // Listen for theme changes so titlebar buttons update immediately
                         ThemeManager.ThemeChanged += ThemeManager_ThemeChanged_ForTitlebar;
-                        
+
                         // Unsubscribe when window closes to avoid memory leaks and crashes on re-login
-                        this.Closed += (s, e) => 
+                        this.Closed += (s, e) =>
                         {
                             ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged_ForTitlebar;
                         };
@@ -79,15 +87,28 @@ namespace TechHaven.Presentation.WinUI.Views
             if (Content is FrameworkElement root)
             {
                 ThemeManager.RegisterRoot(root);
+
+                // Block ESC when trial mode is active
+                try
+                {
+                    var escAccel = new KeyboardAccelerator { Key = VirtualKey.Escape };
+                    escAccel.Invoked += (s, e) =>
+                    {
+                        if (_trialModeManager.IsTrialModeActive)
+                            e.Handled = true;
+                    };
+                    root.KeyboardAccelerators.Add(escAccel);
+                }
+                catch { }
             }
 
             if (AppState.CurrentUser != null)
             {
-                // Lấy dữ liệu từ AppState
+                // L?y d? li?u t? AppState
                 string userFullName = AppState.CurrentUser.UserFullName; //
                 string roleName = AppState.CurrentUser.RoleName; //
 
-                // Gán dữ liệu lên UI (lên 2 TextBlock bạn vừa tạo)
+                // Gán d? li?u lên UI (lên 2 TextBlock b?n v?a t?o)
                 currentUserFullNameText.Text = userFullName;
                 currentUserRoleText.Text = roleName;
 
@@ -136,12 +157,25 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 // Navigate frame
                 contentFrame.Navigate(pageType);
+
+                // After navigation, check trial status
+                _ = CheckTrialAsync();
             }
             catch
             {
                 // fallback to dashboard
                 try { contentFrame.Navigate(typeof(DashboardPage)); } catch { }
             }
+        }
+
+        public Task TriggerTrialCheckAsync()
+        {
+            return _trialModeManager.CheckAndShowTrialModeAsync();
+        }
+
+        private async Task CheckTrialAsync()
+        {
+            await _trialModeManager.CheckAndShowTrialModeAsync();
         }
 
         private void ThemeManager_ThemeChanged_ForTitlebar(ThemeManager.ThemeType obj)
@@ -264,7 +298,7 @@ namespace TechHaven.Presentation.WinUI.Views
             }
         }
 
-        // Xử lý khi nhấn vào một item
+        // X? lý khi nh?n vào m?t item
         private async void navView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.InvokedItemContainer == null) return;
@@ -295,7 +329,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     pageType = typeof(SettingPage);
                     break;
 
-                // XỬ LÝ LOGOUT QUAN TRỌNG
+                // X? LÝ LOGOUT QUAN TR?NG
                 case "logout":
                     ContentDialog logoutDialog = new ContentDialog
                     {
@@ -305,15 +339,15 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "Cancel"
                     };
 
-                    logoutDialog.XamlRoot = this.Content.XamlRoot; // Hoặc navView.XamlRoot
+                    logoutDialog.XamlRoot = this.Content.XamlRoot; // Ho?c navView.XamlRoot
 
-                    // 3. Hiển thị Dialog và chờ kết quả
+                    // 3. Hi?n th? Dialog và ch? k?t qu?
                     ContentDialogResult result = await logoutDialog.ShowAsync();
 
-                    // 4. Chỉ đăng xuất nếu người dùng nhấn nút "Đăng xuất"
+                    // 4. Ch? dang xu?t n?u ngu?i dùng nh?n nút "Ðang xu?t"
                     if (result == ContentDialogResult.Primary)
                     {
-                        // 1. Xóa trạng thái đăng nhập
+                        // 1. Xóa tr?ng thái dang nh?p
                         AppState.CurrentUser = null;
 
                         // Remove persisted refresh token and clear in-memory tokens
@@ -330,15 +364,14 @@ namespace TechHaven.Presentation.WinUI.Views
                         try { TokenStore.RefreshToken = null; } catch { }
                         try { TokenStore.AccessToken = null; } catch { }
 
-                        // 2. Mở lại cửa sổ Login (MainWindow)
+                        // 2. M? l?i c?a s? Login (MainWindow)
                         var loginWindow = new MainWindow();
                         App.MainWindow = loginWindow;
                         loginWindow.Activate();
 
-                        // 3. Đóng cửa sổ chính này lại
+                        // 3. Ðóng c?a s? chính này l?i
                         this.Close();
                     }
-                    // Nếu người dùng nhấn "Hủy", dialog tự đóng và không làm gì cả
 
                     return;
 
@@ -347,7 +380,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     break;
             }
 
-            // Điều hướng Frame đến trang đã chọn
+            // Ði?u hu?ng Frame d?n trang dã ch?n
             contentFrame.Navigate(pageType);
 
             // Persist last visited (ignore logout)
