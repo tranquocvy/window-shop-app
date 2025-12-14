@@ -32,13 +32,14 @@ namespace TechHaven.Presentation.WinUI.Views
     {
         private AppWindow? _appWindow;
         private readonly SettingViewModel _settingViewModel;
-        private bool _isForcedTrialActive = false;
+        private readonly TrialModeManager _trialModeManager;
 
         public ShellWindow()
         {
             this.InitializeComponent();
 
             _settingViewModel = new SettingViewModel();
+            _trialModeManager = new TrialModeManager(this, new Services.Http.HttpAuthService(ApiClientFactory.GetHttpClient()));
 
             // Extend content into title bar so we can use a custom title area
             try
@@ -65,9 +66,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
                         // Listen for theme changes so titlebar buttons update immediately
                         ThemeManager.ThemeChanged += ThemeManager_ThemeChanged_ForTitlebar;
-                        
+
                         // Unsubscribe when window closes to avoid memory leaks and crashes on re-login
-                        this.Closed += (s, e) => 
+                        this.Closed += (s, e) =>
                         {
                             ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged_ForTitlebar;
                         };
@@ -87,29 +88,27 @@ namespace TechHaven.Presentation.WinUI.Views
             {
                 ThemeManager.RegisterRoot(root);
 
-                // Global keyboard accelerator to intercept Escape at root element level
+                // Block ESC when trial mode is active
                 try
                 {
-                    var windowEsc = new KeyboardAccelerator { Key = VirtualKey.Escape };
-                    windowEsc.Invoked += (s, e) =>
+                    var escAccel = new KeyboardAccelerator { Key = VirtualKey.Escape };
+                    escAccel.Invoked += (s, e) =>
                     {
-                        if (_isForcedTrialActive)
-                        {
-                            e.Handled = true; // swallow ESC when forced dialog is active
-                        }
+                        if (_trialModeManager.IsTrialModeActive)
+                            e.Handled = true;
                     };
-                    root.KeyboardAccelerators.Add(windowEsc);
+                    root.KeyboardAccelerators.Add(escAccel);
                 }
                 catch { }
             }
 
             if (AppState.CurrentUser != null)
             {
-                // Lấy dữ liệu từ AppState
+                // L?y d? li?u t? AppState
                 string userFullName = AppState.CurrentUser.UserFullName; //
                 string roleName = AppState.CurrentUser.RoleName; //
 
-                // Gán dữ liệu lên UI (lên 2 TextBlock bạn vừa tạo)
+                // Gán d? li?u lên UI (lên 2 TextBlock b?n v?a t?o)
                 currentUserFullNameText.Text = userFullName;
                 currentUserRoleText.Text = roleName;
 
@@ -171,308 +170,13 @@ namespace TechHaven.Presentation.WinUI.Views
 
         public Task TriggerTrialCheckAsync()
         {
-            return CheckTrialAsync();
+            return _trialModeManager.CheckAndShowTrialModeAsync();
         }
 
         private async Task CheckTrialAsync()
         {
-            try
-            {
-                if (AppState.CurrentUser == null) return;
-                if (string.IsNullOrWhiteSpace(TokenStore.AccessToken)) return;
-
-                var client = ApiClientFactory.GetHttpClient();
-
-                // prepare request without mutating shared DefaultRequestHeaders (set per-request)
-                using var req = new HttpRequestMessage(HttpMethod.Get, "api/Auth/isActive");
-                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenStore.AccessToken);
-
-                HttpResponseMessage resp;
-                try
-                {
-                    resp = await client.SendAsync(req).ConfigureAwait(false);
-                }
-                catch (TaskCanceledException)
-                {
-                    return;
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-
-                 if (!resp.IsSuccessStatusCode) return;
-
-                 var wrapper = await resp.Content.ReadFromJsonAsync<ResponseWrapper<IsActiveResponseDto>>().ConfigureAwait(false);
-                 if (wrapper == null || !wrapper.Success || wrapper.Data == null) return;
-
-                 var dto = wrapper.Data;
-                 Debug.WriteLine(dto.IsActive ? "True" : "False");
-
-                if (!dto.IsActive)
-                {
-                    _ = this.DispatcherQueue.TryEnqueue(async () =>
-                    {
-                        string message = "Your trial period has expired.";
-                        if (dto.DaysRemain > 0)
-                        {
-                            message = $"Trial will expire in {dto.DaysRemain} day(s).";
-                        }
-
-                        // If DaysRemain == 0: force user to logout (but remove persisted refresh token immediately).
-                        if (dto.DaysRemain <= 0)
-                        {
-                            try { TokenPersistence.RemoveRefreshToken(); } catch { }
-                            try { TokenStore.RefreshToken = null; } catch { }
-
-                            // Create custom blocking overlay instead of ContentDialog to prevent ALL escape routes
-                            _isForcedTrialActive = true;
-                            
-                            // Create full-screen overlay Grid
-                            var overlayGrid = new Grid
-                            {
-                                Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(200, 0, 0, 0)),
-                                HorizontalAlignment = HorizontalAlignment.Stretch,
-                                VerticalAlignment = VerticalAlignment.Stretch
-                            };
-
-                            // Create dialog-like content in center
-                            var dialogBorder = new Border
-                            {
-                                Background = (Brush)Application.Current.Resources["LayerFillColorDefaultBrush"],
-                                CornerRadius = new CornerRadius(8),
-                                Padding = new Thickness(24),
-                                MaxWidth = 500,
-                                HorizontalAlignment = HorizontalAlignment.Center,
-                                VerticalAlignment = VerticalAlignment.Center,
-                                BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-                                BorderThickness = new Thickness(1)
-                            };
-
-                            var contentStack = new StackPanel { Spacing = 16 };
-                            
-                            // Title
-                            contentStack.Children.Add(new TextBlock 
-                            { 
-                                Text = "Trial Mode - Expired", 
-                                FontSize = 20, 
-                                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold 
-                            });
-
-                            // Message
-                            contentStack.Children.Add(new TextBlock 
-                            { 
-                                Text = message + "\nYou must log out or activate to continue.", 
-                                TextWrapping = TextWrapping.Wrap 
-                            });
-
-                            // Activation input
-                            var keyBox = new TextBox { PlaceholderText = "Enter activation key", Width = 360 };
-                            contentStack.Children.Add(keyBox);
-
-                            var activationResultText = new TextBlock { Text = string.Empty, Foreground = new SolidColorBrush(Colors.Red) };
-                            contentStack.Children.Add(activationResultText);
-
-                            // Buttons
-                            var buttonStack = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 8 };
-                            
-                            var activateBtn = new Button { Content = "Activate", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
-                            var logoutBtn = new Button { Content = "Log Out" };
-                            
-                            buttonStack.Children.Add(activateBtn);
-                            buttonStack.Children.Add(logoutBtn);
-                            contentStack.Children.Add(buttonStack);
-
-                            dialogBorder.Child = contentStack;
-                            overlayGrid.Children.Add(dialogBorder);
-
-                            // Block ALL keyboard input on overlay
-                            overlayGrid.KeyDown += (s, e) => { e.Handled = true; };
-                            overlayGrid.KeyUp += (s, e) => { e.Handled = true; };
-
-                            // Add overlay to root Grid (assuming root is Grid in XAML)
-                            if (this.Content is Panel rootPanel)
-                            {
-                                rootPanel.Children.Add(overlayGrid);
-                            }
-
-                            // Handle Activate button
-                            activateBtn.Click += async (s, e) =>
-                            {
-                                var key = keyBox.Text?.Trim() ?? string.Empty;
-                                if (string.IsNullOrWhiteSpace(key))
-                                {
-                                    activationResultText.Text = "Please enter an activation key.";
-                                    return;
-                                }
-
-                                activationResultText.Text = "Verifying...";
-                                activateBtn.IsEnabled = false;
-
-                                try
-                                {
-                                    var client = ApiClientFactory.GetHttpClient();
-                                    var dtoReq = new Shared.DTOs.Auth.ActivateRequestDto { Key = key };
-                                    using var resp = await client.PostAsJsonAsync("api/Auth/activate", dtoReq);
-                                    
-                                    if (!resp.IsSuccessStatusCode)
-                                    {
-                                        activationResultText.Text = $"Activation failed: {resp.StatusCode}";
-                                        activateBtn.IsEnabled = true;
-                                        return;
-                                    }
-
-                                    var wrapper = await resp.Content.ReadFromJsonAsync<ResponseWrapper<ActivateResponseDto>>();
-                                    if (wrapper == null || !wrapper.Success || wrapper.Data == null)
-                                    {
-                                        activationResultText.Text = wrapper?.Message ?? "Activation failed.";
-                                        activateBtn.IsEnabled = true;
-                                        return;
-                                    }
-
-                                    if (wrapper.Data.IsValid)
-                                    {
-                                        // Success: remove overlay and restore
-                                        _isForcedTrialActive = false;
-                                        if (this.Content is Panel panel)
-                                        {
-                                            panel.Children.Remove(overlayGrid);
-                                        }
-
-                                        var successDialog = new ContentDialog 
-                                        { 
-                                            Title = "Activated", 
-                                            Content = "Activation successful. You may continue.", 
-                                            CloseButtonText = "OK", 
-                                            XamlRoot = this.Content.XamlRoot 
-                                        };
-                                        await successDialog.ShowAsync();
-                                    }
-                                    else
-                                    {
-                                        activationResultText.Text = "Invalid activation key.";
-                                        activateBtn.IsEnabled = true;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    activationResultText.Text = $"Error: {ex.Message}";
-                                    activateBtn.IsEnabled = true;
-                                }
-                            };
-
-                            // Handle Log Out button
-                            logoutBtn.Click += (s, e) =>
-                            {
-                                // Perform logout
-                                try { TokenPersistence.RemoveRefreshToken(); } catch { }
-                                try { TokenStore.RefreshToken = null; } catch { }
-                                try { TokenStore.AccessToken = null; } catch { }
-
-                                AppState.CurrentUser = null;
-
-                                var loginWindow = new MainWindow();
-                                App.MainWindow = loginWindow;
-                                loginWindow.Activate();
-
-                                this.Close();
-                            };
-                        }
-                        else
-                        {
-                            // DaysRemain > 0: allow user to close dialog and continue, but also provide activation input
-                            var stackPanel = new StackPanel { Spacing = 8 };
-                            stackPanel.Children.Add(new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap });
-
-                            var keyBox = new TextBox { PlaceholderText = "Enter activation key", Width = 360 };
-                            stackPanel.Children.Add(keyBox);
-
-                            var activationResultText = new TextBlock { Text = string.Empty, Foreground = new SolidColorBrush(Colors.Red) };
-                            stackPanel.Children.Add(activationResultText);
-
-                            var dialog = new ContentDialog
-                            {
-                                Title = "Trial Mode",
-                                Content = stackPanel,
-                                PrimaryButtonText = "Log Out",
-                                CloseButtonText = "Close",
-                                SecondaryButtonText = "Activate",
-                                XamlRoot = this.Content.XamlRoot
-                            };
-
-                            dialog.SecondaryButtonClick += async (s, e) =>
-                            {
-                                e.Cancel = true; // keep dialog open while processing
-                                var key = keyBox.Text?.Trim() ?? string.Empty;
-                                if (string.IsNullOrWhiteSpace(key))
-                                {
-                                    activationResultText.Text = "Please enter an activation key.";
-                                    return;
-                                }
-
-                                activationResultText.Text = string.Empty;
-                                try
-                                {
-                                    var client = ApiClientFactory.GetHttpClient();
-                                    var dtoReq = new Shared.DTOs.Auth.ActivateRequestDto { Key = key };
-                                    using var resp = await client.PostAsJsonAsync("api/Auth/activate", dtoReq).ConfigureAwait(false);
-                                    if (!resp.IsSuccessStatusCode)
-                                    {
-                                        _ = this.DispatcherQueue.TryEnqueue(() => activationResultText.Text = $"Activation failed: {resp.StatusCode}");
-                                        return;
-                                    }
-
-                                    var wrapper = await resp.Content.ReadFromJsonAsync<ResponseWrapper<ActivateResponseDto>>().ConfigureAwait(false);
-                                    if (wrapper == null || !wrapper.Success || wrapper.Data == null)
-                                    {
-                                        _ = this.DispatcherQueue.TryEnqueue(() => activationResultText.Text = wrapper?.Message ?? "Activation failed.");
-                                        return;
-                                    }
-
-                                    if (wrapper.Data.IsValid)
-                                    {
-                                        _ = this.DispatcherQueue.TryEnqueue(async () =>
-                                        {
-                                            var okDialog = new ContentDialog { Title = "Activated", Content = "Activation successful. You may continue.", CloseButtonText = "OK", XamlRoot = this.Content.XamlRoot };
-                                            await okDialog.ShowAsync();
-                                            dialog.Hide();
-                                        });
-                                    }
-                                    else
-                                    {
-                                        _ = this.DispatcherQueue.TryEnqueue(() => activationResultText.Text = "Invalid activation key.");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _ = this.DispatcherQueue.TryEnqueue(() => activationResultText.Text = $"Error: {ex.Message}");
-                                }
-                            };
-
-                            var result = await dialog.ShowAsync();
-                            if (result == ContentDialogResult.Primary)
-                            {
-                                try { TokenPersistence.RemoveRefreshToken(); } catch { }
-                                try { TokenStore.RefreshToken = null; } catch { }
-                                try { TokenStore.AccessToken = null; } catch { }
-
-                                AppState.CurrentUser = null;
-
-                                var loginWindow = new MainWindow();
-                                App.MainWindow = loginWindow;
-                                loginWindow.Activate();
-
-                                this.Close();
-                            }
-                        }
-                     });
-                 }
-             }
-             catch
-             {
-                 // ignore trial check failures
-             }
-         }
+            await _trialModeManager.CheckAndShowTrialModeAsync();
+        }
 
         private void ThemeManager_ThemeChanged_ForTitlebar(ThemeManager.ThemeType obj)
         {
@@ -594,7 +298,7 @@ namespace TechHaven.Presentation.WinUI.Views
             }
         }
 
-        // Xử lý khi nhấn vào một item
+        // X? lý khi nh?n vào m?t item
         private async void navView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.InvokedItemContainer == null) return;
@@ -625,7 +329,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     pageType = typeof(SettingPage);
                     break;
 
-                // XỬ LÝ LOGOUT QUAN TRỌNG
+                // X? LÝ LOGOUT QUAN TR?NG
                 case "logout":
                     ContentDialog logoutDialog = new ContentDialog
                     {
@@ -635,15 +339,15 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "Cancel"
                     };
 
-                    logoutDialog.XamlRoot = this.Content.XamlRoot; // Hoặc navView.XamlRoot
+                    logoutDialog.XamlRoot = this.Content.XamlRoot; // Ho?c navView.XamlRoot
 
-                    // 3. Hiển thị Dialog và chờ kết quả
+                    // 3. Hi?n th? Dialog và ch? k?t qu?
                     ContentDialogResult result = await logoutDialog.ShowAsync();
 
-                    // 4. Chỉ đăng xuất nếu người dùng nhấn nút "Đăng xuất"
+                    // 4. Ch? dang xu?t n?u ngu?i dùng nh?n nút "Ðang xu?t"
                     if (result == ContentDialogResult.Primary)
                     {
-                        // 1. Xóa trạng thái đăng nhập
+                        // 1. Xóa tr?ng thái dang nh?p
                         AppState.CurrentUser = null;
 
                         // Remove persisted refresh token and clear in-memory tokens
@@ -660,12 +364,12 @@ namespace TechHaven.Presentation.WinUI.Views
                         try { TokenStore.RefreshToken = null; } catch { }
                         try { TokenStore.AccessToken = null; } catch { }
 
-                        // 2. Mở lại cửa sổ Login (MainWindow)
+                        // 2. M? l?i c?a s? Login (MainWindow)
                         var loginWindow = new MainWindow();
                         App.MainWindow = loginWindow;
                         loginWindow.Activate();
 
-                        // 3. Đóng cửa sổ chính này lại
+                        // 3. Ðóng c?a s? chính này l?i
                         this.Close();
                     }
 
@@ -676,7 +380,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     break;
             }
 
-            // Điều hướng Frame đến trang đã chọn
+            // Ði?u hu?ng Frame d?n trang dã ch?n
             contentFrame.Navigate(pageType);
 
             // Persist last visited (ignore logout)
