@@ -107,5 +107,131 @@
 
             <Frame x:Name="contentFrame"/>
         </NavigationView>
+
+        <!-- ChatBot UI -->
+        <Grid x:Name="ChatBotRoot">
+            <!-- Minimized Button (floating) -->
+            <Button 
+                x:Name="ChatMinimizedButton"
+                Width="60" 
+                Height="60"
+                CornerRadius="30"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,20,20"
+                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                BorderThickness="0">
+                <FontIcon Glyph="&#xE8F2;" FontSize="24" Foreground="White"/>
+            </Button>
+
+            <!-- Expanded Chat Window -->
+            <Grid 
+                x:Name="ChatExpandedWindow"
+                Width="380" 
+                Height="550"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,20,20"
+                Visibility="Collapsed"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                CornerRadius="12"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+                
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Grid Grid.Row="0" 
+                      Background="{ThemeResource AccentFillColorDefaultBrush}" 
+                      Padding="16,12"
+                      CornerRadius="12,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Grid.Column="0" 
+                             Glyph="&#xE8F2;" 
+                             FontSize="20" 
+                             Foreground="White"
+                             VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Column="1" 
+                              Text="AI Assistant" 
+                              FontSize="16" 
+                              FontWeight="SemiBold"
+                              Foreground="White"
+                              VerticalAlignment="Center"
+                              Margin="12,0,0,0"/>
+
+                    <Button Grid.Column="2"
+                           x:Name="ChatCloseButton"
+                           Width="32" 
+                           Height="32"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8BB;" FontSize="12" Foreground="White"/>
+                    </Button>
+                </Grid>
+
+                <!-- Chat Messages Area -->
+                <ScrollViewer Grid.Row="1" 
+                             x:Name="ChatMessageScrollViewer"
+                             VerticalScrollBarVisibility="Auto"
+                             Padding="16">
+                    <StackPanel x:Name="ChatMessagesPanel" Spacing="12">
+                        <!-- Welcome message -->
+                        <Grid>
+                            <Border Background="{ThemeResource LayerFillColorAltBrush}"
+                                   Padding="12"
+                                   CornerRadius="8"
+                                   MaxWidth="300"
+                                   HorizontalAlignment="Left">
+                                <TextBlock Text="Hello! I'm your AI assistant. How can I help you today?"
+                                         TextWrapping="Wrap"
+                                         Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Input Area -->
+                <Grid Grid.Row="2" 
+                      Padding="16"
+                      Background="{ThemeResource LayerFillColorAltBrush}"
+                      CornerRadius="0,0,12,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Name="ChatMessageInputBox"
+                            Grid.Column="0"
+                            PlaceholderText="Type your message..."
+                            MaxHeight="100"
+                            TextWrapping="Wrap"
+                            AcceptsReturn="True"
+                            VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1"
+                           x:Name="ChatSendButton"
+                           Width="40" 
+                           Height="40"
+                           Margin="8,0,0,0"
+                           CornerRadius="20"
+                           Background="{ThemeResource AccentFillColorDefaultBrush}"
+                           BorderThickness="0"
+                           VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE724;" FontSize="16" Foreground="White"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
