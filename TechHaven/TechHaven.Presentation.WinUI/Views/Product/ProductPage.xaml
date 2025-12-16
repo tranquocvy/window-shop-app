@@ -68,7 +68,7 @@
                         <Setter Target="StatusCombo.(Grid.Column)" Value="2" />
                         <Setter Target="StatusCombo.Margin" Value="0" />
 
-                        <Setter Target="Col_CostPrice.Width" Value="0" />
+                        <Setter Target="Col_CostPrice.Width" Value="1*" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -128,7 +128,7 @@
                 <ComboBox x:Name="StatusCombo" Grid.Row="0" Grid.Column="3"
                           ItemsSource="{x:Bind ViewModel.StatusFilter}"
                           SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
-                          HorizontalAlignment="Stretch" Height="40" PlaceholderText="TT" 
+                          HorizontalAlignment="Stretch" Height="40" PlaceholderText="Trạng thái" 
                           Margin="8,0,0,0"/>
             </Grid>
 
@@ -185,7 +185,7 @@
                     <CheckBox Grid.Column="0" IsChecked="{Binding IsAllSelected, Mode=TwoWay}" MinWidth="0" Margin="0" />
                     <TextBlock Grid.Column="1" Text="Ảnh" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" />
                     <TextBlock Grid.Column="2" Text="Tên Sản Phẩm" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" />
-                    <TextBlock Grid.Column="3" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" />
+                    <TextBlock Grid.Column="3" Text="Giá Nhập" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" Margin="-10,0,0,0" />
                     <TextBlock Grid.Column="4" Text="Giá Bán" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" />
                     <TextBlock Grid.Column="5" Text="SL" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" />
                     <TextBlock Grid.Column="6" Text="Hãng" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource TH.TextSecondary}" />

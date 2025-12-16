@@ -94,7 +94,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _selectedBrandName = "Không";
 
         [ObservableProperty]
-        private string _selectedStatus = "Không";
+        private string _selectedStatus = null;
 
         public ProductViewModel()
         {
