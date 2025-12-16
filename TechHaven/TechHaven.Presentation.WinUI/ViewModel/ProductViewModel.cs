@@ -21,8 +21,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class ProductViewModel : ObservableObject
     {
-        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
-        private readonly IProductService _productService = new HttpProductService(SharedHttpClient);
+        // Don't cache HttpClient statically here.
+        // Always obtain current client from ApiClientFactory so ResetClient / login changes take effect.
+        private HttpClient HttpClient => ApiClientFactory.GetHttpClient();
+
+        // Removed static shared HttpClient and the long-lived _productService.
+        // We'll create HttpProductService(ApiClientFactory.GetHttpClient()) per operation so auth headers are fresh.
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
 
@@ -42,9 +46,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private int _pageNumber = 1;
 
-        // local cache but queries will use AppState.PageSize
         [ObservableProperty]
-        private int _pageSize = AppState.PageSize;
+        private int _pageSize = 10;
 
         [ObservableProperty]
         private int _totalPages;
@@ -87,8 +90,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             "Trên 50 triệu"
         };
 
-
-
         [ObservableProperty]
         private string _selectedBrandName = "Không";
 
@@ -97,9 +98,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public ProductViewModel()
         {
-            // Initialize local page size from global AppState
-            _pageSize = AppState.PageSize;
-
             // Load brands when ViewModel is created
             _ = LoadBrandsAsync();
         }
@@ -111,13 +109,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             try
             {
-                var response = await SharedHttpClient.GetFromJsonAsync<TechHaven.Shared.DTOs.Common.ResponseWrapper<System.Collections.Generic.List<BrandDto>>>("api/Brand");
-                
+                var client = ApiClientFactory.GetHttpClient();
+                var response = await client.GetFromJsonAsync<TechHaven.Shared.DTOs.Common.ResponseWrapper<System.Collections.Generic.List<BrandDto>>>("api/Brand");
+
                 if (response?.Success == true && response.Data != null)
                 {
                     BrandNameFilter.Clear();
                     BrandNameFilter.Add("Không"); // Default option
-                    
+
                     foreach (var brand in response.Data)
                     {
                         if (!string.IsNullOrWhiteSpace(brand.BrandName))
@@ -158,8 +157,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             {
                 SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim().ToLower(),
                 PageNumber = PageNumber,
-                // use global AppState.PageSize
-                PageSize = AppState.PageSize,
+                PageSize = PageSize,
                 Brand = SelectedBrandName == "Không" ? null : SelectedBrandName,
 
                 FromPrice = PriceFrom,
@@ -168,8 +166,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 Status = statusFilter
             };
         }
-
-
 
         // ========================
         // Search triggers reload
@@ -263,9 +259,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _ = LoadProductsAsync(BuildQuery());
         }
 
-
-
-
         // ========================
         // Main load function
         // ========================
@@ -284,27 +277,35 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             Products.Clear();
             // ==========================
 
-            var response = await _productService.QueryProductsAsync(query);
-            if (!response.Success || response.Data == null)
-                return;
-
-            var paging = response.Data;
-
-            foreach (var product in paging.Items)
+            try
             {
-                var itemVM = new ProductItemViewModel(product);
-                // Đăng ký sự kiện PropertyChanged cho từng item để update Select All checkbox
-                itemVM.PropertyChanged += ProductItem_PropertyChanged;
+                var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+                var response = await productService.QueryProductsAsync(query);
+                if (!response.Success || response.Data == null)
+                    return;
 
-                Products.Add(itemVM);
+                var paging = response.Data;
+
+                foreach (var product in paging.Items)
+                {
+                    var itemVM = new ProductItemViewModel(product);
+                    // Đăng ký sự kiện PropertyChanged cho từng item để update Select All checkbox
+                    itemVM.PropertyChanged += ProductItem_PropertyChanged;
+
+                    Products.Add(itemVM);
+                }
+
+                // Cập nhật trạng thái Select All dựa trên list mới load
+                _isUpdatingAll = true;
+                IsAllSelected = Products.Any() && Products.All(p => p.IsSelected);
+                _isUpdatingAll = false;
+
+                UpdatePaginationState(paging.TotalCount);
             }
-
-            // Cập nhật trạng thái Select All dựa trên list mới load
-            _isUpdatingAll = true;
-            IsAllSelected = Products.Any() && Products.All(p => p.IsSelected);
-            _isUpdatingAll = false;
-
-            UpdatePaginationState(paging.TotalCount);
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ProductViewModel] LoadProductsAsync error: {ex}");
+            }
         }
 
         private void ProductItem_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -318,7 +319,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
-
         // ========================
         // Pagination state update
         // ========================
@@ -326,9 +326,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             TotalCount = totalCount;
 
-            var pageSize = AppState.PageSize;
-            TotalPages = pageSize > 0
-                ? (int)Math.Ceiling((double)totalCount / pageSize)
+            TotalPages = PageSize > 0
+                ? (int)Math.Ceiling((double)totalCount / PageSize)
                 : 1;
 
             if (TotalPages == 0) TotalPages = 1;
@@ -396,11 +395,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 if (!confirm) return;
 
+                var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+
                 foreach (var item in selectedItems)
                 {
                     try
                     {
-                        var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+                        var response = await productService.DeleteProductsAsync(item.Product.ProductId);
                         if (response?.Success == true)
                             Products.Remove(item);
                         else
@@ -467,13 +468,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 try
                 {
-                    var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
-                    
-             
+                    var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+                    var response = await productService.DeleteProductsAsync(item.Product.ProductId);
+
                     Products.Remove(item);
-                        
-                    
-                    // chỗ này bỏ if vì "tính năng" đã bàn với leader hihi
+
                     // Update list/paging after deletion
                     await LoadProductsAsync();
 
@@ -510,14 +509,16 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // ========================
         public async Task UpdateProductAsync(int id, ProductUpsertRequest dto)
         {
-            await _productService.UpdateProductsAsync(id, dto);
+            var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+            await productService.UpdateProductsAsync(id, dto);
             await LoadProductsAsync(); // Dùng query mặc định
         }
 
         public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
-            var response = await _productService.CreateProductsAsync(dto);
+            var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+            var response = await productService.CreateProductsAsync(dto);
             if (response.Success)
                 await LoadProductsAsync(); // Dùng query mặc định
         }
