@@ -539,6 +539,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         public bool IsAdmin => CurrentUserRole == "Admin";
+
+        public string CostPriceColumnWidth => IsAdmin ? "1.2*" : "0";
     }
 
 
