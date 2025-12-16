@@ -27,7 +27,7 @@
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Auto"
-            SelectionFollowsFocus="Enabled"
+            SelectionFollowsFocus="Disabled"
             Loaded="navView_Loaded"
             ItemInvoked="navView_ItemInvoked"
             Background="{ThemeResource TH.NavBackground}"

@@ -319,7 +319,13 @@ namespace TechHaven.Presentation.WinUI.Views
         // X? lý khi nh?n vào m?t item
         private async void navView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.InvokedItemContainer == null) return;
+            // IMPORTANT: Ignore if this is a toggle pane button click (hamburger menu)
+            if (args.IsSettingsInvoked)
+                return;
+
+            // Ignore if no item container (e.g., clicking toggle button)
+            if (args.InvokedItemContainer == null)
+                return;
 
             string? tag = args.InvokedItemContainer.Tag as string;
             if (tag == null) return;
@@ -362,7 +368,7 @@ namespace TechHaven.Presentation.WinUI.Views
                     // 3. Hi?n th? Dialog và ch? k?t qu?
                     ContentDialogResult result = await logoutDialog.ShowAsync();
 
-                    // 4. Ch? dang xu?t n?u ngu?i dùng nh?n nút "Ðang xu?t"
+                    // 4. Ch? dang xu?t n?u ngu?i dùng nhấn nút "Ðang xu?t"
                     if (result == ContentDialogResult.Primary)
                     {
                         // 1. Xóa tr?ng thái dang nh?p
