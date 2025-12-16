@@ -11,32 +11,35 @@
     <!-- =====================   COLORS   ========================= -->
     <!-- ========================================================= -->
 
-    <!-- ========== Background Layers (Light mode) ========== -->
-    <Color x:Key="TH.Color.SurfaceBackground">#FFF2FAFF</Color>
+    <!-- ========== Background Layers (Light mode) - Improved contrast ========== -->
+    <Color x:Key="TH.Color.SurfaceBackground">#FF4B5563</Color>
     <!-- nền app -->
-    <Color x:Key="TH.Color.Layer1Background">#FFF7FCFF</Color>
+    <Color x:Key="TH.Color.Layer1Background">#FFFFFFFF</Color>
     <!-- layer phụ / container -->
     <Color x:Key="TH.Color.CardBackground">#FFFFFFFF</Color>
     <!-- card -->
-    <Color x:Key="TH.Color.NavBackground">#FF355A7A</Color>
+    <Color x:Key="TH.Color.NavBackground">#FF1E3A5F</Color>
     <!-- navigation panel -->
 
     <!-- ========== Borders ========== -->
-    <Color x:Key="TH.Color.Border">#FFDDEFF5</Color>
-    <!-- border nhẹ -->
-    <Color x:Key="TH.Color.Divider">#FFE6F2F9</Color>
+    <Color x:Key="TH.Color.Border">#FFD1D5DB</Color>
+    <!-- border -->
+    <Color x:Key="TH.Color.Divider">#FFE5E7EB</Color>
     <!-- divider -->
 
     <!-- ========== Text ========== -->
-    <Color x:Key="TH.Color.TextPrimary">#FF08324A</Color>
+    <Color x:Key="TH.Color.TextPrimary">#FF111827</Color>
     <!-- text chính -->
-    <Color x:Key="TH.Color.TextSecondary">#FF355A7A</Color>
+    <Color x:Key="TH.Color.TextSecondary">#FF4B5563</Color>
     <!-- text phụ -->
-    <Color x:Key="TH.Color.TextDisabled">#FF9FB0BD</Color>
+    <Color x:Key="TH.Color.TextDisabled">#FF9CA3AF</Color>
     <!-- disabled text -->
 
-    <Color x:Key="TH.Color.NavItemPointerOver">#FFD7EDF9</Color>
-    <Color x:Key="TH.Color.NavItemSelected">#FFCCE9F6</Color>
+    <!-- ========== Nav Item States - Better visibility ========== -->
+    <Color x:Key="TH.Color.NavItemPointerOver">#FF2563EB</Color>
+    <!-- blue hover -->
+    <Color x:Key="TH.Color.NavItemSelected">#FF3B82F6</Color>
+    <!-- blue selected -->
 
     <!-- ========================================================= -->
     <!-- ======================= BRUSHES ========================= -->
@@ -81,12 +84,12 @@
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="{StaticResource TH.Color.NavItemSelected}" />
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPointerOver" Color="{StaticResource TH.Color.NavItemSelected}" />
 
-    <SolidColorBrush x:Key="NavigationViewItemForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
-    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="{StaticResource TH.Color.TextPrimary}" />
-    <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundPointerOver" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedPointerOver" Color="#FFFFFFFF" />
 
     <!-- Additional states to ensure text color remains correct -->
-    <SolidColorBrush x:Key="NavigationViewItemForegroundPressed" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="NavigationViewItemForegroundPressed" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="NavigationViewItemForegroundDisabled" Color="{StaticResource TH.Color.TextDisabled}" />
 
     <!-- Map success/danger colors from Common -->
