@@ -29,8 +29,18 @@ namespace TechHaven.Presentation.WinUI.Views
             this.InitializeComponent();
             ViewModel = new ProductViewModel();
             this.DataContext = ViewModel;
+
+            // Ẩn cột Giá Nhập nếu không phải Admin
+            UpdateCostPriceColumnVisibility();
         }
 
+        private void UpdateCostPriceColumnVisibility()
+        {
+            if (!ViewModel.IsAdmin)
+            {
+                Col_CostPrice_Header.Width = new GridLength(0);
+            }
+        }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
