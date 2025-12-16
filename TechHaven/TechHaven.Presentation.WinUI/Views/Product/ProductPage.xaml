@@ -9,6 +9,7 @@
     xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
     x:Name="RootPage"
     mc:Ignorable="d"
+      
     Background="{StaticResource TH.SurfaceBackground}"
     Foreground="{StaticResource TH.TextPrimary}">
     
@@ -21,15 +22,15 @@
         <converters:PriceFormatConverter x:Key="PriceFormatConverter" />
 
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
+            <Setter Property="Background" Value="{ThemeResource TH.CardBackground}" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="12" />
-            <Setter Property="BorderBrush" Value="{StaticResource TH.BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource TH.BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="0" />
         </Style>
     </Page.Resources>
-
+  
     <Grid Padding="16">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="LayoutStates">

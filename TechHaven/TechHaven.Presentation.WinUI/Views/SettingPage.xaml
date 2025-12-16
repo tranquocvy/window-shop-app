@@ -59,7 +59,13 @@
             <TextBlock x:Name="themeStatusText" Foreground="{ThemeResource TH.TextSecondary}"/>
 
             <!-- Add user form (horizontal dashboard-style card) -->
-            <Border x:Name="addUserBorder" Style="{ThemeResource CardStyle}" Margin="0,12,0,0">
+            <Border x:Name="addUserBorder" 
+                    Background="{ThemeResource TH.CardBackground}"
+                    BorderBrush="{ThemeResource TH.BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,12,0,0">
                 <StackPanel>
                     <TextBlock Text="Create new user" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}" />
                     <TextBlock Text="Quickly add an account from here" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,4,0,12"/>

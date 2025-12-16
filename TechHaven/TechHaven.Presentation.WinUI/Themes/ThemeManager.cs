@@ -72,7 +72,7 @@ namespace TechHaven.Presentation.WinUI.Themes
                 app.Resources.MergedDictionaries.Add(dict);
                 CurrentTheme = theme;
 
-                // Re-apply to registered roots
+                // Force re-apply to registered roots
                 ReapplyAll();
 
                 // notify listeners
@@ -137,29 +137,52 @@ namespace TechHaven.Presentation.WinUI.Themes
             var appRes = Application.Current?.Resources;
             if (appRes == null) return;
 
-            // Use the TH.* keys used in your XAML
-            if (appRes.ContainsKey("TH.SurfaceBackground"))
+            // Force update Background
+            ApplyBackgroundBrush(root, appRes);
+
+            // Force update NavigationView
+            ApplyNavigationViewTheme(root, appRes);
+
+            // Force update all Borders (for signup form, etc.)
+            ApplyBordersTheme(root, appRes);
+
+            // Force update TextBlocks
+            ApplyTextBlocksTheme(root, appRes);
+
+            // Force update ChatBot background
+            ApplyChatBotTheme(root, appRes);
+        }
+
+        private static void ApplyBackgroundBrush(FrameworkElement root, ResourceDictionary appRes)
+        {
+            try
             {
-                var brush = appRes["TH.SurfaceBackground"] as Brush;
-                if (brush != null)
+                if (appRes.ContainsKey("TH.SurfaceBackground"))
                 {
-                    if (root is Panel panel)
-                        panel.Background = brush;
-                    else if (root is Control control)
-                        control.Background = brush;
-                    else
+                    var brush = appRes["TH.SurfaceBackground"] as Brush;
+                    if (brush != null)
                     {
-                        var prop = root.GetType().GetProperty("Background");
-                        if (prop != null && prop.CanWrite && prop.PropertyType.IsAssignableFrom(typeof(Brush)))
-                            prop.SetValue(root, brush);
+                        if (root is Panel panel)
+                            panel.Background = brush;
+                        else if (root is Control control)
+                            control.Background = brush;
+                        else
+                        {
+                            var prop = root.GetType().GetProperty("Background");
+                            if (prop != null && prop.CanWrite && prop.PropertyType.IsAssignableFrom(typeof(Brush)))
+                                prop.SetValue(root, brush);
+                        }
                     }
                 }
             }
+            catch { }
+        }
 
-            // If there's a NavigationView named 'navView' under this root, apply nav brushes
+        private static void ApplyNavigationViewTheme(FrameworkElement root, ResourceDictionary appRes)
+        {
             try
             {
-                var nav = root.FindName("navView") as NavigationView;
+                var nav = FindElementByName<NavigationView>(root, "navView");
                 if (nav != null)
                 {
                     if (appRes.ContainsKey("TH.NavBackground"))
@@ -173,34 +196,140 @@ namespace TechHaven.Presentation.WinUI.Themes
                         var tp = appRes["TH.TextPrimary"] as Brush;
                         if (tp != null) nav.Foreground = tp;
                     }
+
+                    // Force update nav items
+                    nav.UpdateLayout();
                 }
             }
-            catch
-            {
-                // ignore find/assign errors
-            }
+            catch { }
+        }
 
-            // Also apply Text brushes to known named textblocks if present
+        private static void ApplyBordersTheme(FrameworkElement root, ResourceDictionary appRes)
+        {
             try
             {
-                var fullName = root.FindName("currentUserFullNameText") as TextBlock;
+                // Find all Borders in visual tree and update their properties
+                var borders = FindAllDescendants<Border>(root);
+                foreach (var border in borders)
+                {
+                    // Update CardBackground for borders with specific names or that use card style
+                    if (border.Name?.Contains("Card", StringComparison.OrdinalIgnoreCase) == true ||
+                        border.Name?.Contains("addUserBorder", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        if (appRes.ContainsKey("TH.CardBackground"))
+                        {
+                            var bg = appRes["TH.CardBackground"] as Brush;
+                            if (bg != null) border.Background = bg;
+                        }
+                    }
+
+                    // Update border brush
+                    if (border.BorderThickness.Top > 0 && appRes.ContainsKey("TH.BorderBrush"))
+                    {
+                        var borderBrush = appRes["TH.BorderBrush"] as Brush;
+                        if (borderBrush != null) border.BorderBrush = borderBrush;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static void ApplyTextBlocksTheme(FrameworkElement root, ResourceDictionary appRes)
+        {
+            try
+            {
+                // Update known named textblocks
+                var fullName = FindElementByName<TextBlock>(root, "currentUserFullNameText");
                 if (fullName != null && appRes.ContainsKey("TH.TextPrimary"))
                 {
                     var tp = appRes["TH.TextPrimary"] as Brush;
                     if (tp != null) fullName.Foreground = tp;
                 }
 
-                var role = root.FindName("currentUserRoleText") as TextBlock;
+                var role = FindElementByName<TextBlock>(root, "currentUserRoleText");
                 if (role != null && appRes.ContainsKey("TH.TextSecondary"))
                 {
                     var ts = appRes["TH.TextSecondary"] as Brush;
                     if (ts != null) role.Foreground = ts;
                 }
+
+                var titleText = FindElementByName<TextBlock>(root, "titleText");
+                if (titleText != null && appRes.ContainsKey("TH.TextPrimary"))
+                {
+                    var tp = appRes["TH.TextPrimary"] as Brush;
+                    if (tp != null) titleText.Foreground = tp;
+                }
             }
-            catch
+            catch { }
+        }
+
+        private static void ApplyChatBotTheme(FrameworkElement root, ResourceDictionary appRes)
+        {
+            try
             {
-                // ignore
+                // Update ChatBot expanded window background
+                var chatWindow = FindElementByName<Grid>(root, "ChatExpandedWindow");
+                if (chatWindow != null && appRes.ContainsKey("TH.NavBackground"))
+                {
+                    var bg = appRes["TH.NavBackground"] as Brush;
+                    if (bg != null) chatWindow.Background = bg;
+                }
             }
+            catch { }
+        }
+
+        private static T? FindElementByName<T>(DependencyObject parent, string name) where T : FrameworkElement
+        {
+            if (parent == null) return null;
+
+            try
+            {
+                var element = parent as FrameworkElement;
+                if (element != null)
+                {
+                    var found = element.FindName(name);
+                    if (found is T t) return t;
+                }
+            }
+            catch { }
+
+            return FindDescendantByName<T>(parent, name);
+        }
+
+        private static T? FindDescendantByName<T>(DependencyObject parent, string name) where T : FrameworkElement
+        {
+            if (parent == null) return null;
+
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T t && (child as FrameworkElement)?.Name == name)
+                    return t;
+
+                var result = FindDescendantByName<T>(child, name);
+                if (result != null) return result;
+            }
+
+            return null;
+        }
+
+        private static List<T> FindAllDescendants<T>(DependencyObject parent) where T : DependencyObject
+        {
+            var results = new List<T>();
+            if (parent == null) return results;
+
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T t)
+                    results.Add(t);
+
+                results.AddRange(FindAllDescendants<T>(child));
+            }
+
+            return results;
         }
 
         public static void RegisterRoot(FrameworkElement root)

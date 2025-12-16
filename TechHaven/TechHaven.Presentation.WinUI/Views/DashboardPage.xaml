@@ -8,7 +8,8 @@
     xmlns:dashboard="using:TechHaven.Shared.DTOs.Dashboard"
     xmlns:conv="using:TechHaven.Presentation.WinUI.Converters"
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="{ThemeResource TH.SurfaceBackground}">
 
     <Page.Resources>
         <conv:CurrencyConverter x:Key="CurrencyConverter" />
@@ -40,7 +41,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid>
+    <Grid Background="Transparent">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="AdaptiveStates">
                 <VisualState x:Name="Wide">
@@ -65,7 +66,7 @@
         </VisualStateManager.VisualStateGroups>
 
         <!-- Desktop Layout (>720px) -->
-        <Grid x:Name="DesktopLayout" Padding="24" ColumnSpacing="20" RowSpacing="20">
+        <Grid x:Name="DesktopLayout" Padding="24" ColumnSpacing="20" RowSpacing="20" Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="1*" />
@@ -293,7 +294,7 @@
         </Grid>
 
         <!-- Tablet Layout (<=720px) -->
-        <ScrollViewer x:Name="TabletLayout" Visibility="Collapsed">
+        <ScrollViewer x:Name="TabletLayout" Visibility="Collapsed" Background="Transparent">
             <StackPanel Padding="16" Spacing="16">
                 <!-- Total products -->
                 <Border Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
