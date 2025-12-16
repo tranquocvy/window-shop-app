@@ -39,7 +39,6 @@
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
-        <!-- Customer item template used by the customer selector dialog -->
         <DataTemplate x:Key="CustomerItemTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -51,7 +50,6 @@
             </Grid>
         </DataTemplate>
 
-        <!-- Product item template used by the product selector dialog -->
         <DataTemplate x:Key="ProductItemTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -65,303 +63,493 @@
             </Grid>
         </DataTemplate>
 
+        <DataTemplate x:Key="OrderItemDesktopTemplate" x:DataType="vm:OrderItemViewModel">
+            <Grid HorizontalAlignment="Stretch" Padding="12,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="15*"/>
+                    <ColumnDefinition Width="15*"/>
+                    <ColumnDefinition Width="15*"/>
+                    <ColumnDefinition Width="15*"/>
+                    <ColumnDefinition Width="20*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" 
+                           Text="{x:Bind OrderDateDisplay}" 
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                <TextBlock Grid.Column="1" 
+                           Text="{x:Bind CustomerDisplay}" 
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                <Border Grid.Column="2"
+                        CornerRadius="12"
+                        Padding="10,4"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <Border.Background>
+                        <SolidColorBrush Color="{x:Bind StatusColor}"/>
+                    </Border.Background>
+                    <TextBlock Text="{x:Bind StatusDisplay}"
+                               Foreground="White"
+                               FontSize="11"
+                               FontWeight="SemiBold"/>
+                </Border>
+
+                <TextBlock Grid.Column="3" 
+                           Text="{x:Bind ProductsCountDisplay}" 
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TH.TextSecondary}"/>
+
+                <TextBlock Grid.Column="4" 
+                           Text="{x:Bind TotalAmountDisplay}" 
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TH.TextPrimary}" />
+
+                <TextBlock Grid.Column="5" 
+                           Text="{x:Bind Order.Notes}" 
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TH.TextSecondary}"/>
+
+                <Grid.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Xem Chi Tiết" Click="ViewDetails_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE7C3;"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Cập Nhật Trạng Thái" Click="UpdateStatus_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE70F;"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem Text="In Đơn Hàng" Click="PrintOrder_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE8A7;"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem Text="Xóa Đơn Hàng" Click="DeleteOrder_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE74D;" Foreground="{ThemeResource TH.DangerBrush}"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </Grid.ContextFlyout>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="OrderItemTabletTemplate" x:DataType="vm:OrderItemViewModel">
+            <Border BorderBrush="{ThemeResource TH.BorderBrush}" 
+                    BorderThickness="0,0,0,1" 
+                    Padding="12">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{x:Bind CustomerDisplay}" 
+                                       FontWeight="Bold" 
+                                       FontSize="14"
+                                       Foreground="{ThemeResource TH.TextPrimary}"/>
+                            <TextBlock Text="{x:Bind OrderDateDisplay}" 
+                                       FontSize="12"
+                                       Foreground="{ThemeResource TH.TextSecondary}"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <Border Grid.Column="1"
+                                CornerRadius="12"
+                                Padding="10,4"
+                                VerticalAlignment="Center">
+                            <Border.Background>
+                                <SolidColorBrush Color="{x:Bind StatusColor}"/>
+                            </Border.Background>
+                            <TextBlock Text="{x:Bind StatusDisplay}"
+                                       Foreground="White"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Sản phẩm" 
+                                       FontSize="11" 
+                                       Foreground="{ThemeResource TH.TextSecondary}"/>
+                            <TextBlock Text="{x:Bind ProductsCountDisplay}" 
+                                       FontSize="13"
+                                       Foreground="{ThemeResource TH.TextPrimary}"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Tổng tiền" 
+                                       FontSize="11" 
+                                       Foreground="{ThemeResource TH.TextSecondary}"/>
+                            <TextBlock Text="{x:Bind TotalAmountDisplay}" 
+                                       FontSize="13"
+                                       FontWeight="Bold"
+                                       Foreground="{ThemeResource TH.TextPrimary}"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" 
+                               Text="{x:Bind Order.Notes}" 
+                               FontSize="12"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TH.TextSecondary}"/>
+
+                    <Grid.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="Xem Chi Tiết" Click="ViewDetails_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE7C3;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Cập Nhật Trạng Thái" Click="UpdateStatus_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE70F;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Text="In Đơn Hàng" Click="PrintOrder_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8A7;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Text="Xóa Đơn Hàng" Click="DeleteOrder_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE74D;" Foreground="{ThemeResource TH.DangerBrush}"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </Grid.ContextFlyout>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </Page.Resources>
 
-    <Grid Padding="24" RowSpacing="20" Background="Transparent">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Grid Background="Transparent">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveStates">
+                <VisualState x:Name="Desktop">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="721" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DesktopLayout.Visibility" Value="Visible" />
+                        <Setter Target="TabletLayout.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Tablet">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DesktopLayout.Visibility" Value="Collapsed" />
+                        <Setter Target="TabletLayout.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
 
-        <!-- Title -->
-        <TextBlock Grid.Row="0" 
-                   Text="Orders" 
-                   Style="{StaticResource SectionTitle}"
-                   Margin="0,0,0,16"/>
+        <!-- Desktop Layout (>720px) -->
+        <Grid x:Name="DesktopLayout" Padding="24" RowSpacing="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- Filters -->
-        <Grid Grid.Row="1" Margin="0,0,0,16" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.5*"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="0.7*"/>
-                <ColumnDefinition Width="0.7*"/>
-                <ColumnDefinition Width="2.5*"/>
-            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" 
+                       Text="Orders" 
+                       Style="{StaticResource SectionTitle}"
+                       Margin="0,0,0,16"/>
 
-            <!-- Search Box -->
-            <TextBox
-                Grid.Column="0"
-                PlaceholderText="Tìm kiếm theo khách hàng"
-                VerticalContentAlignment="Center"
-                HorizontalAlignment="Stretch"
-                Height="40"
-                Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Grid Grid.Row="1" Margin="0,0,0,16" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2.5*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="0.7*"/>
+                    <ColumnDefinition Width="0.7*"/>
+                    <ColumnDefinition Width="2.5*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Status Filter -->
-            <ComboBox 
-                Grid.Column="1"
-                ItemsSource="{Binding StatusList}"
-                SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
-                DisplayMemberPath="DisplayName"
-                PlaceholderText="Trạng thái"
-                HorizontalAlignment="Stretch"
-                Height="40"
-                SelectionChanged="StatusFilter_SelectionChanged"/>
+                <TextBox Grid.Column="0"
+                         PlaceholderText="Tìm kiếm theo khách hàng"
+                         Height="40"
+                         Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <!-- From Date -->
-            <CalendarDatePicker
-                Grid.Column="2"
-                Date="{Binding FromDate, Mode=TwoWay}"
-                PlaceholderText="Từ ngày"
-                HorizontalAlignment="Stretch"
-                Height="40"
-                DateChanged="FromDate_DateChanged"/>
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding StatusList}"
+                          SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
+                          DisplayMemberPath="DisplayName"
+                          PlaceholderText="Trạng thái"
+                          Height="40"
+                          HorizontalAlignment="Stretch"
+                          SelectionChanged="StatusFilter_SelectionChanged"/>
 
-            <!-- To Date -->
-            <CalendarDatePicker
-                Grid.Column="3"
-                Date="{Binding ToDate, Mode=TwoWay}"
-                PlaceholderText="Đến ngày"
-                HorizontalAlignment="Stretch"
-                Height="40"
-                DateChanged="ToDate_DateChanged"/>
+                <CalendarDatePicker Grid.Column="2"
+                                    Date="{Binding FromDate, Mode=TwoWay}"
+                                    PlaceholderText="Từ ngày"
+                                    Height="40"
+                                    HorizontalAlignment="Stretch"
+                                    DateChanged="FromDate_DateChanged"/>
 
-            <!-- Search Button -->
-            <Button 
-                Grid.Column="4"
-                Content="Tìm"
-                Command="{Binding SearchCommand}"
-                Background="{StaticResource TH.PrimaryBrush}"
-                Foreground="White"
-                FontWeight="SemiBold"
-                CornerRadius="8"
-                Height="40"
-                HorizontalAlignment="Stretch"/>
+                <CalendarDatePicker Grid.Column="3"
+                                    Date="{Binding ToDate, Mode=TwoWay}"
+                                    PlaceholderText="Đến ngày"
+                                    Height="40"
+                                    HorizontalAlignment="Stretch"
+                                    DateChanged="ToDate_DateChanged"/>
 
-            <!-- Create Order Button -->
-            <Button
-                Grid.Column="7"
-                Click="CreateOrder_Click"
-                Background="{StaticResource TH.PrimaryBrush}"
-                Foreground="White"
-                FontWeight="SemiBold"
-                CornerRadius="8"
-                Height="40"
-                HorizontalAlignment="Stretch"
-                Padding="12,8">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE710;" FontSize="14"/>
-                    <TextBlock Text="Tạo Đơn Hàng" VerticalAlignment="Center" FontSize="13"/>
-                </StackPanel>
-            </Button>
+                <Button Grid.Column="4"
+                        Content="Tìm"
+                        Command="{Binding SearchCommand}"
+                        Background="{ThemeResource TH.PrimaryBrush}"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        CornerRadius="8"
+                        Height="40"
+                        HorizontalAlignment="Stretch"/>
+
+                <Button Grid.Column="7"
+                        Click="CreateOrder_Click"
+                        Background="{ThemeResource TH.PrimaryBrush}"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        CornerRadius="8"
+                        Height="40"
+                        HorizontalAlignment="Stretch"
+                        Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" FontSize="14"/>
+                        <TextBlock Text="Tạo Đơn Hàng" FontSize="13"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <Border Grid.Row="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" 
+                               Text="Danh sách đơn hàng" 
+                               FontWeight="SemiBold" 
+                               FontSize="16"
+                               Margin="0,0,0,12" 
+                               Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,8" Padding="12,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="20*"/>
+                            <ColumnDefinition Width="20*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Ngày Đặt" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}"/>
+                        <TextBlock Grid.Column="1" Text="Khách Hàng" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}"/>
+                        <TextBlock Grid.Column="2" Text="Trạng Thái" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}"/>
+                        <TextBlock Grid.Column="3" Text="Sản Phẩm" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}"/>
+                        <TextBlock Grid.Column="4" Text="Tổng Tiền" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}"/>
+                        <TextBlock Grid.Column="5" Text="Ghi Chú" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}"/>
+                    </Grid>
+
+                    <ListView Grid.Row="2"
+                              x:Name="OrdersListView"
+                              ItemsSource="{Binding Orders}"
+                              SelectionMode="None"
+                              IsItemClickEnabled="True"
+                              ItemClick="OrdersList_ItemClick"
+                              ItemTemplate="{StaticResource OrderItemDesktopTemplate}"
+                              ItemContainerStyle="{StaticResource ListViewItemNoPadding}"/>
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0" Spacing="12">
+                <Button Command="{Binding PreviousPageCommand}"
+                        IsEnabled="{Binding CanGoPrevious}"
+                        ToolTipService.ToolTip="Trang trước"
+                        Width="40" Height="40" CornerRadius="8"
+                        Background="{ThemeResource TH.CardBackground}"
+                        BorderBrush="{ThemeResource TH.BorderBrush}"
+                        BorderThickness="1">
+                    <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{ThemeResource TH.TextPrimary}"/>
+                </Button>
+
+                <TextBlock VerticalAlignment="Center" 
+                           Text="{Binding PageInfo}"
+                           Foreground="{ThemeResource TH.TextPrimary}"
+                           FontWeight="SemiBold"/>
+
+                <Button Command="{Binding NextPageCommand}"
+                        IsEnabled="{Binding CanGoNext}"
+                        ToolTipService.ToolTip="Trang sau"
+                        Width="40" Height="40" CornerRadius="8"
+                        Background="{ThemeResource TH.CardBackground}"
+                        BorderBrush="{ThemeResource TH.BorderBrush}"
+                        BorderThickness="1">
+                    <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{ThemeResource TH.TextPrimary}"/>
+                </Button>
+            </StackPanel>
         </Grid>
 
-        <!-- Orders List Card -->
-        <Border Grid.Row="2" 
-                Style="{StaticResource CardStyle}" 
-                VerticalAlignment="Stretch">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+        <!-- Tablet Layout (<=720px) -->
+        <ScrollViewer x:Name="TabletLayout" Visibility="Collapsed">
+            <StackPanel Padding="16" Spacing="16">
+                <TextBlock Text="Orders" 
+                           Style="{StaticResource SectionTitle}"/>
 
-                <TextBlock Grid.Row="0" 
-                           Text="Danh sách đơn hàng" 
-                           FontWeight="SemiBold" 
-                           FontSize="16"
-                           Margin="0,0,0,12" 
-                           Foreground="{StaticResource TH.TextPrimary}"/>
+                <StackPanel Spacing="12">
+                    <TextBox PlaceholderText="Tìm kiếm theo khách hàng"
+                             Height="40"
+                             Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <!-- Header -->
-                <Grid Grid.Row="1" 
-                      Margin="0,0,0,8" 
-                      Padding="12,8"
-                      CornerRadius="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="15*"/>
-                        <ColumnDefinition Width="15*"/>
-                        <ColumnDefinition Width="15*"/>
-                        <ColumnDefinition Width="15*"/>
-                        <ColumnDefinition Width="20*"/>
-                        <ColumnDefinition Width="20*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Ngày Đặt" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="1" Text="Khách Hàng" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="2" Text="Trạng Thái" FontWeight="SemiBold" FontSize="12" TextAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="3" Text="Sản Phẩm" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="4" Text="Tổng Tiền" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
-                    <TextBlock Grid.Column="5" Text="Ghi Chú" FontWeight="SemiBold" FontSize="12" TextAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}"/>
-                </Grid>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                <ListView
-                    Grid.Row="2"
-                    x:Name="OrdersListView"
-                    ItemsSource="{Binding Orders}"
-                    SelectionMode="None"
-                    IsItemClickEnabled="True"
-                    ItemClick="OrdersList_ItemClick"
-                    Padding="0"
-                    HorizontalContentAlignment="Stretch"
-                    ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                        <ComboBox Grid.Column="0"
+                                  ItemsSource="{Binding StatusList}"
+                                  SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName"
+                                  PlaceholderText="Trạng thái"
+                                  Height="40"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="StatusFilter_SelectionChanged"/>
 
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:OrderItemViewModel">
-                            <Grid HorizontalAlignment="Stretch" Margin="0" Padding="12,8">
-                                <!-- Use same star ratios as header -->
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="15*"/>
-                                    <ColumnDefinition Width="15*"/>
-                                    <ColumnDefinition Width="15*"/>
-                                    <ColumnDefinition Width="15*"/>
-                                    <ColumnDefinition Width="20*"/>
-                                    <ColumnDefinition Width="20*"/>
-                                </Grid.ColumnDefinitions>
+                        <Button Grid.Column="1"
+                                Content="Tìm"
+                                Command="{Binding SearchCommand}"
+                                Background="{ThemeResource TH.PrimaryBrush}"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                CornerRadius="8"
+                                Height="40"
+                                HorizontalAlignment="Stretch"/>
+                    </Grid>
 
-                                <!-- Order Date -->
-                                <TextBlock Grid.Column="0" 
-                                           Text="{x:Bind OrderDateDisplay}" 
-                                           TextAlignment="Left"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextPrimary}"/>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                                <!-- Customer Name -->
-                                <TextBlock Grid.Column="1" 
-                                           Text="{x:Bind CustomerDisplay}" 
-                                           TextAlignment="Left"
-                                           TextTrimming="CharacterEllipsis"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource TH.TextPrimary}"/>
+                        <CalendarDatePicker Grid.Column="0"
+                                            Date="{Binding FromDate, Mode=TwoWay}"
+                                            PlaceholderText="Từ ngày"
+                                            Height="40"
+                                            HorizontalAlignment="Stretch"
+                                            DateChanged="FromDate_DateChanged"/>
 
-                                <!-- Status Badge -->
-                                <Border Grid.Column="2"
-                                        CornerRadius="12"
-                                        Padding="10,4"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="{x:Bind StatusColor}"/>
-                                    </Border.Background>
-                                    <TextBlock Text="{x:Bind StatusDisplay}"
-                                               Foreground="White"
-                                               FontSize="11"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"/>
-                                </Border>
+                        <CalendarDatePicker Grid.Column="1"
+                                            Date="{Binding ToDate, Mode=TwoWay}"
+                                            PlaceholderText="Đến ngày"
+                                            Height="40"
+                                            HorizontalAlignment="Stretch"
+                                            DateChanged="ToDate_DateChanged"/>
+                    </Grid>
 
-                                <!-- Products Count -->
-                                <TextBlock Grid.Column="3" 
-                                           Text="{x:Bind ProductsCountDisplay}" 
-                                           TextAlignment="Left"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextSecondary}"/>
+                    <Button Click="CreateOrder_Click"
+                            Background="{ThemeResource TH.PrimaryBrush}"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            CornerRadius="8"
+                            Height="44"
+                            HorizontalAlignment="Stretch"
+                            Padding="12,8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE710;" FontSize="16"/>
+                            <TextBlock Text="Tạo Đơn Hàng" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
-                                <!-- Total Amount -->
-                                <TextBlock Grid.Column="4" 
-                                           Text="{x:Bind TotalAmountDisplay}" 
-                                           FontWeight="Bold"
-                                           TextAlignment="Left"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextPrimary}" />
+                <Border Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                                <!-- Notes -->
-                                <TextBlock Grid.Column="5" 
-                                           Text="{x:Bind Order.Notes}" 
-                                           TextAlignment="Left"
-                                           TextTrimming="CharacterEllipsis"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TH.TextSecondary}"
-                                           MinWidth="120"/>
+                        <TextBlock Grid.Row="0" 
+                                   Text="Danh sách đơn hàng" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="16"
+                                   Margin="0,0,0,12" 
+                                   Foreground="{ThemeResource TH.TextPrimary}"/>
 
-                                <!-- Context Menu -->
-                                <Grid.ContextFlyout>
-                                    <MenuFlyout>
-                                        <MenuFlyoutItem 
-                                            Text="Xem Chi Tiết"
-                                            Click="ViewDetails_Click">
-                                            <MenuFlyoutItem.Icon>
-                                                <FontIcon Glyph="&#xE7C3;"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <MenuFlyoutItem 
-                                            Text="Cập Nhật Trạng Thái"
-                                            Click="UpdateStatus_Click">
-                                            <MenuFlyoutItem.Icon>
-                                                <FontIcon Glyph="&#xE70F;"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <MenuFlyoutSeparator/>
-                                        <MenuFlyoutItem
-                                            Text="In Đơn Hàng"
-                                            Click="PrintOrder_Click">
-                                            <MenuFlyoutItem.Icon>
-                                                <FontIcon Glyph="&#xE8A7;"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <MenuFlyoutSeparator/>
-                                        <MenuFlyoutItem 
-                                            Text="Xóa Đơn Hàng"
-                                            Click="DeleteOrder_Click">
-                                            <MenuFlyoutItem.Icon>
-                                                <FontIcon Glyph="&#xE74D;" Foreground="{StaticResource TH.DangerBrush}"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                    </MenuFlyout>
-                                </Grid.ContextFlyout>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </Grid>
-        </Border>
+                        <ListView Grid.Row="1"
+                                  ItemsSource="{Binding Orders}"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="True"
+                                  ItemClick="OrdersList_ItemClick"
+                                  ItemTemplate="{StaticResource OrderItemTabletTemplate}"
+                                  ItemContainerStyle="{StaticResource ListViewItemNoPadding}"/>
+                    </Grid>
+                </Border>
 
-        <!-- Pagination -->
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,16,0,0"
-                    Spacing="12">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+                    <Button Command="{Binding PreviousPageCommand}"
+                            IsEnabled="{Binding CanGoPrevious}"
+                            Width="44" Height="44" CornerRadius="8"
+                            Background="{ThemeResource TH.CardBackground}"
+                            BorderBrush="{ThemeResource TH.BorderBrush}"
+                            BorderThickness="1">
+                        <FontIcon Glyph="&#xE96F;" FontSize="18" Foreground="{ThemeResource TH.TextPrimary}"/>
+                    </Button>
 
-            <Button 
-                Command="{Binding PreviousPageCommand}"
-                IsEnabled="{Binding CanGoPrevious}"
-                ToolTipService.ToolTip="Trang trước"
-                Width="40" 
-                Height="40"
-                CornerRadius="8"
-                Background="{StaticResource TH.CardBackground}"
-                BorderBrush="{StaticResource TH.BorderBrush}"
-                BorderThickness="1">
-                <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
-            </Button>
+                    <TextBlock VerticalAlignment="Center" 
+                               Text="{Binding PageInfo}"
+                               Foreground="{ThemeResource TH.TextPrimary}"
+                               FontWeight="SemiBold"
+                               FontSize="14"/>
 
-            <TextBlock 
-                VerticalAlignment="Center" 
-                Text="{Binding PageInfo}"
-                Foreground="{StaticResource TH.TextPrimary}"
-                FontWeight="SemiBold"/>
-
-            <Button 
-                Command="{Binding NextPageCommand}"
-                IsEnabled="{Binding CanGoNext}"
-                ToolTipService.ToolTip="Trang sau"
-                Width="40" 
-                Height="40"
-                CornerRadius="8"
-                Background="{StaticResource TH.CardBackground}"
-                BorderBrush="{StaticResource TH.BorderBrush}"
-                BorderThickness="1">
-                <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
-            </Button>
-
-        </StackPanel>
+                    <Button Command="{Binding NextPageCommand}"
+                            IsEnabled="{Binding CanGoNext}"
+                            Width="44" Height="44" CornerRadius="8"
+                            Background="{ThemeResource TH.CardBackground}"
+                            BorderBrush="{ThemeResource TH.BorderBrush}"
+                            BorderThickness="1">
+                        <FontIcon Glyph="&#xE970;" FontSize="18" Foreground="{ThemeResource TH.TextPrimary}"/>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>
