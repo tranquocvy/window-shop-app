@@ -10,8 +10,8 @@
     xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
     x:Name="RootPage"
     mc:Ignorable="d"
-    Background="{StaticResource TH.SurfaceBackground}"
-    Foreground="{StaticResource TH.TextPrimary}">
+    Background="{ThemeResource TH.SurfaceBackground}"
+    Foreground="{ThemeResource TH.TextPrimary}">
 
     <Page.DataContext>
         <vm:ProductViewModel />
@@ -24,16 +24,16 @@
 
         <!-- Local CardStyle so ProductPage can use consistent card look -->
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
+            <Setter Property="Background" Value="{ThemeResource TH.CardBackground}" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="12" />
-            <Setter Property="BorderBrush" Value="{StaticResource TH.BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource TH.BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="0" />
         </Style>
     </Page.Resources>
 
-    <Grid Padding="16">
+    <Grid Padding="16" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />

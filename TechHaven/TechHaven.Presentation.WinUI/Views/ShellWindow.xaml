@@ -116,9 +116,9 @@
                 Width="60" 
                 Height="60"
                 CornerRadius="30"
-                HorizontalAlignment="Right"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                Margin="0,0,20,20"
+                Margin="20,0,0,20"
                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                 BorderThickness="0">
                 <FontIcon Glyph="&#xE8F2;" FontSize="24" Foreground="White"/>
@@ -129,11 +129,11 @@
                 x:Name="ChatExpandedWindow"
                 Width="380" 
                 Height="550"
-                HorizontalAlignment="Right"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                Margin="0,0,20,20"
+                Margin="20,0,0,20"
                 Visibility="Collapsed"
-                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                Background="{ThemeResource TH.NavBackground}"
                 CornerRadius="12"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1">
