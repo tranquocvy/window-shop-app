@@ -99,11 +99,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
             if (AppState.CurrentUser != null)
             {
-                // L?y d? li?u t? AppState
-                string userFullName = AppState.CurrentUser.UserFullName; //
-                string roleName = AppState.CurrentUser.RoleName; //
+                string userFullName = AppState.CurrentUser.UserFullName;
+                string roleName = AppState.CurrentUser.RoleName;
 
-                // Gán d? li?u lên UI (lên 2 TextBlock b?n v?a t?o)
                 currentUserFullNameText.Text = userFullName;
                 currentUserRoleText.Text = roleName;
 
@@ -316,14 +314,11 @@ namespace TechHaven.Presentation.WinUI.Views
             }
         }
 
-        // X? lý khi nh?n vào m?t item
         private async void navView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            // IMPORTANT: Ignore if this is a toggle pane button click (hamburger menu)
             if (args.IsSettingsInvoked)
                 return;
 
-            // Ignore if no item container (e.g., clicking toggle button)
             if (args.InvokedItemContainer == null)
                 return;
 
@@ -353,7 +348,6 @@ namespace TechHaven.Presentation.WinUI.Views
                     pageType = typeof(SettingPage);
                     break;
 
-                // X? LÝ LOGOUT QUAN TR?NG
                 case "logout":
                     ContentDialog logoutDialog = new ContentDialog
                     {
@@ -363,15 +357,12 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "Cancel"
                     };
 
-                    logoutDialog.XamlRoot = this.Content.XamlRoot; // Ho?c navView.XamlRoot
+                    logoutDialog.XamlRoot = this.Content.XamlRoot; 
 
-                    // 3. Hi?n th? Dialog và ch? k?t qu?
                     ContentDialogResult result = await logoutDialog.ShowAsync();
 
-                    // 4. Ch? dang xu?t n?u ngu?i dùng nhấn nút "Ðang xu?t"
                     if (result == ContentDialogResult.Primary)
                     {
-                        // 1. Xóa tr?ng thái dang nh?p
                         AppState.CurrentUser = null;
 
                         // Remove persisted refresh token and clear in-memory tokens
@@ -388,12 +379,10 @@ namespace TechHaven.Presentation.WinUI.Views
                         try { TokenStore.RefreshToken = null; } catch { }
                         try { TokenStore.AccessToken = null; } catch { }
 
-                        // 2. M? l?i c?a s? Login (MainWindow)
                         var loginWindow = new MainWindow();
                         App.MainWindow = loginWindow;
                         loginWindow.Activate();
 
-                        // 3. Ðóng c?a s? chính này l?i
                         this.Close();
                     }
 
@@ -404,7 +393,6 @@ namespace TechHaven.Presentation.WinUI.Views
                     break;
             }
 
-            // Ði?u hu?ng Frame d?n trang dã ch?n
             contentFrame.Navigate(pageType);
 
             // Persist last visited (ignore logout)
