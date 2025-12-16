@@ -197,6 +197,28 @@ namespace TechHaven.Presentation.WinUI.Themes
                         if (tp != null) nav.Foreground = tp;
                     }
 
+                    // Update all NavigationViewItem foreground colors
+                    if (appRes.ContainsKey("TH.TextSecondary"))
+                    {
+                        var textSecondary = appRes["TH.TextSecondary"] as Brush;
+                        if (textSecondary != null && nav.MenuItems != null)
+                        {
+                            foreach (var item in nav.MenuItems)
+                            {
+                                if (item is NavigationViewItem navItem)
+                                {
+                                    navItem.Foreground = textSecondary;
+
+                                    // Also update the icon if it exists
+                                    if (navItem.Icon is IconElement icon)
+                                    {
+                                        icon.Foreground = textSecondary;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Force update nav items
                     nav.UpdateLayout();
                 }

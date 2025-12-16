@@ -12,13 +12,13 @@
     <!-- ========================================================= -->
 
     <!-- ========== Background Layers (Light mode) - Improved contrast ========== -->
-    <Color x:Key="TH.Color.SurfaceBackground">#FF4B5563</Color>
+    <Color x:Key="TH.Color.SurfaceBackground">#AAAAAA</Color>
     <!-- nền app -->
     <Color x:Key="TH.Color.Layer1Background">#FFFFFFFF</Color>
     <!-- layer phụ / container -->
     <Color x:Key="TH.Color.CardBackground">#FFFFFFFF</Color>
     <!-- card -->
-    <Color x:Key="TH.Color.NavBackground">#FF1E3A5F</Color>
+    <Color x:Key="TH.Color.NavBackground">#DDDDDD</Color>
     <!-- navigation panel -->
 
     <!-- ========== Borders ========== -->
@@ -30,7 +30,7 @@
     <!-- ========== Text ========== -->
     <Color x:Key="TH.Color.TextPrimary">#FF111827</Color>
     <!-- text chính -->
-    <Color x:Key="TH.Color.TextSecondary">#FF4B5563</Color>
+    <Color x:Key="TH.Color.TextSecondary">#333333</Color>
     <!-- text phụ -->
     <Color x:Key="TH.Color.TextDisabled">#FF9CA3AF</Color>
     <!-- disabled text -->
