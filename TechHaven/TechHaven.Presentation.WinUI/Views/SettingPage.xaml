@@ -58,10 +58,10 @@
 
         <!-- Desktop Layout (>720px) -->
         <ScrollViewer x:Name="DesktopLayout">
-            <Grid Padding="24">
+            <Grid Padding="24" Background="{ThemeResource TH.SurfaceBackground}">
                 <StackPanel Spacing="20">
                     <TextBlock x:Name="titleText" 
-                               Text="Application Settings" 
+                               Text="Settings" 
                                FontSize="24" 
                                FontWeight="Bold" 
                                Foreground="{ThemeResource TH.TextPrimary}"/>
@@ -208,7 +208,7 @@
 
         <!-- Tablet Layout (<=720px) -->
         <ScrollViewer x:Name="TabletLayout" Visibility="Collapsed">
-            <StackPanel Padding="16" Spacing="16">
+            <StackPanel Padding="16" Spacing="16" Background="{ThemeResource TH.SurfaceBackground}">
                 <TextBlock Text="Application Settings" 
                            FontSize="20" 
                            FontWeight="Bold" 
