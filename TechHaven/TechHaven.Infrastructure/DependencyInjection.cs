@@ -13,6 +13,7 @@ using TechHaven.Infrastructure.Configuration;
 using TechHaven.Infrastructure.Authorization;
 using TechHaven.Infrastructure.Authorization.Handlers;
 using Microsoft.AspNetCore.Authorization;
+using TechHaven.Infrastructure.Services.AI;
 
 namespace TechHaven.Infrastructure;
 
@@ -198,6 +199,23 @@ public static class DependencyInjection
 
         // Register Image Upload Service
         services.AddScoped<IImageUploadService, SupabaseImageUploadService>();
+
+        // Register RAG Service
+        services.AddScoped<RAGService>();
+
+        // // Configure Gemini Settings
+        // services.Configure<GeminiSettings>(
+        //     configuration.GetSection("GeminiSettings"));
+
+        // // Register AI Chat Service
+        // services.AddScoped<IAIChatService, GeminiAIChatService>();
+
+        // Configure OpenAI Settings
+        services.Configure<OpenAISettings>(
+            configuration.GetSection("OpenAISettings"));
+
+        // Register AI Chat Service
+        services.AddScoped<IAIChatService, OpenAIChatService>();
 
         return services;
     }
