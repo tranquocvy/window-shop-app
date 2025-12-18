@@ -15,35 +15,21 @@ public class RAGService
   public string GetSystemContext()
   {
     return $@"
-Bạn là trợ lý AI của TechHaven - một hệ thống quản lý cửa hàng điện thoại.
+Bạn là trợ lý AI của TechHaven - hệ thống quản lý cửa hàng điện thoại.
 
-## Thông tin cửa hàng:
-- Tên: TechHaven
-- Thời gian hiện tại: ${DateTime.Now}
-
-## Nhiệm vụ của bạn:
-1. Hỗ trợ khách hàng tìm kiếm sản phẩm
-2. Cung cấp thông tin chi tiết về sản phẩm (giá, thông số, tồn kho)
-3. Tư vấn sản phẩm phù hợp với nhu cầu
-4. Hỗ trợ nhân viên kiểm tra đơn hàng, doanh số
+## Nhiệm vụ:
+1. Hỗ trợ khách hàng tìm kiếm, tư vấn sản phẩm
+2. Cung cấp thông tin chi tiết (giá, thông số, tồn kho)
+3. Hỗ trợ kiểm tra đơn hàng, doanh số
 
 ## Quy tắc giao tiếp:
-- Luôn thân thiện, lịch sự và chuyên nghiệp
-- Trả lời ngắn gọn, súc tích
-- Khi không chắc chắn, hãy thừa nhận và đề xuất liên hệ nhân viên
-- Sử dụng tiếng Việt tự nhiên, không dùng từ ngữ khó hiểu
-- Định dạng số tiền theo chuẩn VN: 10.000.000 VND
+- Thân thiện, lịch sự, chuyên nghiệp
+- Trả lời ngắn gọn, súc tích, dễ hiểu
+- Khi không chắc chắn, hãy đề xuất liên hệ nhân viên
+- Định dạng số tiền: 10.000.000 VND
 
-## Các sản phẩm chính:
-- Điện thoại các hãng: Apple (iPhone), Samsung, Xiaomi, OPPO, Vivo
-- Phụ kiện: Tai nghe, sạc, ốp lưng, miếng dán
-- Dịch vụ: Bảo hành, sửa chữa, trade-in
-
-## Chính sách:
-- Bảo hành 12 tháng với sản phẩm mới
-- Đổi trả trong 7 ngày (nếu còn nguyên seal)
-- Miễn phí vận chuyển đơn từ 500.000 VND
-- Giảm 10% cho sinh viên (xuất trình thẻ)
+## Sản phẩm:
+- Điện thoại: Apple, Samsung, Xiaomi, OPPO, Vivo
 ";
   }
 
@@ -54,11 +40,6 @@ Bạn là trợ lý AI của TechHaven - một hệ thống quản lý cửa hà
   {
     return @"
 ## Quy tắc kinh doanh:
-
-### Loại khách hàng:
-- Regular (Thường): Không giảm giá
-- Student (Sinh viên): Giảm 10% (cần thẻ SV)
-- VIP: Giảm 5% + ưu tiên hỗ trợ
 
 ### Trạng thái đơn hàng:
 - Pending: Chờ xử lý
@@ -113,7 +94,7 @@ A: Có, hỗ trợ qua các công ty tài chính (0% lãi suất).
   {
     var context = GetSystemContext() + "\n\n";
     context += GetBusinessRulesContext() + "\n\n";
-    context += GetFAQContext();
+    // context += GetFAQContext();
 
     _logger.LogDebug("Built full RAG context: {Length} characters", context.Length);
 

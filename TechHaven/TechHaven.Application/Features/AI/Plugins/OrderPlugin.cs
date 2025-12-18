@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using System.Text;
 using Microsoft.SemanticKernel;
+using TechHaven.Domain.Enums;
 using TechHaven.Domain.Interfaces;
 
 namespace TechHaven.Application.Features.AI.Plugins;
@@ -16,29 +18,41 @@ public class OrderPlugin
     _unitOfWork = unitOfWork;
   }
 
+  private static string GetStatusDisplay(OrderStatus status)
+  {
+    return status switch
+    {
+      OrderStatus.Pending => "Chờ xử lý",
+      OrderStatus.Processing => "Đang xử lý",
+      OrderStatus.Completed => "Hoàn thành",
+      OrderStatus.Cancelled => "Đã hủy",
+      OrderStatus.Returned => "Đã trả hàng",
+      _ => status.ToString()
+    };
+  }
+
   [KernelFunction("get_recent_orders")]
   [Description("Lấy danh sách đơn hàng gần đây")]
   public async Task<string> GetRecentOrdersAsync(
       [Description("Số lượng đơn hàng")] int limit = 5,
       CancellationToken cancellationToken = default)
   {
-    var orders = await _unitOfWork.Orders
-        .GetRecentOrdersAsync(limit, cancellationToken);
+    var orders = await _unitOfWork.Orders.GetRecentOrdersAsync(limit, cancellationToken);
 
     if (!orders.Any())
       return "Chưa có đơn hàng nào";
 
-    var result = "Đơn hàng gần đây:\n\n";
+    var sb = new StringBuilder("Đơn hàng gần đây:\n\n");
     foreach (var order in orders)
     {
-      result += $"Đơn #{order.OrderId}\n";
-      result += $"Khách hàng: {order.Customer?.CustomerName ?? "Khách vãng lai"}\n";
-      result += $"Ngày: {order.OrderDate:dd/MM/yyyy HH:mm}\n";
-      result += $"Tổng tiền: {order.TotalAmount:N0} VND\n";
-      result += $"Trạng thái: {order.Status}\n\n";
+      sb.AppendLine($"Đơn #{order.OrderId}");
+      sb.AppendLine($"Khách hàng: {order.Customer?.CustomerName ?? "Khách vãng lai"}");
+      sb.AppendLine($"Ngày: {order.OrderDate:dd/MM/yyyy HH:mm}");
+      sb.AppendLine($"Tổng tiền: {order.TotalAmount:N0} VND");
+      sb.AppendLine($"Trạng thái: {GetStatusDisplay(order.Status)}\n");
     }
 
-    return result;
+    return sb.ToString();
   }
 
   [KernelFunction("get_order_details")]
@@ -47,35 +61,41 @@ public class OrderPlugin
       [Description("ID của đơn hàng")] int orderId,
       CancellationToken cancellationToken = default)
   {
-    var order = await _unitOfWork.Orders
-        .GetWithDetailsAsync(orderId, cancellationToken);
+    var order = await _unitOfWork.Orders.GetWithDetailsAsync(orderId, cancellationToken);
 
     if (order == null)
       return $"Không tìm thấy đơn hàng #{orderId}";
 
-    var details = $"Chi tiết đơn hàng #{order.OrderId}:\n\n";
-    details += $"Khách hàng: {order.Customer?.CustomerName ?? "Khách vãng lai"}\n";
-    details += $"Ngày đặt: {order.OrderDate:dd/MM/yyyy HH:mm}\n";
-    details += $"Nhân viên: {order.User?.UserFullName}\n";
-    details += $"Trạng thái: {order.Status}\n\n";
-
-    details += "Sản phẩm:\n";
-    if (order.OrderDetails != null)
+    var sb = new StringBuilder();
+    sb.AppendLine($"Chi tiết đơn hàng #{order.OrderId}:");
+    sb.AppendLine();
+    sb.AppendLine($"Khách hàng: {order.Customer?.CustomerName ?? "Khách vãng lai"}");
+    sb.AppendLine($"Ngày đặt: {order.OrderDate:dd/MM/yyyy HH:mm}");
+    sb.AppendLine($"Nhân viên: {order.User?.UserFullName ?? "(Không rõ)"}");
+    sb.AppendLine($"Trạng thái: {GetStatusDisplay(order.Status)}");
+    sb.AppendLine();
+    sb.AppendLine("Sản phẩm:");
+    if (order.OrderDetails != null && order.OrderDetails.Any())
     {
       foreach (var item in order.OrderDetails)
       {
-        details += $"- {item.Product?.ProductName} x{item.Quantity}\n";
-        details += $"  Đơn giá: {item.UnitPrice:N0} VND\n";
-        details += $"  Thành tiền: {item.SubTotal:N0} VND\n";
+        sb.AppendLine($"- {item.Product?.ProductName ?? "(Không rõ)"} x{item.Quantity}");
+        sb.AppendLine($"  Đơn giá: {item.UnitPrice:N0} VND");
+        sb.AppendLine($"  Thành tiền: {item.SubTotal:N0} VND");
       }
     }
+    else
+    {
+      sb.AppendLine("- (Không có sản phẩm)");
+    }
 
-    details += $"\nTổng cộng: {order.SubtotalAmount:N0} VND\n";
+    sb.AppendLine();
+    sb.AppendLine($"Tổng cộng: {order.SubtotalAmount:N0} VND");
     if (order.Discount > 0)
-      details += $"Giảm giá: {order.Discount:N0} VND\n";
-    details += $"Tổng thanh toán: {order.TotalAmount:N0} VND\n";
+      sb.AppendLine($"Giảm giá: {order.Discount:N0} VND");
+    sb.AppendLine($"Tổng thanh toán: {order.TotalAmount:N0} VND");
 
-    return details;
+    return sb.ToString();
   }
 
   [KernelFunction("get_today_revenue")]
@@ -83,11 +103,8 @@ public class OrderPlugin
   public async Task<string> GetTodayRevenueAsync(
       CancellationToken cancellationToken = default)
   {
-    var revenue = await _unitOfWork.Orders
-        .GetTodayRevenueAsync(cancellationToken);
-
-    var orderCount = await _unitOfWork.Orders
-        .GetTodayOrderCountAsync(cancellationToken);
+    var revenue = await _unitOfWork.Orders.GetTodayRevenueAsync(cancellationToken);
+    var orderCount = await _unitOfWork.Orders.GetTodayOrderCountAsync(cancellationToken);
 
     return $"Thống kê hôm nay:\n" +
            $"- Số đơn hàng: {orderCount}\n" +

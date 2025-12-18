@@ -200,22 +200,15 @@ public static class DependencyInjection
         // Register Image Upload Service
         services.AddScoped<IImageUploadService, SupabaseImageUploadService>();
 
-        // Register RAG Service
+        // Configure Gemini
+        services.Configure<GeminiSettings>(configuration.GetSection("GeminiSettings"));
         services.AddScoped<RAGService>();
+        services.AddScoped<IAIChatService, GeminiAIChatService>();
 
-        // // Configure Gemini Settings
-        // services.Configure<GeminiSettings>(
-        //     configuration.GetSection("GeminiSettings"));
-
-        // // Register AI Chat Service
-        // services.AddScoped<IAIChatService, GeminiAIChatService>();
-
-        // Configure OpenAI Settings
-        services.Configure<OpenAISettings>(
-            configuration.GetSection("OpenAISettings"));
-
-        // Register AI Chat Service
-        services.AddScoped<IAIChatService, OpenAIChatService>();
+        // // Configure OpenAI Settings
+        // services.Configure<OpenAISettings>(configuration.GetSection("OpenAISettings"));
+        // services.AddScoped<RAGService>();
+        // services.AddScoped<IAIChatService, OpenAIChatService>();
 
         return services;
     }
