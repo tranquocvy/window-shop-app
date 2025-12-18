@@ -104,13 +104,14 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
             _messageInputBox.Text = string.Empty;
 
-            AddUserMessage(message);
+            var userMessageTime = DateTime.UtcNow;
+            AddUserMessage(message, userMessageTime);
 
             var userMessage = new ChatMessageDto
             {
                 Role = Role.User,
                 Content = message,
-                Timestamp = DateTime.UtcNow
+                Timestamp = userMessageTime
             };
             _conversationHistory.Add(userMessage);
 
@@ -120,20 +121,21 @@ namespace TechHaven.Presentation.WinUI.Helpers
             try
             {
                 var response = await GetAIResponseAsync(message);
-                AddBotMessage(response);
+                var botMessageTime = DateTime.UtcNow;
+                AddBotMessage(response, botMessageTime);
 
                 var assistantMessage = new ChatMessageDto
                 {
                     Role = Role.Assistance,
                     Content = response,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = botMessageTime
                 };
                 _conversationHistory.Add(assistantMessage);
             }
             catch (Exception ex)
             {
                 var errorMessage = $"Sorry, an error occurred: {ex.Message}";
-                AddBotMessage(errorMessage);
+                AddBotMessage(errorMessage, DateTime.UtcNow);
             }
             finally
             {
@@ -143,11 +145,16 @@ namespace TechHaven.Presentation.WinUI.Helpers
             }
         }
 
-        private void AddUserMessage(string message)
+        private void AddUserMessage(string message, DateTime timestamp)
         {
             var messageGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var stackPanel = new StackPanel
+            {
+                Spacing = 4
             };
 
             var border = new Border
@@ -166,17 +173,34 @@ namespace TechHaven.Presentation.WinUI.Helpers
             };
 
             border.Child = textBlock;
-            messageGrid.Children.Add(border);
+            stackPanel.Children.Add(border);
+
+            var timestampText = new TextBlock
+            {
+                Text = timestamp.ToLocalTime().ToString("HH:mm"),
+                FontSize = 10,
+                Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 2, 4, 0)
+            };
+            stackPanel.Children.Add(timestampText);
+
+            messageGrid.Children.Add(stackPanel);
             _messagesPanel.Children.Add(messageGrid);
 
             ScrollToBottom();
         }
 
-        private void AddBotMessage(string message)
+        private void AddBotMessage(string message, DateTime timestamp)
         {
             var messageGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Left
+            };
+
+            var stackPanel = new StackPanel
+            {
+                Spacing = 4
             };
 
             var border = new Border
@@ -195,7 +219,19 @@ namespace TechHaven.Presentation.WinUI.Helpers
             };
 
             border.Child = textBlock;
-            messageGrid.Children.Add(border);
+            stackPanel.Children.Add(border);
+
+            var timestampText = new TextBlock
+            {
+                Text = timestamp.ToLocalTime().ToString("HH:mm"),
+                FontSize = 10,
+                Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(4, 2, 0, 0)
+            };
+            stackPanel.Children.Add(timestampText);
+
+            messageGrid.Children.Add(stackPanel);
             _messagesPanel.Children.Add(messageGrid);
 
             ScrollToBottom();
