@@ -71,7 +71,8 @@ public class VerifyOtpCommandHandler : ICommandHandler<VerifyOtpCommand, OtpVeri
       UserFullName = user.UserFullName,
       Email = user?.Email ?? string.Empty,
       RoleId = user!.RoleId,
-      RoleName = user.Role?.RoleName ?? string.Empty
+      RoleName = user.Role?.RoleName ?? string.Empty,
+      HasSeenGuide = user.HasSeenGuide
     };
   }
 }
