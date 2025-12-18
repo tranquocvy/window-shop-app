@@ -4,8 +4,12 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
 using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Windows.System;
+using TechHaven.Shared.DTOs.AI;
 
 namespace TechHaven.Presentation.WinUI.Helpers
 {
@@ -20,6 +24,8 @@ namespace TechHaven.Presentation.WinUI.Helpers
         private readonly Button _sendButton;
         private readonly StackPanel _messagesPanel;
         private readonly ScrollViewer _messageScrollViewer;
+        private readonly HttpClient _httpClient;
+        private readonly List<ChatMessageDto> _conversationHistory;
 
         public ChatBotManager(
             Button minimizedButton,
@@ -36,6 +42,9 @@ namespace TechHaven.Presentation.WinUI.Helpers
             _sendButton = sendButton ?? throw new ArgumentNullException(nameof(sendButton));
             _messagesPanel = messagesPanel ?? throw new ArgumentNullException(nameof(messagesPanel));
             _messageScrollViewer = messageScrollViewer ?? throw new ArgumentNullException(nameof(messageScrollViewer));
+
+            _httpClient = ApiClientFactory.GetHttpClient();
+            _conversationHistory = new List<ChatMessageDto>();
 
             // Wire up events
             _minimizedButton.Click += OnMinimizedButtonClick;
@@ -95,21 +104,38 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
             _messageInputBox.Text = string.Empty;
 
-            AddUserMessage(message);
+            var userMessageTime = DateTime.UtcNow;
+            AddUserMessage(message, userMessageTime);
+
+            var userMessage = new ChatMessageDto
+            {
+                Role = Role.User,
+                Content = message,
+                Timestamp = userMessageTime
+            };
+            _conversationHistory.Add(userMessage);
 
             _sendButton.IsEnabled = false;
             _messageInputBox.IsEnabled = false;
 
             try
             {
-                await Task.Delay(1000);
-                
-                var response = GetBotResponse(message);
-                AddBotMessage(response);
+                var response = await GetAIResponseAsync(message);
+                var botMessageTime = DateTime.UtcNow;
+                AddBotMessage(response, botMessageTime);
+
+                var assistantMessage = new ChatMessageDto
+                {
+                    Role = Role.Assistance,
+                    Content = response,
+                    Timestamp = botMessageTime
+                };
+                _conversationHistory.Add(assistantMessage);
             }
             catch (Exception ex)
             {
-                AddBotMessage($"Sorry, an error occurred: {ex.Message}");
+                var errorMessage = $"Sorry, an error occurred: {ex.Message}";
+                AddBotMessage(errorMessage, DateTime.UtcNow);
             }
             finally
             {
@@ -119,11 +145,16 @@ namespace TechHaven.Presentation.WinUI.Helpers
             }
         }
 
-        private void AddUserMessage(string message)
+        private void AddUserMessage(string message, DateTime timestamp)
         {
             var messageGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var stackPanel = new StackPanel
+            {
+                Spacing = 4
             };
 
             var border = new Border
@@ -142,17 +173,34 @@ namespace TechHaven.Presentation.WinUI.Helpers
             };
 
             border.Child = textBlock;
-            messageGrid.Children.Add(border);
+            stackPanel.Children.Add(border);
+
+            var timestampText = new TextBlock
+            {
+                Text = timestamp.ToLocalTime().ToString("HH:mm"),
+                FontSize = 10,
+                Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 2, 4, 0)
+            };
+            stackPanel.Children.Add(timestampText);
+
+            messageGrid.Children.Add(stackPanel);
             _messagesPanel.Children.Add(messageGrid);
 
             ScrollToBottom();
         }
 
-        private void AddBotMessage(string message)
+        private void AddBotMessage(string message, DateTime timestamp)
         {
             var messageGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Left
+            };
+
+            var stackPanel = new StackPanel
+            {
+                Spacing = 4
             };
 
             var border = new Border
@@ -171,7 +219,19 @@ namespace TechHaven.Presentation.WinUI.Helpers
             };
 
             border.Child = textBlock;
-            messageGrid.Children.Add(border);
+            stackPanel.Children.Add(border);
+
+            var timestampText = new TextBlock
+            {
+                Text = timestamp.ToLocalTime().ToString("HH:mm"),
+                FontSize = 10,
+                Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(4, 2, 0, 0)
+            };
+            stackPanel.Children.Add(timestampText);
+
+            messageGrid.Children.Add(stackPanel);
             _messagesPanel.Children.Add(messageGrid);
 
             ScrollToBottom();
@@ -183,32 +243,37 @@ namespace TechHaven.Presentation.WinUI.Helpers
             _messageScrollViewer.ChangeView(null, _messageScrollViewer.ScrollableHeight, null);
         }
 
-        private string GetBotResponse(string userMessage)
+        private async Task<string> GetAIResponseAsync(string userMessage)
         {
-            var lower = userMessage.ToLowerInvariant();
+            try
+            {
+                var request = new ChatRequestDto
+                {
+                    Message = userMessage,
+                    History = _conversationHistory.Count > 0 ? new List<ChatMessageDto>(_conversationHistory) : null
+                };
 
-            if (lower.Contains("hello") || lower.Contains("hi") || lower.Contains("hey") || lower.Contains("xin chào"))
-                return "Hello! How can I assist you today?";
+                var response = await _httpClient.PostAsJsonAsync("api/AI/chat", request);
+                var result = await response.EnsureSuccessAndReadWrapperAsync<ChatResponseDto>("Failed to get AI response");
 
-            if (lower.Contains("help") || lower.Contains("giúp"))
-                return "I can help you with information about products, orders, customers, and reports. What would you like to know?";
-
-            if (lower.Contains("product") || lower.Contains("s?n ph?m"))
-                return "You can manage products in the Products section. Would you like to know more about product features?";
-
-            if (lower.Contains("order") || lower.Contains("??n hàng"))
-                return "The Orders section allows you to view and manage customer orders. Need specific information?";
-
-            if (lower.Contains("customer") || lower.Contains("khách hàng"))
-                return "You can view customer information and history in the Customers section.";
-
-            if (lower.Contains("report") || lower.Contains("báo cáo"))
-                return "The Reports section provides analytics and insights about your business.";
-
-            if (lower.Contains("thank") || lower.Contains("c?m ?n"))
-                return "You're welcome! Let me know if you need anything else.";
-
-            return "I understand you're asking about: \"" + userMessage + "\". Could you provide more details so I can assist you better?";
+                if (result.Success && result.Data != null)
+                {
+                    return result.Data.Response;
+                }
+                else
+                {
+                    var errorMessage = result.Message ?? "Failed to get AI response";
+                    if (result.Errors != null && result.Errors.Count > 0)
+                    {
+                        errorMessage += ": " + string.Join(", ", result.Errors);
+                    }
+                    return $"Sorry, I couldn't process your request. {errorMessage}";
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Sorry, I encountered an error: {ex.Message}";
+            }
         }
     }
 }
