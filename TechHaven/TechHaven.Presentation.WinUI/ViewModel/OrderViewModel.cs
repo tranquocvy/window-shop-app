@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml;
 using System.Net.Http;
 using TechHaven.Presentation.WinUI.Services.Http;
 using Windows.UI;
+using System.Threading;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -73,6 +74,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             new OrderStatusItem { DisplayName = "Cancelled", Status = OrderStatus.Cancelled },
             new OrderStatusItem { DisplayName = "Returned", Status = OrderStatus.Returned }
         };
+
+        private CancellationTokenSource? _searchDebounceCts;
 
         // Parameterless ctor chains to default OrderPdfService
         public OrderViewModel() : this(new OrderPdfService()) { }
@@ -137,8 +140,54 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Auto-reload when search keyword changes
         partial void OnSearchKeywordChanged(string? value)
         {
+            // Reset to first page for new searches
             PageNumber = 1;
-            _ = LoadOrdersAsync();
+
+            // Cancel previous debounce (if any) and create a new CTS
+            _searchDebounceCts?.Cancel();
+            _searchDebounceCts = new CancellationTokenSource();
+            var token = _searchDebounceCts.Token;
+
+            // Fire-and-forget debounce task
+            _ = DebounceSearchAsync(token);
+        }
+
+        private async Task DebounceSearchAsync(CancellationToken token)
+        {
+            try
+            {
+                // Wait 500ms
+                await Task.Delay(500, token);
+
+                if (token.IsCancellationRequested) return;
+
+                // Ensure LoadOrdersAsync is invoked on UI thread
+                try
+                {
+                    var dq = App.MainWindow?.DispatcherQueue;
+                    if (dq != null)
+                    {
+                        dq.TryEnqueue(() => _ = LoadOrdersAsync());
+                    }
+                    else
+                    {
+                        await LoadOrdersAsync();
+                    }
+                }
+                catch
+                {
+                    // fallback
+                    await LoadOrdersAsync();
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // expected when input changes before delay completes
+            }
+            catch
+            {
+                // ignore other errors silently
+            }
         }
 
         // Auto-reload when from date changes

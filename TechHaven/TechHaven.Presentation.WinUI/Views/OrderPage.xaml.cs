@@ -6,6 +6,8 @@ using System.Linq;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Shared.DTOs.Orders;
 using TechHaven.Presentation.WinUI.Helpers;
+using System.Threading; // added for debounce
+using System.Threading.Tasks;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -812,9 +814,29 @@ namespace TechHaven.Presentation.WinUI.Views
                     tcs.TrySetResult(null);
             };
 
+            // debounce variable
+            CancellationTokenSource? searchCts = null;
+
             searchBox.TextChanged += (s, e) =>
             {
-                vm.SearchTerm = searchBox.Text;
+                // debounce input: wait 500ms after last change before applying to VM
+                searchCts?.Cancel();
+                searchCts = new CancellationTokenSource();
+                var token = searchCts.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500, token);
+                        if (token.IsCancellationRequested) return;
+
+                        // update VM on UI thread
+                        _ = this.DispatcherQueue.TryEnqueue(() => vm.SearchTerm = searchBox.Text);
+                    }
+                    catch (TaskCanceledException) { }
+                    catch { }
+                });
             };
 
             // Keep dialog responsive by hooking vm collection to UI; ensure initial load already done
@@ -893,9 +915,27 @@ namespace TechHaven.Presentation.WinUI.Views
                     tcs.TrySetResult(null);
             };
 
+            // debounce for product search
+            CancellationTokenSource? prodSearchCts = null;
+
             searchBox.TextChanged += (s, e) =>
             {
-                vm.SearchTerm = searchBox.Text;
+                prodSearchCts?.Cancel();
+                prodSearchCts = new CancellationTokenSource();
+                var token = prodSearchCts.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500, token);
+                        if (token.IsCancellationRequested) return;
+
+                        _ = this.DispatcherQueue.TryEnqueue(() => vm.SearchTerm = searchBox.Text);
+                    }
+                    catch (TaskCanceledException) { }
+                    catch { }
+                });
             };
 
             panel.DataContext = vm;
