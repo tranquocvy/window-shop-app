@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using System.Net.Http.Json;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Presentation.WinUI.ViewModel;
@@ -24,30 +23,14 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             this.InitializeComponent();
 
-            // Register this page root so ThemeManager can apply brushes to named elements
-            ThemeManager.RegisterRoot(this.Content as FrameworkElement ?? this);
-
             _viewModel = new SettingViewModel();
 
             LoadCurrentUser();
-
             UpdateThemeStatus();
-
-            ThemeManager.ThemeChanged += OnThemeChanged;
-            this.Unloaded += SettingPage_Unloaded;
 
             pageSizeCombo.ItemsSource = new int[] { 5, 10, 20, 50 };
 
-            // Do NOT set SelectedItem here — wait until viewmodel is initialized to avoid triggering change handler
-            // try { pageSizeCombo.SelectedItem = _viewModel.PageSize; } catch { }
-
             _ = InitializeViewModelAsync();
-        }
-
-        private void SettingPage_Unloaded(object? sender, RoutedEventArgs e)
-        {
-            ThemeManager.ThemeChanged -= OnThemeChanged;
-            this.Unloaded -= SettingPage_Unloaded;
         }
 
         private void LoadCurrentUser()
@@ -57,7 +40,6 @@ namespace TechHaven.Presentation.WinUI.Views
             {
                 currentUserFullNameText.Text = string.IsNullOrWhiteSpace(user.UserFullName) ? user.UserName : user.UserFullName;
                 currentUserRoleText.Text = user.RoleName ?? "-";
-
                 currentUserUserNameText.Text = user.UserName ?? string.Empty;
                 currentUserEmailText.Text = user.Email ?? string.Empty;
             }
@@ -77,183 +59,34 @@ namespace TechHaven.Presentation.WinUI.Views
                 else
                     addUserBorder.Visibility = Visibility.Collapsed;
             }
-            catch
-            {
-                // ignore if element not present
-            }
+            catch { }
         }
 
         private void UpdateThemeStatus()
         {
-            // Prefer the viewmodel value if present (it may be null if we didn't initialize here), otherwise use ThemeManager's current theme
             var themeText = _viewModel.CurrentTheme ?? ThemeManager.CurrentTheme.ToString();
             themeStatusText.Text = $"Current: {themeText}";
             themeButton.Content = $"Theme: {themeText}";
-
-            // Also apply current theme brushes to this page immediately
-            ApplyThemeBrushes();
-        }
-
-        private void ApplyThemeBrushes()
-        {
-            var appRes = Application.Current?.Resources;
-            if (appRes == null) return;
-
-            // Helper to safely get brush
-            Brush? GetBrush(String key) => appRes.ContainsKey(key) ? appRes[key] as Brush : null;
-
-            // Page background
-            var pageBg = GetBrush("TH.SurfaceBackground");
-            if (pageBg != null)
-            {
-                if (this.Content is Panel panel)
-                {
-                    panel.Background = pageBg;
-                }
-                else if (this.Content is Control control)
-                {
-                    control.Background = pageBg;
-                }
-                else
-                {
-                    // attempt via reflection to set Background property if available
-                    try
-                    {
-                        var root = this.Content as FrameworkElement;
-                        var prop = root?.GetType().GetProperty("Background");
-                        if (prop != null && prop.CanWrite && prop.PropertyType.IsAssignableFrom(typeof(Brush)))
-                        {
-                            prop.SetValue(root, pageBg);
-                        }
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-                }
-            }
-
-            // Text colors
-            var primary = GetBrush("TH.TextPrimary");
-            var secondary = GetBrush("TH.TextSecondary");
-
-            if (primary != null)
-                currentUserFullNameText.Foreground = primary;
-            if (secondary != null)
-                currentUserRoleText.Foreground = secondary;
-
-            // Also update the username and email fields
-            if (secondary != null)
-            {
-                currentUserUserNameText.Foreground = secondary;
-                currentUserEmailText.Foreground = secondary;
-            }
-
-            // Update title and color mode label so they change immediately
-            if (primary != null)
-            {
-                try { titleText.Foreground = primary; } catch { }
-                try { colorModeLabel.Foreground = primary; } catch { }
-            }
-
-            // Button accent/foreground
-            var primaryBrush = GetBrush("TH.PrimaryBrush");
-            if (primaryBrush != null)
-                themeButton.Background = primaryBrush;
-
-            // Style the page size combo to match theme
-            if (primary != null)
-            {
-                try { pageSizeCombo.Foreground = primary; } catch { }
-            }
-
-            // Status text
-            if (secondary != null)
-                themeStatusText.Foreground = secondary;
-
-            var cardBg = GetBrush("TH.CardBackground");
-            try
-            {
-                if (cardBg != null && addUserBorder != null)
-                    addUserBorder.Background = cardBg;
-            }
-            catch { }
-
-            // Apply brushes recursively to children so unnamed TextBlocks and controls update immediately
-            try
-            {
-                var root = this.Content as DependencyObject;
-                if (root != null)
-                {
-                    void Walk(DependencyObject parent)
-                    {
-                        int cnt = VisualTreeHelper.GetChildrenCount(parent);
-                        for (int i = 0; i < cnt; i++)
-                        {
-                            var child = VisualTreeHelper.GetChild(parent, i);
-                            if (child is TextBlock tb)
-                            {
-                                if (primary != null) tb.Foreground = primary;
-                            }
-                            else if (child is TextBox tbx)
-                            {
-                                if (primary != null) tbx.Foreground = primary;
-                                if (cardBg != null) tbx.Background = cardBg;
-                            }
-                            else if (child is PasswordBox pb)
-                            {
-                                if (primary != null) pb.Foreground = primary;
-                                if (cardBg != null) pb.Background = cardBg;
-                            }
-                            else if (child is ComboBox cb)
-                            {
-                                if (primary != null) cb.Foreground = primary;
-                                if (cardBg != null) cb.Background = cardBg;
-                            }
-                            else if (child is Border bd)
-                            {
-                                if (cardBg != null) bd.Background = cardBg;
-                            }
-                            else if (child is Button btn)
-                            {
-                                if (primaryBrush != null) btn.Background = primaryBrush;
-                            }
-
-                            // recurse
-                            try { Walk(child); } catch { }
-                        }
-                    }
-
-                    Walk(root);
-                }
-            }
-            catch { }
         }
 
         private async void ThemeButton_Click(object sender, RoutedEventArgs e)
         {
-            // Show a menu list of available themes for the user to choose from
             var flyout = new MenuFlyout();
 
             foreach (ThemeManager.ThemeType t in Enum.GetValues(typeof(ThemeManager.ThemeType)))
             {
                 var item = new MenuFlyoutItem { Text = t.ToString() };
-                var theme = t; // capture
+                var theme = t;
                 item.Click += async (_, _) =>
                 {
-                    // Persist via ViewModel (which calls the setting service)
                     var ok = await _viewModel.SetThemeAsync(theme.ToString());
                     if (ok)
                     {
                         ThemeManager.ApplyTheme(theme);
-                        try { ThemeManager.ApplyTo(this.Content as FrameworkElement ?? this); } catch { }
-                        try { ThemeManager.ApplyTo(this); } catch { }
-                        ApplyThemeBrushes();
-                        UpdateThemeStatus();
+                        ReloadPage();
                     }
                     else
                     {
-                        // show a simple dialog to inform failure
                         var dlg = new ContentDialog
                         {
                             Title = "Save failed",
@@ -261,16 +94,29 @@ namespace TechHaven.Presentation.WinUI.Views
                             CloseButtonText = "OK",
                             XamlRoot = this.Content.XamlRoot
                         };
-
                         await dlg.ShowAsync();
                     }
                 };
-
                 flyout.Items.Add(item);
             }
 
-            // Show the flyout anchored to the button
             flyout.ShowAt(themeButton);
+        }
+
+        private void ReloadPage()
+        {
+            try
+            {
+                var frame = this.Frame;
+                if (frame != null)
+                {
+                    frame.Navigate(typeof(SettingPage));
+                }
+            }
+            catch
+            {
+                UpdateThemeStatus();
+            }
         }
 
         private async void PageSizeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -279,11 +125,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
             if (pageSizeCombo.SelectedItem is int selected)
             {
-                // persist via viewmodel
                 var ok = await _viewModel.SetPageSizeAsync(selected);
                 if (!ok)
                 {
-                    // show simple dialog on failure
                     var dlg = new ContentDialog
                     {
                         Title = "Save failed",
@@ -291,22 +135,10 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "OK",
                         XamlRoot = this.Content.XamlRoot
                     };
-
                     await dlg.ShowAsync();
-
-                    // revert selection to current value
                     pageSizeCombo.SelectedItem = _viewModel.PageSize;
                 }
             }
-        }
-
-        private void OnThemeChanged(ThemeManager.ThemeType obj)
-        {
-            _ = this.DispatcherQueue?.TryEnqueue(() =>
-            {
-                UpdateThemeStatus();
-                ApplyThemeBrushes();
-            });
         }
 
         private async Task InitializeViewModelAsync()
@@ -318,12 +150,8 @@ namespace TechHaven.Presentation.WinUI.Views
                 {
                     await _viewModel.InitializeAsync();
                 }
-                catch
-                {
-                    // ignore init failures (keep UI responsive)
-                }
+                catch { }
 
-                // Update UI with loaded values
                 try
                 {
                     UpdateThemeStatus();
@@ -347,7 +175,6 @@ namespace TechHaven.Presentation.WinUI.Views
             if (string.IsNullOrWhiteSpace(email)) return false;
             try
             {
-                // simple regex for email validation
                 var pattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
                 return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
             }
@@ -394,14 +221,13 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             ClearInlineErrors();
 
-            // Collect values from UI
             var fullName = newUserFullNameBox.Text?.Trim() ?? string.Empty;
             var email = newUserEmailBox.Text?.Trim() ?? string.Empty;
             var username = newUserUserNameBox.Text?.Trim() ?? string.Empty;
             var password = newUserPasswordBox.Password ?? string.Empty;
             var confirm = newUserConfirmPasswordBox.Password ?? string.Empty;
 
-            int roleId = 1; // default Admin
+            int roleId = 1;
             try
             {
                 if (newUserRoleCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag != null)
@@ -411,7 +237,6 @@ namespace TechHaven.Presentation.WinUI.Views
 
             bool hasError = false;
 
-            // Email validation
             if (!IsValidEmail(email))
             {
                 newUserEmailErrorText.Text = "Invalid email format.";
@@ -419,7 +244,6 @@ namespace TechHaven.Presentation.WinUI.Views
                 hasError = true;
             }
 
-            // Username validation
             if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
             {
                 newUserUserNameErrorText.Text = "Username must be at least 3 characters.";
@@ -427,7 +251,6 @@ namespace TechHaven.Presentation.WinUI.Views
                 hasError = true;
             }
 
-            // Password validation
             var pwdEval = EvaluatePassword(password);
             if (!pwdEval.ok)
             {
@@ -436,7 +259,6 @@ namespace TechHaven.Presentation.WinUI.Views
                 hasError = true;
             }
 
-            // Confirm password
             if (password != confirm)
             {
                 newUserConfirmErrorText.Text = "Passwords do not match.";
@@ -446,10 +268,9 @@ namespace TechHaven.Presentation.WinUI.Views
 
             if (hasError)
             {
-                return; // show inline errors only
+                return;
             }
 
-            // Build signup DTO
             var signupDto = new SignupRequestDto
             {
                 UserFullName = fullName,
@@ -459,13 +280,12 @@ namespace TechHaven.Presentation.WinUI.Views
                 RoleId = roleId
             };
 
-            // Disable button while processing
             addUserButton.IsEnabled = false;
             addUserButton.Content = "Creating...";
 
             try
             {
-                var authService = new TechHaven.Presentation.WinUI.Services.Http.HttpAuthService(ApiClientFactory.GetHttpClient());
+                var authService = new HttpAuthService(ApiClientFactory.GetHttpClient());
                 ResponseWrapper<SignupResponseDto>? wrapper = null;
                 try
                 {
@@ -480,7 +300,6 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "OK",
                         XamlRoot = this.Content.XamlRoot
                     };
-
                     await dlgErr.ShowAsync();
                     return;
                 }
@@ -494,10 +313,8 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "OK",
                         XamlRoot = this.Content.XamlRoot
                     };
-
                     await done.ShowAsync();
 
-                    // Clear inputs
                     newUserFullNameBox.Text = string.Empty;
                     newUserEmailBox.Text = string.Empty;
                     newUserUserNameBox.Text = string.Empty;
@@ -520,7 +337,6 @@ namespace TechHaven.Presentation.WinUI.Views
                         CloseButtonText = "OK",
                         XamlRoot = this.Content.XamlRoot
                     };
-
                     await fail.ShowAsync();
                 }
             }

@@ -6,8 +6,7 @@
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource TH.SurfaceBackground}">
+    mc:Ignorable="d">
 
     <Page.Resources>
         <Style x:Key="CardStyle" TargetType="Border">
@@ -32,7 +31,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Background="Transparent">
+    <Grid x:Name="rootGrid">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="AdaptiveStates">
                 <VisualState x:Name="Desktop">
