@@ -30,7 +30,106 @@ namespace TechHaven.Presentation.WinUI.Views
 
             pageSizeCombo.ItemsSource = new int[] { 5, 10, 20, 50 };
 
+            // Apply theme colors after page is loaded to ensure visual tree is ready
+            this.Loaded += SettingPage_Loaded;
+
             _ = InitializeViewModelAsync();
+        }
+
+        private void SettingPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            ApplyThemeColors();
+            this.Loaded -= SettingPage_Loaded;
+        }
+
+        private void ApplyThemeColors()
+        {
+            var appRes = Application.Current?.Resources;
+            if (appRes == null) return;
+
+            Brush? GetBrush(string key) => appRes.ContainsKey(key) ? appRes[key] as Brush : null;
+
+            var primary = GetBrush("TH.TextPrimary");
+            var secondary = GetBrush("TH.TextSecondary");
+            var primaryBrush = GetBrush("TH.PrimaryBrush");
+            var cardBg = GetBrush("TH.CardBackground");
+
+            // Update named elements
+            if (primary != null)
+            {
+                try { titleText.Foreground = primary; } catch { }
+                try { colorModeLabel.Foreground = primary; } catch { }
+                try { currentUserFullNameText.Foreground = primary; } catch { }
+                try { currentUserUserNameText.Foreground = primary; } catch { }
+            }
+
+            if (secondary != null)
+            {
+                try { currentUserRoleText.Foreground = secondary; } catch { }
+                try { currentUserEmailText.Foreground = secondary; } catch { }
+                try { themeStatusText.Foreground = secondary; } catch { }
+            }
+
+            if (primaryBrush != null)
+            {
+                try { themeButton.Background = primaryBrush; } catch { }
+            }
+
+            // Walk visual tree to update all controls
+            try
+            {
+                var root = this.Content as DependencyObject;
+                if (root != null)
+                {
+                    WalkVisualTree(root, primary, secondary, primaryBrush, cardBg);
+                }
+            }
+            catch { }
+        }
+
+        private void WalkVisualTree(DependencyObject parent, Brush? primary, Brush? secondary, Brush? primaryBrush, Brush? cardBg)
+        {
+            if (parent == null) return;
+
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+
+                try
+                {
+                    if (child is TextBlock tb)
+                    {
+                        // Apply primary color to all TextBlocks
+                        if (primary != null)
+                            tb.Foreground = primary;
+                    }
+                    else if (child is TextBox tbx)
+                    {
+                        if (primary != null) tbx.Foreground = primary;
+                    }
+                    else if (child is ComboBox cb)
+                    {
+                        if (primary != null) cb.Foreground = primary;
+                    }
+                    else if (child is PasswordBox pb)
+                    {
+                        if (primary != null) pb.Foreground = primary;
+                    }
+                    else if (child is Button btn)
+                    {
+                        // Only update buttons that use primary brush
+                        if (btn.Name?.Contains("User") == false && primaryBrush != null)
+                        {
+                            btn.Background = primaryBrush;
+                        }
+                    }
+                }
+                catch { }
+
+                // Recurse
+                WalkVisualTree(child, primary, secondary, primaryBrush, cardBg);
+            }
         }
 
         private void LoadCurrentUser()
@@ -100,7 +199,11 @@ namespace TechHaven.Presentation.WinUI.Views
                 flyout.Items.Add(item);
             }
 
-            flyout.ShowAt(themeButton);
+            // Anchor flyout to the actual button that was clicked (works for both desktop and tablet)
+            if (sender is Button clickedButton)
+            {
+                flyout.ShowAt(clickedButton);
+            }
         }
 
         private void ReloadPage()
