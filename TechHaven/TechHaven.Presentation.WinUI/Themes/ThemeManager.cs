@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using TechHaven.Presentation.WinUI;
 
 namespace TechHaven.Presentation.WinUI.Themes
 {
@@ -25,13 +26,10 @@ namespace TechHaven.Presentation.WinUI.Themes
         private const string MidnightPath = "ms-appx:///Themes/MidnightTheme.xaml";
         private const string AccentsPath = "ms-appx:///Themes/Accents.xaml";
 
-        // Registered roots to update when theme changes
         private static readonly List<WeakReference<FrameworkElement>> _registeredRoots = new();
 
-        // Event raised when theme changes so callers can react (e.g. update status text)
         public static event Action<ThemeType>? ThemeChanged;
 
-        // Initialize just loads the requested dictionaries. No automatic re-application.
         public static void Initialize(ThemeType defaultTheme = ThemeType.Light, bool loadAccents = false)
         {
             ApplyTheme(defaultTheme);
@@ -46,25 +44,14 @@ namespace TechHaven.Presentation.WinUI.Themes
 
             RemoveThemeDictionaries(app);
 
-            string path;
-            switch (theme)
+            string path = theme switch
             {
-                case ThemeType.Light:
-                    path = LightPath;
-                    break;
-                case ThemeType.Dark:
-                    path = DarkPath;
-                    break;
-                case ThemeType.HyperViolet:
-                    path = HyperVioletPath;
-                    break;
-                case ThemeType.Midnight:
-                    path = MidnightPath;
-                    break;
-                default:
-                    path = LightPath;
-                    break;
-            }
+                ThemeType.Light => LightPath,
+                ThemeType.Dark => DarkPath,
+                ThemeType.HyperViolet => HyperVioletPath,
+                ThemeType.Midnight => MidnightPath,
+                _ => LightPath
+            };
 
             try
             {
@@ -72,10 +59,7 @@ namespace TechHaven.Presentation.WinUI.Themes
                 app.Resources.MergedDictionaries.Add(dict);
                 CurrentTheme = theme;
 
-                // Force re-apply to registered roots
                 ReapplyAll();
-
-                // notify listeners
                 ThemeChanged?.Invoke(theme);
             }
             catch (Exception)
@@ -86,7 +70,6 @@ namespace TechHaven.Presentation.WinUI.Themes
 
         public static void ToggleTheme()
         {
-            // Cycle through available themes in enum order
             var values = Enum.GetValues(typeof(ThemeType)).Cast<ThemeType>().ToArray();
             int idx = Array.IndexOf(values, CurrentTheme);
             int next = (idx + 1) % values.Length;
@@ -98,7 +81,8 @@ namespace TechHaven.Presentation.WinUI.Themes
             var app = Application.Current;
             if (app == null) return;
 
-            var existing = app.Resources.MergedDictionaries.FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains("Accents.xaml", StringComparison.OrdinalIgnoreCase));
+            var existing = app.Resources.MergedDictionaries.FirstOrDefault(d => 
+                d.Source != null && d.Source.OriginalString.Contains("Accents.xaml", StringComparison.OrdinalIgnoreCase));
             if (existing != null)
                 app.Resources.MergedDictionaries.Remove(existing);
 
@@ -107,10 +91,7 @@ namespace TechHaven.Presentation.WinUI.Themes
                 var accentDict = new ResourceDictionary { Source = new Uri(AccentsPath) };
                 app.Resources.MergedDictionaries.Add(accentDict);
 
-                // Re-apply to registered roots
                 ReapplyAll();
-
-                // notify listeners - accents might affect visuals too
                 ThemeChanged?.Invoke(CurrentTheme);
             }
             catch (Exception)
@@ -122,34 +103,24 @@ namespace TechHaven.Presentation.WinUI.Themes
         private static void RemoveThemeDictionaries(Application app)
         {
             var toRemove = app.Resources.MergedDictionaries
-                .Where(d => d.Source != null && (
-                    d.Source.OriginalString.Contains("Theme.xaml", StringComparison.OrdinalIgnoreCase)))
+                .Where(d => d.Source != null && 
+                    d.Source.OriginalString.Contains("Theme.xaml", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             foreach (var d in toRemove)
                 app.Resources.MergedDictionaries.Remove(d);
         }
 
-        // Apply theme brushes to a specific root element on demand
         public static void ApplyTo(FrameworkElement root)
         {
             if (root == null) return;
             var appRes = Application.Current?.Resources;
             if (appRes == null) return;
 
-            // Force update Background
             ApplyBackgroundBrush(root, appRes);
-
-            // Force update NavigationView
             ApplyNavigationViewTheme(root, appRes);
-
-            // Force update all Borders (for signup form, etc.)
             ApplyBordersTheme(root, appRes);
-
-            // Force update TextBlocks
             ApplyTextBlocksTheme(root, appRes);
-
-            // Force update ChatBot background
             ApplyChatBotTheme(root, appRes);
         }
 
@@ -197,7 +168,6 @@ namespace TechHaven.Presentation.WinUI.Themes
                         if (tp != null) nav.Foreground = tp;
                     }
 
-                    // Update all NavigationViewItem foreground colors
                     if (appRes.ContainsKey("TH.TextSecondary"))
                     {
                         var textSecondary = appRes["TH.TextSecondary"] as Brush;
@@ -209,7 +179,6 @@ namespace TechHaven.Presentation.WinUI.Themes
                                 {
                                     navItem.Foreground = textSecondary;
 
-                                    // Also update the icon if it exists
                                     if (navItem.Icon is IconElement icon)
                                     {
                                         icon.Foreground = textSecondary;
@@ -219,7 +188,6 @@ namespace TechHaven.Presentation.WinUI.Themes
                         }
                     }
 
-                    // Force update nav items
                     nav.UpdateLayout();
                 }
             }
@@ -230,11 +198,9 @@ namespace TechHaven.Presentation.WinUI.Themes
         {
             try
             {
-                // Find all Borders in visual tree and update their properties
                 var borders = FindAllDescendants<Border>(root);
                 foreach (var border in borders)
                 {
-                    // Update CardBackground for borders with specific names or that use card style
                     if (border.Name?.Contains("Card", StringComparison.OrdinalIgnoreCase) == true ||
                         border.Name?.Contains("addUserBorder", StringComparison.OrdinalIgnoreCase) == true)
                     {
@@ -245,7 +211,6 @@ namespace TechHaven.Presentation.WinUI.Themes
                         }
                     }
 
-                    // Update border brush
                     if (border.BorderThickness.Top > 0 && appRes.ContainsKey("TH.BorderBrush"))
                     {
                         var borderBrush = appRes["TH.BorderBrush"] as Brush;
@@ -260,7 +225,6 @@ namespace TechHaven.Presentation.WinUI.Themes
         {
             try
             {
-                // Update known named textblocks
                 var fullName = FindElementByName<TextBlock>(root, "currentUserFullNameText");
                 if (fullName != null && appRes.ContainsKey("TH.TextPrimary"))
                 {
@@ -289,7 +253,6 @@ namespace TechHaven.Presentation.WinUI.Themes
         {
             try
             {
-                // Update ChatBot expanded window background
                 var chatWindow = FindElementByName<Grid>(root, "ChatExpandedWindow");
                 if (chatWindow != null && appRes.ContainsKey("TH.NavBackground"))
                 {
@@ -359,12 +322,10 @@ namespace TechHaven.Presentation.WinUI.Themes
             if (root == null) return;
             lock (_registeredRoots)
             {
-                // avoid duplicates
                 if (!_registeredRoots.Any(wr => wr.TryGetTarget(out var t) && t == root))
                     _registeredRoots.Add(new WeakReference<FrameworkElement>(root));
             }
 
-            // apply immediately
             ApplyTo(root);
         }
 
@@ -384,6 +345,16 @@ namespace TechHaven.Presentation.WinUI.Themes
                     }
                 }
             }
+
+            try
+            {
+                var main = App.MainWindow;
+                if (main != null && main.Content is FrameworkElement mainRoot)
+                {
+                    ApplyTo(mainRoot);
+                }
+            }
+            catch { }
         }
     }
 }
