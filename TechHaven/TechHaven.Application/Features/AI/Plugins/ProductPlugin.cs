@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 using Microsoft.SemanticKernel;
 using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.SearchCriteria;
@@ -38,16 +39,18 @@ public class ProductPlugin
     if (!products.Any())
       return $"Không tìm thấy sản phẩm nào với từ khóa '{searchTerm}'";
 
-    var result = "Danh sách sản phẩm:\n";
+    var sb = new StringBuilder();
+    sb.AppendLine("Danh sách sản phẩm:");
     foreach (var p in products)
     {
-      result += $"- {p.ProductName} ({p.BrandName})\n";
-      result += $"  Giá: {p.SellPrice:N0} VND\n";
-      result += $"  Tồn kho: {p.StockQuantity} sản phẩm\n";
-      result += $"  ID: {p.ProductId}\n\n";
+      sb.AppendLine($"- {p.ProductName} ({p.BrandName})");
+      sb.AppendLine($"  Giá: {p.SellPrice:N0} VND");
+      sb.AppendLine($"  Tồn kho: {p.StockQuantity} sản phẩm {GetStockStatus(p.StockQuantity)}");
+      sb.AppendLine($"  ID: {p.ProductId}");
+      sb.AppendLine();
     }
 
-    return result;
+    return sb.ToString();
   }
 
   [KernelFunction("get_product_details")]
@@ -61,29 +64,33 @@ public class ProductPlugin
     if (product == null)
       return $"Không tìm thấy sản phẩm với ID {productId}";
 
-    var details = $"Thông tin chi tiết sản phẩm:\n\n";
-    details += $"Tên: {product.ProductName}\n";
-    details += $"Hãng: {product.BrandName}\n";
-    details += $"Giá: {product.SellPrice:N0} VND\n";
-    details += $"Giá vốn: {product.CostPrice:N0} VND\n";
-    details += $"Tồn kho: {product.StockQuantity} sản phẩm\n";
+    var sb = new StringBuilder();
+    sb.AppendLine("Thông tin chi tiết sản phẩm:\n");
+    sb.AppendLine($"Tên: {product.ProductName}");
+    sb.AppendLine($"Hãng: {product.BrandName}");
+    sb.AppendLine($"Giá bán: {product.SellPrice:N0} VND");
+    sb.AppendLine($"Giá vốn: {product.CostPrice:N0} VND");
+    sb.AppendLine($"Tồn kho: {product.StockQuantity} sản phẩm {GetStockStatus(product.StockQuantity)}");
 
-    if (!string.IsNullOrEmpty(product.Color))
-      details += $"Màu sắc: {product.Color}\n";
+    if (!string.IsNullOrWhiteSpace(product.Color))
+      sb.AppendLine($"Màu sắc: {product.Color}");
 
     if (product.StorageCapacity.HasValue)
-      details += $"Bộ nhớ: {product.StorageCapacity} GB\n";
+      sb.AppendLine($"Bộ nhớ: {product.StorageCapacity} GB");
 
-    if (!string.IsNullOrEmpty(product.Processor))
-      details += $"CPU: {product.Processor}\n";
+    if (!string.IsNullOrWhiteSpace(product.Processor))
+      sb.AppendLine($"CPU: {product.Processor}");
 
     if (product.ScreenSize.HasValue)
-      details += $"Màn hình: {product.ScreenSize} inch\n";
+      sb.AppendLine($"Màn hình: {product.ScreenSize} inch");
 
-    if (!string.IsNullOrEmpty(product.Description))
-      details += $"\nMô tả: {product.Description}\n";
+    if (product.BatteryCapacity.HasValue)
+      sb.AppendLine($"Pin: {product.BatteryCapacity} mAh");
 
-    return details;
+    if (!string.IsNullOrWhiteSpace(product.Description))
+      sb.AppendLine($"\nMô tả: {product.Description}");
+
+    return sb.ToString();
   }
 
   [KernelFunction("check_stock")]
@@ -97,12 +104,7 @@ public class ProductPlugin
     if (product == null)
       return $"Không tìm thấy sản phẩm với ID {productId}";
 
-    var status = product.StockQuantity switch
-    {
-      0 => "HẾT HÀNG",
-      <= 5 => $"SẮP HẾT (còn {product.StockQuantity} sản phẩm)",
-      _ => $"CÒN HÀNG ({product.StockQuantity} sản phẩm)"
-    };
+    var status = GetStockStatus(product.StockQuantity, true);
 
     return $"{product.ProductName}: {status}";
   }
@@ -128,14 +130,25 @@ public class ProductPlugin
     if (!products.Any())
       return $"Không tìm thấy sản phẩm nào của hãng {brandName}";
 
-    var result = $"Sản phẩm {brandName} (Tổng: {totalCount}):\n\n";
+    var sb = new StringBuilder();
+    sb.AppendLine($"Sản phẩm {brandName} (Tổng: {totalCount}):\n");
     foreach (var p in products)
     {
-      result += $"- {p.ProductName}\n";
-      result += $"  Giá: {p.SellPrice:N0} VND\n";
-      result += $"  Tồn kho: {p.StockQuantity}\n\n";
+      sb.AppendLine($"- {p.ProductName}");
+      sb.AppendLine($"  Giá: {p.SellPrice:N0} VND");
+      sb.AppendLine($"  Tồn kho: {p.StockQuantity} sản phẩm {GetStockStatus(p.StockQuantity)}");
+      sb.AppendLine();
     }
 
-    return result;
+    return sb.ToString();
+  }
+
+  private static string GetStockStatus(int stock, bool shortForm = false)
+  {
+    if (stock == 0)
+      return shortForm ? "HẾT HÀNG" : "(Hết hàng)";
+    if (stock <= 5)
+      return shortForm ? $"SẮP HẾT (còn {stock})" : "(Sắp hết)";
+    return shortForm ? $"CÒN HÀNG ({stock})" : "(Còn hàng)";
   }
 }
