@@ -140,8 +140,35 @@ namespace TechHaven.Presentation.WinUI.Views
                 }
             };
 
-            // 4. Hiển thị Dialog
-            await dialog.ShowAsync();
+            // 4. Hiển thị Dialog và xử lý nút HỦY => lưu draft
+            var result = await dialog.ShowAsync();
+
+            // If user clicked Close/Cancel (result == None), save as draft
+            if (result == ContentDialogResult.None)
+            {
+                try
+                {
+                    // Build DTO from form without strict validation (draft)
+                    var draftDto = productForm.GetFormData();
+                    if (draftDto != null)
+                    {
+                        draftDto.IsDraft = true;
+
+                        if (itemForEdit == null)
+                        {
+                            await ViewModel.CreateProductAsync(draftDto);
+                        }
+                        else
+                        {
+                            await ViewModel.UpdateProductAsync(itemForEdit.Product.ProductId, draftDto);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ShowProductDialogAsync] Failed to save draft: {ex}");
+                }
+            }
         }
 
         // -------------------------------------------------------------------
@@ -532,7 +559,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 // Tạo sản phẩm ảo với IsDraft = true
                 var draftProduct = new ProductUpsertRequest
                 {
-                    ProductName = "ma_product",
+                    ProductName = $"ma_prroduct_{DateTime.Now:yyyyMMddHHmmss}",
                     BrandName = brandName,
                     SellPrice = 0,
                     CostPrice = 0,

@@ -167,7 +167,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 FromPrice = PriceFrom,
                 ToPrice = PriceTo,
-                IsDraft = false,
                 Status = statusFilter
             };
         }
@@ -585,5 +584,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             Product.StockQuantity > 0
                 ? new SolidColorBrush(Colors.Green)
                 : new SolidColorBrush(Colors.Red);
+
+        // New: provide a faint red background when the product is a draft
+        public SolidColorBrush DraftBackground =>
+            Product != null && Product.IsDraft
+                ? new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(36, 255, 0, 0)) // alpha ~14%
+                : new SolidColorBrush(Colors.Transparent);
     }
 }

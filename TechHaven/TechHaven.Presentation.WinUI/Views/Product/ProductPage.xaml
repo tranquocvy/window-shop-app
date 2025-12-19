@@ -213,12 +213,13 @@
 
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="vm:ProductItemViewModel">
-                            <Grid Padding="12,6" x:Name="ProductItemGrid">
+                            <!-- bind Grid Background to DraftBackground to highlight drafts -->
+                            <Grid Padding="12,6" Background="{Binding DraftBackground}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
                                     <ColumnDefinition Width="60" />
                                     <ColumnDefinition Width="2*" />
-                                    <ColumnDefinition Width="{Binding DataContext.CostPriceColumnWidth, ElementName=RootPage}" />
+                                    <ColumnDefinition Width="1.2*" />
                                     <ColumnDefinition Width="1.2*" />
                                     <ColumnDefinition Width="0.6*" />
                                     <ColumnDefinition Width="1*" />
@@ -228,9 +229,8 @@
                                 <Border Grid.Column="1" CornerRadius="4" Width="40" Height="40" HorizontalAlignment="Left" Margin="0,0,10,0">
                                     <Image Source="{Binding Product.ImageUrl, Converter={StaticResource UrlToImageConverter}}" Stretch="UniformToFill" />
                                 </Border>
-                                <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" Margin="0,0,20,0" />
-                                <TextBlock Grid.Column="3" Text="{Binding Product.CostPrice, Converter={StaticResource PriceFormatConverter}}" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" 
-                                           Visibility="{Binding DataContext.IsAdmin, ElementName=RootPage, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock Grid.Column="2" Text="{Binding Product.ProductName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" />
+                                <TextBlock Grid.Column="3" Text="{Binding Product.CostPrice, Converter={StaticResource PriceFormatConverter}}" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="4" Text="{Binding Product.SellPrice, Converter={StaticResource PriceFormatConverter}}" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="5" Text="{Binding Product.StockQuantity}" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" />
                                 <TextBlock Grid.Column="6" Text="{Binding Product.BrandName}" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis"/>
