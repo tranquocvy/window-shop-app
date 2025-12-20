@@ -265,13 +265,23 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         // Public API for dialog to create a customer and refresh list
-        public async Task CreateCustomerAsync(CustomerUpsertRequestDto dto)
+        public async Task<ResponseWrapper<CustomerDto>?> CreateCustomerAsync(CustomerUpsertRequestDto dto)
         {
-            var response = await _customerService.CreateCustomerAsync(dto);
-            
-            if (response?.Success == true)
+            if (dto == null) return null;
+
+            try
             {
-                await LoadCustomersAsync();
+                var response = await _customerService.CreateCustomerAsync(dto);
+                if (response?.Success == true)
+                {
+                    // refresh list after successful creation
+                    await LoadCustomersAsync();
+                }
+                return response;
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
 
