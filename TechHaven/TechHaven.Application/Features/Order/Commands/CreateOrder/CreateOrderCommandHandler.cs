@@ -30,11 +30,12 @@ public class CreateOrderCommandHandler
     {
         try
         {
+            Domain.Entities.Customer? customer = null; //lấy biến này để ở dưới còn xài thêm
             // 1. Validate Customer 
             if (request.CustomerId.HasValue)
             {
-                var customerExists = await _unitOfWork.Customers.GetByIdAsync(request.CustomerId.Value);
-                if (customerExists == null)
+                customer = await _unitOfWork.Customers.GetByIdAsync(request.CustomerId.Value);
+                if (customer == null)
                 {
                     return Result<OrderDto>.Failure(
                         $"Customer with ID {request.CustomerId} not found.",
@@ -107,7 +108,7 @@ public class CreateOrderCommandHandler
             {
                 subtractedAmount = (order.SubtotalAmount * order.Discount);
             }
-            else { subtractedAmount = (order.SubtotalAmount - order.Discount); }
+            else { subtractedAmount =  order.Discount; }
 
             order.TotalAmount = order.SubtotalAmount - subtractedAmount; 
 
@@ -116,6 +117,14 @@ public class CreateOrderCommandHandler
 
             // 5. Lưu xuống DB
             await _unitOfWork.Orders.AddAsync(order, cancellationToken);
+
+            //Thêm totalAmount vào totalPurchase của Customer
+            if (customer != null)
+            {
+                customer.TotalPurchased += order.TotalAmount;
+                await _unitOfWork.Customers.UpdateAsync(customer, cancellationToken);
+            }
+            
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // 6. Map kết quả trả về
