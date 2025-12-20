@@ -68,7 +68,36 @@ namespace TechHaven.Presentation.WinUI.Views
         {
             if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is OrderItemViewModel item)
             {
-                // Simple status update dialog
+                // Determine allowed transitions
+                var allowed = new List<OrderStatus>();
+                switch (item.Order.Status)
+                {
+                    case OrderStatus.Pending:
+                        allowed.Add(OrderStatus.Processing);
+                        allowed.Add(OrderStatus.Cancelled);
+                        break;
+                    case OrderStatus.Processing:
+                        allowed.Add(OrderStatus.Completed);
+                        allowed.Add(OrderStatus.Cancelled);
+                        break;
+                    case OrderStatus.Completed:
+                        allowed.Add(OrderStatus.Returned);
+                        break;
+                    case OrderStatus.Cancelled:
+                    case OrderStatus.Returned:
+                    default:
+                        // no transitions
+                        break;
+                }
+
+                // If no allowed transitions, inform user and return
+                if (!allowed.Any())
+                {
+                    await ShowErrorDialog("Không thể cập nhật", $"Không thể chuyển trạng thái từ '{item.StatusDisplay}' sang trạng thái khác.");
+                    return;
+                }
+
+                // Build dialog showing current status and only allowed next statuses
                 var statusComboBox = new ComboBox
                 {
                     PlaceholderText = "Select new status",
@@ -76,17 +105,19 @@ namespace TechHaven.Presentation.WinUI.Views
                     Margin = new Microsoft.UI.Xaml.Thickness(0, 8, 0, 0)
                 };
 
-                statusComboBox.Items.Add(new ComboBoxItem { Content = "Pending", Tag = OrderStatus.Pending });
-                statusComboBox.Items.Add(new ComboBoxItem { Content = "Processing", Tag = OrderStatus.Processing });
-                statusComboBox.Items.Add(new ComboBoxItem { Content = "Completed", Tag = OrderStatus.Completed });
-                statusComboBox.Items.Add(new ComboBoxItem { Content = "Cancelled", Tag = OrderStatus.Cancelled });
-                statusComboBox.Items.Add(new ComboBoxItem { Content = "Returned", Tag = OrderStatus.Returned });
-
-                // Set current status
-                var currentItem = statusComboBox.Items.Cast<ComboBoxItem>()
-                    .FirstOrDefault(i => (OrderStatus)i.Tag == item.Order.Status);
-                if (currentItem != null)
-                    statusComboBox.SelectedItem = currentItem;
+                foreach (var s in allowed)
+                {
+                    var display = s switch
+                    {
+                        OrderStatus.Pending => "Pending",
+                        OrderStatus.Processing => "Processing",
+                        OrderStatus.Completed => "Completed",
+                        OrderStatus.Cancelled => "Cancelled",
+                        OrderStatus.Returned => "Returned",
+                        _ => s.ToString()
+                    };
+                    statusComboBox.Items.Add(new ComboBoxItem { Content = display, Tag = s });
+                }
 
                 var panel = new StackPanel();
                 panel.Children.Add(new TextBlock
@@ -575,16 +606,59 @@ namespace TechHaven.Presentation.WinUI.Views
                 totalText.Text = $"Total: {total:N0} ₫";
             }
 
-            // Status combobox
+            // Status combobox - only allow valid transitions (include current status)
             var statusCombo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Pending", Tag = OrderStatus.Pending });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Processing", Tag = OrderStatus.Processing });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Completed", Tag = OrderStatus.Completed });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Cancelled", Tag = OrderStatus.Cancelled });
-            statusCombo.Items.Add(new ComboBoxItem { Content = "Returned", Tag = OrderStatus.Returned });
 
-            var currentStatusItem = statusCombo.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (OrderStatus)i.Tag == full.Status);
-            if (currentStatusItem != null) statusCombo.SelectedItem = currentStatusItem;
+            List<OrderStatus> allowedStatuses = new List<OrderStatus>();
+            // Always include current status first so user sees it
+            allowedStatuses.Add(full.Status);
+            switch (full.Status)
+            {
+                case OrderStatus.Pending:
+                    allowedStatuses.Add(OrderStatus.Processing);
+                    allowedStatuses.Add(OrderStatus.Cancelled);
+                    break;
+                case OrderStatus.Processing:
+                    allowedStatuses.Add(OrderStatus.Completed);
+                    allowedStatuses.Add(OrderStatus.Cancelled);
+                    break;
+                case OrderStatus.Completed:
+                    allowedStatuses.Add(OrderStatus.Returned);
+                    break;
+                case OrderStatus.Cancelled:
+                case OrderStatus.Returned:
+                default:
+                    // no additional transitions
+                    break;
+            }
+
+            // Populate combo with allowed statuses (avoid duplicates)
+            foreach (var s in allowedStatuses.Distinct())
+            {
+                var display = s switch
+                {
+                    OrderStatus.Pending => "Pending",
+                    OrderStatus.Processing => "Processing",
+                    OrderStatus.Completed => "Completed",
+                    OrderStatus.Cancelled => "Cancelled",
+                    OrderStatus.Returned => "Returned",
+                    _ => s.ToString()
+                };
+                statusCombo.Items.Add(new ComboBoxItem { Content = display, Tag = s });
+            }
+
+            // If there are no transitions allowed (only current status), disable the combo
+            if (statusCombo.Items.Count == 1)
+            {
+                statusCombo.IsEnabled = false;
+                statusCombo.SelectedIndex = 0;
+            }
+            else
+            {
+                // select current status by default
+                var currentItem = statusCombo.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (OrderStatus)i.Tag == full.Status);
+                if (currentItem != null) statusCombo.SelectedItem = currentItem;
+            }
 
             // Build panel
             var panel = new StackPanel { Spacing = 8 };
@@ -689,6 +763,34 @@ namespace TechHaven.Presentation.WinUI.Views
 
                     var selectedStatus = statusCombo.SelectedItem as ComboBoxItem;
                     var status = selectedStatus != null ? (OrderStatus)selectedStatus.Tag : full.Status;
+
+                    // Validate transition again before sending update
+                    bool validTransition = false;
+                    switch (full.Status)
+                    {
+                        case OrderStatus.Pending:
+                            validTransition = status == OrderStatus.Pending || status == OrderStatus.Processing || status == OrderStatus.Cancelled;
+                            break;
+                        case OrderStatus.Processing:
+                            validTransition = status == OrderStatus.Processing || status == OrderStatus.Completed || status == OrderStatus.Cancelled;
+                            break;
+                        case OrderStatus.Completed:
+                            validTransition = status == OrderStatus.Completed || status == OrderStatus.Returned;
+                            break;
+                        case OrderStatus.Cancelled:
+                        case OrderStatus.Returned:
+                            validTransition = status == full.Status;
+                            break;
+                        default:
+                            validTransition = status == full.Status;
+                            break;
+                    }
+
+                    if (!validTransition)
+                    {
+                        await ShowErrorDialog("Invalid Transition", "Selected status change is not allowed.");
+                        continue; // reopen dialog
+                    }
 
                     var updateDto = new OrderUpsertRequestDto
                     {

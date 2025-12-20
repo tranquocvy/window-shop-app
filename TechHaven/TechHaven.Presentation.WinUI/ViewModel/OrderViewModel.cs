@@ -421,10 +421,23 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             get
             {
+<<<<<<< Updated upstream
+=======
+                // Use TotalItems from DTO to reflect server-calculated count
+>>>>>>> Stashed changes
                 var count = Order.TotalItems;
                 return $"{count} items";
             }
         }
+
+        // Indicates whether the status can be changed from current status
+        public bool CanChangeStatus => Order.Status switch
+        {
+            OrderStatus.Pending => true,
+            OrderStatus.Processing => true,
+            OrderStatus.Completed => true, // can go to Returned
+            _ => false,
+        };
     }
 
     public class OrderStatusItem
