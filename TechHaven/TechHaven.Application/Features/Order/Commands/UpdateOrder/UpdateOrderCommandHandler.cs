@@ -4,6 +4,7 @@ using TechHaven.Domain.Interfaces;
 using TechHaven.Domain.Common;
 using TechHaven.Domain.Entities;
 using AutoMapper;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace TechHaven.Application.Features.Order.Commands.UpdateOrder;
 
@@ -39,6 +40,18 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
             {
                 return Result<OrderDto>.Failure($"Order {request.OrderId} not found", ErrorType.NotFound);
             }
+            // Chỉ cho phép sửa nếu đơn hàng đang là Pending (1) hoặc Processing (2)
+            if (order.Status != (Domain.Enums.OrderStatus) OrderStatus.Pending 
+                && order.Status != (Domain.Enums.OrderStatus) OrderStatus.Processing
+                )
+            {
+                return Result<OrderDto>.Failure(
+                    $"Only Pending or Processing orders can be updated.",
+                    ErrorType.Validation);
+            }
+            // ---  LƯU GIÁ TRỊ CŨ ĐỂ TÍNH TOÁN CUSTOMER TOTAL ---
+            decimal oldTotalAmount = order.TotalAmount;
+            int? oldCustomerId = order.CustomerId;
 
             // 2. Update thông tin Header
             order.CustomerId = request.CustomerId;
@@ -135,9 +148,61 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
             // 4. Tính lại tổng tiền
             order.SubtotalAmount = calculatedSubTotal;
             // Công thức mới: Total = Sub - (Sub * Discount)
-            order.TotalAmount = order.SubtotalAmount - (order.SubtotalAmount * order.Discount);
+           if (order.Discount <= 1){
+                order.TotalAmount = order.SubtotalAmount - (order.SubtotalAmount * order.Discount);
+            }
+            else
+            {
+                order.TotalAmount = order.SubtotalAmount - order.Discount;   
+            }
 
             if (order.TotalAmount < 0) order.TotalAmount = 0;
+
+
+            // --- UPDATE CUSTOMER TOTAL PURCHASED ---
+            // Logic: Trừ tiền cũ đi, cộng tiền mới vào.
+
+            // Trường hợp 1: Khách hàng không đổi
+            if (oldCustomerId == order.CustomerId && order.CustomerId.HasValue)
+            {
+                var customer = await _unitOfWork.Customers.GetByIdAsync(order.CustomerId.Value);
+                if (customer != null)
+                {
+                    // Công thức: Tổng mới = Tổng hiện tại - Hóa đơn cũ + Hóa đơn mới
+                    customer.TotalPurchased = customer.TotalPurchased - oldTotalAmount + order.TotalAmount;
+
+                    // Đảm bảo không âm (đề phòng dữ liệu sai lệch từ trước)
+                    if (customer.TotalPurchased < 0) customer.TotalPurchased = 0;
+
+                    // Đánh dấu update
+                    // await _unitOfWork.Customers.UpdateAsync(customer); // (Optional nếu GenericRepo cần gọi Explicitly)
+                }
+            }
+            // Trường hợp 2: Đổi khách hàng (Hiếm gặp nhưng cần xử lý)
+            else
+            {
+                // Trừ tiền khách cũ
+                if (oldCustomerId.HasValue)
+                {
+                    var oldCustomer = await _unitOfWork.Customers.GetByIdAsync(oldCustomerId.Value);
+                    if (oldCustomer != null)
+                    {
+                        oldCustomer.TotalPurchased -= oldTotalAmount;
+                        if (oldCustomer.TotalPurchased < 0) oldCustomer.TotalPurchased = 0;
+                    }
+                }
+                // Cộng tiền khách mới
+                if (order.CustomerId.HasValue)
+                {
+                    var newCustomer = await _unitOfWork.Customers.GetByIdAsync(order.CustomerId.Value);
+                    if (newCustomer != null)
+                    {
+                        newCustomer.TotalPurchased += order.TotalAmount;
+                    }
+                }
+            }
+            // ----------------------------------------------------
+
 
             // 5. Save Changes
             // Do EF Core Tracking, ta chỉ cần gọi SaveChangesAsync

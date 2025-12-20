@@ -28,9 +28,12 @@ public class DeleteOrderCommandHandler : ICommandHandler<DeleteOrderCommand, Res
             }
 
             // 2. [Business Rule] Kiểm tra trạng thái
-            // Chỉ cho phép xóa khi đơn hàng còn ở trạng thái Pending hoặc Cancelled.
-            // Nếu đơn hàng đang xử lý hoặc đã hoàn thành -> Không cho xóa (chỉ nên cho Cancel).
-            if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Cancelled)
+            // Chỉ cho phép xóa khi đơn hàng còn ở trạng thái Pending, Processing hoặc Cancelled.
+            // Nếu đơn hàng đã hoàn thành hoặc hoàn trả -> Không cho xóa 
+            if (order.Status != OrderStatus.Pending 
+                && order.Status != OrderStatus.Cancelled
+                && order.Status != OrderStatus.Processing
+                )
             {
                 return Result<bool>.Failure(
                     $"Cannot delete order with status '{order.Status}'. Only Pending or Cancelled orders can be deleted.",
@@ -45,13 +48,25 @@ public class DeleteOrderCommandHandler : ICommandHandler<DeleteOrderCommand, Res
                 if (item.Product != null)
                 {
                     item.Product.StockQuantity += item.Quantity;
-                    // Không cần gọi UpdateAsync cho Product vì EF Core tự track thay đổi trên graph
                 }
             }
 
             // 4. Xóa Order
             // Khi xóa Order, EF Core (với cấu hình Cascade Delete mặc định) sẽ xóa luôn OrderDetails
             await _unitOfWork.Orders.DeleteAsync(order, cancellationToken);
+            //Hoàn tiền cho khách hàng
+            if (order.CustomerId.HasValue)
+            {
+                var customer = await _unitOfWork.Customers.GetByIdAsync(order.CustomerId.Value, cancellationToken);
+                if (customer != null)
+                {
+                    customer.TotalPurchased -= order.TotalAmount;
+                    if (customer.TotalPurchased < 0)
+                    {
+                        customer.TotalPurchased = 0; // Đảm bảo không âm
+                    }
+                }
+            }
 
             // 5. Lưu thay đổi (Transaction sẽ commit cả việc cập nhật kho và xóa order)
             await _unitOfWork.SaveChangesAsync(cancellationToken);
