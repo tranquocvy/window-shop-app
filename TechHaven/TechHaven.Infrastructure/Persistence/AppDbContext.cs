@@ -142,7 +142,7 @@ public class AppDbContext : DbContext
             }
             else if (entry.Entity is AppSetting appSetting && entry.State == EntityState.Modified)
             {
-                appSetting.UpdatedAt = DateTime.Now;
+                appSetting.UpdatedAt = DateTime.UtcNow;
             }
             else if (entry.Entity is Commission commission && entry.State == EntityState.Added)
             {

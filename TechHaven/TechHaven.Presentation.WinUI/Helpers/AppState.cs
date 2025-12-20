@@ -50,5 +50,16 @@ namespace TechHaven.Presentation.WinUI.Helpers
             {
             }
         }
+
+        // Global PageSize (Per-page) setting
+        private static int _pageSize = 10; // default changed to 10
+        public static int PageSize => _pageSize;
+        public static event Action<int>? PageSizeChanged;
+        public static void SetPageSize(int size)
+        {
+            if (size <= 0) return;
+            _pageSize = size;
+            try { PageSizeChanged?.Invoke(size); } catch { }
+        }
     }
 }

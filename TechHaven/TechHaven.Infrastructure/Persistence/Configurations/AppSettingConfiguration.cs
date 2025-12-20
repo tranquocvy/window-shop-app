@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TechHaven.Domain.Entities;
 
@@ -34,8 +34,8 @@ public class AppSettingConfiguration : IEntityTypeConfiguration<AppSetting>
     builder.Property(e => e.UpdatedAt)
         .IsRequired();
 
-    builder.HasIndex(e => e.Key)
-        .IsUnique();
+    //builder.HasIndex(e => e.Key) tạm bỏ qua để user không bị trùng key/ trạng thái
+        //.IsUnique();
     builder.HasIndex(e => e.Category);
   }
 }

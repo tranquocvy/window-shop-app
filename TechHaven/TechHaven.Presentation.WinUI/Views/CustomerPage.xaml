@@ -7,7 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:converters="using:TechHaven.Presentation.WinUI.Converters"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="{ThemeResource TH.SurfaceBackground}">
 
     <Page.Resources>
         <converters:CustomerTypeToBrushConverter x:Key="CustomerTypeToBrush"/>
@@ -22,10 +23,10 @@
         </Style>
         
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource TH.CardBackground}" />
+            <Setter Property="Background" Value="{ThemeResource TH.CardBackground}" />
             <Setter Property="CornerRadius" Value="16" />
             <Setter Property="Padding" Value="20" />
-            <Setter Property="BorderBrush" Value="{StaticResource TH.BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource TH.BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         
@@ -33,7 +34,7 @@
             <Setter Property="FontSize" Value="20" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,0,0,12" />
-            <Setter Property="Foreground" Value="{StaticResource TH.TextPrimary}" />
+            <Setter Property="Foreground" Value="{ThemeResource TH.TextPrimary}" />
         </Style>
         
         <Style x:Key="ListViewItemNoPadding" TargetType="ListViewItem">
@@ -45,7 +46,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="24" ColumnSpacing="12" RowSpacing="20">
+    <Grid Padding="24" ColumnSpacing="12" RowSpacing="20" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -231,15 +232,6 @@
                 <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
             </Button>
 
-            <TextBlock VerticalAlignment="Center" 
-                       Margin="12,0,0,0" 
-                       Text="Items per page:" 
-                       Foreground="{StaticResource TH.TextSecondary}"/>
-            <ComboBox ItemsSource="{x:Bind ViewModel.PageSizeOptions}"
-                      SelectedItem="{x:Bind ViewModel.SelectedPageSize, Mode=TwoWay}"
-                      HorizontalAlignment="Stretch"
-                      Height="40"
-                      MinWidth="80"/>
         </StackPanel>
     </Grid>
 </Page>

@@ -6,58 +6,335 @@
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="{ThemeResource TH.SurfaceBackground}">
 
-    <Grid Padding="24" Background="{ThemeResource TH.SurfaceBackground}">
-        <StackPanel Spacing="18">
-            <TextBlock x:Name="titleText" Text="Application Settings" FontSize="20" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}"/>
+    <Page.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource TH.CardBackground}" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BorderBrush" Value="{ThemeResource TH.BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
 
-            <!-- Row 1: Current user info -->
-            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <Border Width="48" Height="48" CornerRadius="24" Background="{ThemeResource TH.PrimaryBrush}" VerticalAlignment="Center">
-                    <TextBlock Text="U" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}" FontWeight="SemiBold"/>
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{ThemeResource TH.TextPrimary}" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{ThemeResource TH.TextSecondary}" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+    </Page.Resources>
+
+    <Grid Background="Transparent">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveStates">
+                <VisualState x:Name="Desktop">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="721" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DesktopLayout.Visibility" Value="Visible" />
+                        <Setter Target="TabletLayout.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Tablet">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DesktopLayout.Visibility" Value="Collapsed" />
+                        <Setter Target="TabletLayout.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <!-- Desktop Layout (>720px) -->
+        <ScrollViewer x:Name="DesktopLayout">
+            <Grid Padding="24" Background="{ThemeResource TH.SurfaceBackground}">
+                <StackPanel Spacing="20">
+                    <TextBlock x:Name="titleText" 
+                               Text="Settings" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                    <!-- User Info Card -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="User Information" Style="{StaticResource SectionTitleStyle}"/>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="48" Height="48" CornerRadius="24" Background="{ThemeResource TH.PrimaryBrush}">
+                                    <TextBlock Text="U" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold"/>
+                                </Border>
+
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="currentUserFullNameText" Text="Not signed in" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                                    <Grid Margin="0,8,0,0" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Username:" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="currentUserUserNameText" Text="" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}" />
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Role:" Style="{StaticResource FieldLabelStyle}" Margin="0,6,0,0"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="currentUserRoleText" Text="-" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" Margin="0,6,0,0"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Email:" Style="{StaticResource FieldLabelStyle}" Margin="0,6,0,0"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="currentUserEmailText" Text="" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" TextTrimming="CharacterEllipsis" Margin="0,6,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Appearance & Preferences Card -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel Spacing="16">
+                            <TextBlock Text="Appearance &amp; Preferences" Style="{StaticResource SectionTitleStyle}"/>
+                            
+                            <Grid ColumnSpacing="24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0" Spacing="8">
+                                    <TextBlock x:Name="colorModeLabel" Text="Color mode" Style="{StaticResource FieldLabelStyle}"/>
+                                    <Button x:Name="themeButton" Click="ThemeButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="12,8" MinWidth="140" HorizontalAlignment="Left"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="8">
+                                    <TextBlock Text="Items per page" Style="{StaticResource FieldLabelStyle}"/>
+                                    <ComboBox x:Name="pageSizeCombo" Width="140" HorizontalAlignment="Left" SelectionChanged="PageSizeCombo_SelectionChanged"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock x:Name="themeStatusText" 
+                                       Foreground="{ThemeResource TH.TextSecondary}"
+                                       FontSize="12"
+                                       FontStyle="Italic"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Create User Card -->
+                    <Border x:Name="addUserBorder" Style="{StaticResource CardStyle}">
+                        <StackPanel Spacing="16">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Create New User" Style="{StaticResource SectionTitleStyle}" Margin="0"/>
+                                <TextBlock Text="Quickly add an account from here" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}"/>
+                            </StackPanel>
+
+                            <Grid ColumnSpacing="16" RowSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="200" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Spacing="16">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="newUserFullNameBox" PlaceholderText="Enter full name"/>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="newUserEmailBox" PlaceholderText="Enter email"/>
+                                        <TextBlock x:Name="newUserEmailErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="16">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Username" Style="{StaticResource FieldLabelStyle}"/>
+                                        <TextBox x:Name="newUserUserNameBox" PlaceholderText="Enter username"/>
+                                        <TextBlock x:Name="newUserUserNameErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Password" Style="{StaticResource FieldLabelStyle}"/>
+                                        <PasswordBox x:Name="newUserPasswordBox" PlaceholderText="Enter password"/>
+                                        <TextBlock x:Name="newUserPasswordErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Confirm password" Style="{StaticResource FieldLabelStyle}"/>
+                                        <PasswordBox x:Name="newUserConfirmPasswordBox" PlaceholderText="Confirm password"/>
+                                        <TextBlock x:Name="newUserConfirmErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="12">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Role" Style="{StaticResource FieldLabelStyle}"/>
+                                        <ComboBox x:Name="newUserRoleCombo" SelectedIndex="0" HorizontalAlignment="Stretch">
+                                            <ComboBoxItem Tag="1">Admin</ComboBoxItem>
+                                            <ComboBoxItem Tag="2">Seller</ComboBoxItem>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <Button x:Name="addUserButton" 
+                                            Content="Add User" 
+                                            Click="AddUserButton_Click" 
+                                            Background="{ThemeResource TH.PrimaryBrush}" 
+                                            Foreground="White" 
+                                            Padding="12,8" 
+                                            HorizontalAlignment="Stretch"
+                                            CornerRadius="6" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Tablet Layout (<=720px) -->
+        <ScrollViewer x:Name="TabletLayout" Visibility="Collapsed">
+            <StackPanel Padding="16" Spacing="16" Background="{ThemeResource TH.SurfaceBackground}">
+                <TextBlock Text="Application Settings" 
+                           FontSize="20" 
+                           FontWeight="Bold" 
+                           Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                <!-- User Info Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="User Information" Style="{StaticResource SectionTitleStyle}"/>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="48" Height="48" CornerRadius="24" Background="{ThemeResource TH.PrimaryBrush}">
+                                <TextBlock Text="U" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold"/>
+                            </Border>
+
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ElementName=currentUserFullNameText, Path=Text}" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}"/>
+
+                                <StackPanel Margin="0,8,0,0" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="Username:" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                        <TextBlock Text="{Binding ElementName=currentUserUserNameText, Path=Text}" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="Role:" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                        <TextBlock Text="{Binding ElementName=currentUserRoleText, Path=Text}" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="Email:" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                        <TextBlock Text="{Binding ElementName=currentUserEmailText, Path=Text}" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
                 </Border>
 
-                <StackPanel>
-                    <TextBlock x:Name="currentUserFullNameText" Text="Not signed in" FontSize="14" FontWeight="SemiBold" Foreground="{ThemeResource TH.TextPrimary}"/>
+                <!-- Appearance Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Appearance &amp; Preferences" Style="{StaticResource SectionTitleStyle}"/>
+                        
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Color mode" Style="{StaticResource FieldLabelStyle}"/>
+                                <Button Content="{Binding ElementName=themeButton, Path=Content}" Click="ThemeButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="12,8" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
 
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="6">
-                            <TextBlock Text="Username" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
-                            <TextBlock Text="Role" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
-                            <TextBlock Text="Email" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Items per page" Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox SelectedIndex="{Binding ElementName=pageSizeCombo, Path=SelectedIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" SelectionChanged="PageSizeCombo_SelectionChanged">
+                                    <ComboBoxItem>10</ComboBoxItem>
+                                    <ComboBoxItem>25</ComboBoxItem>
+                                    <ComboBoxItem>50</ComboBoxItem>
+                                    <ComboBoxItem>100</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="6">
-                            <TextBlock x:Name="currentUserUserNameText" Text="" FontSize="12" Foreground="{ThemeResource TH.TextPrimary}" />
-                            <TextBlock x:Name="currentUserRoleText" Text="-" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" />
-                            <TextBlock x:Name="currentUserEmailText" Text="" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding ElementName=themeStatusText, Path=Text}"
+                                   Foreground="{ThemeResource TH.TextSecondary}"
+                                   FontSize="12"
+                                   FontStyle="Italic"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Create User Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="16">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Create New User" Style="{StaticResource SectionTitleStyle}" Margin="0"/>
+                            <TextBlock Text="Quickly add an account from here" FontSize="12" Foreground="{ThemeResource TH.TextSecondary}"/>
                         </StackPanel>
-                    </Grid>
 
-                </StackPanel>
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBox Text="{Binding ElementName=newUserFullNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter full name"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Username" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBox Text="{Binding ElementName=newUserUserNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter username"/>
+                                <TextBlock Visibility="{Binding ElementName=newUserUserNameErrorText, Path=Visibility}" Text="{Binding ElementName=newUserUserNameErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBox Text="{Binding ElementName=newUserEmailBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter email"/>
+                                <TextBlock Visibility="{Binding ElementName=newUserEmailErrorText, Path=Visibility}" Text="{Binding ElementName=newUserEmailErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Password" Style="{StaticResource FieldLabelStyle}"/>
+                                <PasswordBox Password="{Binding ElementName=newUserPasswordBox, Path=Password, Mode=TwoWay}" PlaceholderText="Enter password"/>
+                                <TextBlock Visibility="{Binding ElementName=newUserPasswordErrorText, Path=Visibility}" Text="{Binding ElementName=newUserPasswordErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Confirm password" Style="{StaticResource FieldLabelStyle}"/>
+                                <PasswordBox Password="{Binding ElementName=newUserConfirmPasswordBox, Path=Password, Mode=TwoWay}" PlaceholderText="Confirm password"/>
+                                <TextBlock Visibility="{Binding ElementName=newUserConfirmErrorText, Path=Visibility}" Text="{Binding ElementName=newUserConfirmErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Role" Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox SelectedIndex="{Binding ElementName=newUserRoleCombo, Path=SelectedIndex, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Tag="1">Admin</ComboBoxItem>
+                                    <ComboBoxItem Tag="2">Seller</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <Button Content="Add User" 
+                                    Click="AddUserButton_Click" 
+                                    Background="{ThemeResource TH.PrimaryBrush}" 
+                                    Foreground="White" 
+                                    Padding="12,8" 
+                                    HorizontalAlignment="Stretch"
+                                    CornerRadius="6"
+                                    Height="44"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-
-            <!-- Row 2: Theme selection -->
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                <TextBlock x:Name="colorModeLabel" Text="Color mode" VerticalAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}"/>
-
-                <Button x:Name="themeButton" Click="ThemeButton_Click" Margin="8,0,0,0" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="8,6"/>
-
-                <!-- New: Page size control -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8" Margin="24,0,0,0">
-                    <TextBlock Text="Items per page" VerticalAlignment="Center" Foreground="{ThemeResource TH.TextPrimary}"/>
-                    <ComboBox x:Name="pageSizeCombo" Width="80" SelectionChanged="PageSizeCombo_SelectionChanged"/>
-                </StackPanel>
-            </StackPanel>
-
-            <TextBlock x:Name="themeStatusText" Foreground="{ThemeResource TH.TextSecondary}"/>
-
-        </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>

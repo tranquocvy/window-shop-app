@@ -20,6 +20,12 @@ public class AppSetting
     public int AppSettingId { get; set; }
 
     /// <summary>
+    /// User-specific setting. Null indicates a system-wide setting.
+    /// </summary>
+    [Display(Name = "User ID")]
+    public int? UserId { get; set; }  = null;
+
+    /// <summary>
     /// Gets or sets the unique key for the setting (e.g., "Store.Name", "POS.AutoPrint").
     /// </summary>
     [Required(ErrorMessage = "Setting key is required.")]
@@ -77,5 +83,5 @@ public class AppSetting
     [Display(Name = "Updated At")]
     [DataType(DataType.DateTime)]
     // [Comment("Timestamp of the last update to this configuration")]
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

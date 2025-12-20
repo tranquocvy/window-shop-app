@@ -21,8 +21,12 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 {
     public partial class ProductViewModel : ObservableObject
     {
-        private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
-        private readonly IProductService _productService = new HttpProductService(SharedHttpClient);
+        // Don't cache HttpClient statically here.
+        // Always obtain current client from ApiClientFactory so ResetClient / login changes take effect.
+        private HttpClient HttpClient => ApiClientFactory.GetHttpClient();
+
+        // Removed static shared HttpClient and the long-lived _productService.
+        // We'll create HttpProductService(ApiClientFactory.GetHttpClient()) per operation so auth headers are fresh.
 
         public ObservableCollection<ProductItemViewModel> Products { get; } = new ObservableCollection<ProductItemViewModel>();
 
@@ -80,17 +84,17 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             "Tất cả",
             "Dưới 5 triệu",
-            "Từ 5 đến 10 triệu",
-            "Trên 10 triệu"
+            "Từ 5 đến 15 triệu",
+            "Từ 15 đến 30 triệu",
+            "Từ 30 đến 50 triệu",
+            "Trên 50 triệu"
         };
-
-
 
         [ObservableProperty]
         private string _selectedBrandName = "Không";
 
         [ObservableProperty]
-        private string _selectedStatus = "Không";
+        private string _selectedStatus = null;
 
         public ProductViewModel()
         {
@@ -101,17 +105,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // ========================
         // Load Brands from API
         // ========================
-        private async Task LoadBrandsAsync()
+        public async Task LoadBrandsAsync()
         {
             try
             {
-                var response = await SharedHttpClient.GetFromJsonAsync<TechHaven.Shared.DTOs.Common.ResponseWrapper<System.Collections.Generic.List<BrandDto>>>("api/Brand");
-                
+                var client = ApiClientFactory.GetHttpClient();
+                var response = await client.GetFromJsonAsync<TechHaven.Shared.DTOs.Common.ResponseWrapper<System.Collections.Generic.List<BrandDto>>>("api/Brand");
+
                 if (response?.Success == true && response.Data != null)
                 {
                     BrandNameFilter.Clear();
                     BrandNameFilter.Add("Không"); // Default option
-                    
+
                     foreach (var brand in response.Data)
                     {
                         if (!string.IsNullOrWhiteSpace(brand.BrandName))
@@ -157,12 +162,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 FromPrice = PriceFrom,
                 ToPrice = PriceTo,
-
+                IsDraft = false,
                 Status = statusFilter
             };
         }
-
-
 
         // ========================
         // Search triggers reload
@@ -226,13 +229,23 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     PriceTo = 5000000;
                     break;
 
-                case "Từ 5 đến 10 triệu":
+                case "Từ 5 đến 15 triệu":
                     PriceFrom = 5000000;
-                    PriceTo = 10000000;
+                    PriceTo = 15000000;
                     break;
 
-                case "Trên 10 triệu":
-                    PriceFrom = 10000000;
+                case "Từ 15 đến 30 triệu":
+                    PriceFrom = 15000000;
+                    PriceTo = 30000000;
+                    break;
+
+                case "Từ 30 đến 50 triệu":
+                    PriceFrom = 30000000;
+                    PriceTo = 50000000;
+                    break;
+
+                case "Trên 50 triệu":
+                    PriceFrom = 50000000;
                     PriceTo = null;
                     break;
 
@@ -246,14 +259,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             _ = LoadProductsAsync(BuildQuery());
         }
 
-
-
-
         // ========================
         // Main load function
         // ========================
         [RelayCommand]
-        private async Task LoadProductsAsync(ProductListQueryDto query = null)
+        public async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
             // Nếu không truyền query (null), tự động dùng BuildQuery lấy state hiện tại
             query ??= BuildQuery();
@@ -267,27 +277,35 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             Products.Clear();
             // ==========================
 
-            var response = await _productService.QueryProductsAsync(query);
-            if (!response.Success || response.Data == null)
-                return;
-
-            var paging = response.Data;
-
-            foreach (var product in paging.Items)
+            try
             {
-                var itemVM = new ProductItemViewModel(product);
-                // Đăng ký sự kiện PropertyChanged cho từng item để update Select All checkbox
-                itemVM.PropertyChanged += ProductItem_PropertyChanged;
+                var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+                var response = await productService.QueryProductsAsync(query);
+                if (!response.Success || response.Data == null)
+                    return;
 
-                Products.Add(itemVM);
+                var paging = response.Data;
+
+                foreach (var product in paging.Items)
+                {
+                    var itemVM = new ProductItemViewModel(product);
+                    // Đăng ký sự kiện PropertyChanged cho từng item để update Select All checkbox
+                    itemVM.PropertyChanged += ProductItem_PropertyChanged;
+
+                    Products.Add(itemVM);
+                }
+
+                // Cập nhật trạng thái Select All dựa trên list mới load
+                _isUpdatingAll = true;
+                IsAllSelected = Products.Any() && Products.All(p => p.IsSelected);
+                _isUpdatingAll = false;
+
+                UpdatePaginationState(paging.TotalCount);
             }
-
-            // Cập nhật trạng thái Select All dựa trên list mới load
-            _isUpdatingAll = true;
-            IsAllSelected = Products.Any() && Products.All(p => p.IsSelected);
-            _isUpdatingAll = false;
-
-            UpdatePaginationState(paging.TotalCount);
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ProductViewModel] LoadProductsAsync error: {ex}");
+            }
         }
 
         private void ProductItem_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -300,7 +318,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 _isUpdatingAll = false;
             }
         }
-
 
         // ========================
         // Pagination state update
@@ -378,11 +395,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 if (!confirm) return;
 
+                var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+
                 foreach (var item in selectedItems)
                 {
                     try
                     {
-                        var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
+                        var response = await productService.DeleteProductsAsync(item.Product.ProductId);
                         if (response?.Success == true)
                             Products.Remove(item);
                         else
@@ -449,13 +468,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 try
                 {
-                    var response = await _productService.DeleteProductsAsync(item.Product.ProductId);
-                    
-             
+                    var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+                    var response = await productService.DeleteProductsAsync(item.Product.ProductId);
+
                     Products.Remove(item);
-                        
-                    
-                    // chỗ này bỏ if vì "tính năng" đã bàn với leader hihi
+
                     // Update list/paging after deletion
                     await LoadProductsAsync();
 
@@ -492,14 +509,16 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // ========================
         public async Task UpdateProductAsync(int id, ProductUpsertRequest dto)
         {
-            await _productService.UpdateProductsAsync(id, dto);
+            var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+            await productService.UpdateProductsAsync(id, dto);
             await LoadProductsAsync(); // Dùng query mặc định
         }
 
         public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
-            var response = await _productService.CreateProductsAsync(dto);
+            var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
+            var response = await productService.CreateProductsAsync(dto);
             if (response.Success)
                 await LoadProductsAsync(); // Dùng query mặc định
         }
@@ -520,6 +539,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         }
 
         public bool IsAdmin => CurrentUserRole == "Admin";
+
+        public string CostPriceColumnWidth => IsAdmin ? "1.2*" : "0";
     }
 
 

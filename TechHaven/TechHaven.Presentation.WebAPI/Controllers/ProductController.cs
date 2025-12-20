@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Application.Features.Product.Commands.CreateProduct;
 using TechHaven.Application.Features.Product.Commands.CreateProductsBulk;
@@ -7,11 +8,13 @@ using TechHaven.Application.Features.Product.Commands.UpdateProduct;
 using TechHaven.Application.Features.Product.Queries.GetProductById;
 using TechHaven.Application.Features.Product.Queries.GetProducts;
 using TechHaven.Domain.SearchCriteria;
+using TechHaven.Infrastructure.Authorization;
 using TechHaven.Shared.DTOs.Common;
 using TechHaven.Shared.DTOs.Products;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
+[Authorize(Policy = AuthorizationPolicies.ManageProducts)]
 public class ProductController : BaseApiController
 {
   private readonly IMediator _mediator;
@@ -193,6 +196,7 @@ public class ProductController : BaseApiController
   /// Delete a product
   /// </summary>
   [HttpDelete("{id}")]
+  [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status204NoContent)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status404NotFound)]
   public async Task<IActionResult> DeleteProduct(

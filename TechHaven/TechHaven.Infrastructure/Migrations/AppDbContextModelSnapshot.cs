@@ -57,6 +57,10 @@ namespace TechHaven.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
                     b.Property<string>("Value")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
@@ -71,10 +75,6 @@ namespace TechHaven.Infrastructure.Migrations
 
                     b.HasIndex("Category")
                         .HasDatabaseName("ix_app_settings_category");
-
-                    b.HasIndex("Key")
-                        .IsUnique()
-                        .HasDatabaseName("ix_app_settings_key");
 
                     b.ToTable("app_settings", (string)null);
                 });

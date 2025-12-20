@@ -37,5 +37,22 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp", dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OtpResendResponseDto>("Failed to resend OTP");
         }
+
+        public async Task<ResponseWrapper<SignupResponseDto>> SignupAsync(SignupRequestDto dto)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/signup", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<SignupResponseDto>("Failed to signup user");
+        }
+
+        public async Task<ResponseWrapper<ActivateResponseDto>> ActivateAsync(ActivateRequestDto dto)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/activate", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<ActivateResponseDto>("Failed to activate account");
+        }
+
+        public async Task<ResponseWrapper<IsActiveResponseDto>> CheckTrialStatusAsync()
+        {
+            return await _httpClient.GetWrapperFromJsonAsync<IsActiveResponseDto>($"{BaseUrl}/isActive", "Failed to check trial status");
+        }
     }
 }

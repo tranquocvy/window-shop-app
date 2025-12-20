@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
 using TechHaven.Shared.DTOs.Auth;
 using TechHaven.Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Users;
 
 namespace TechHaven.Presentation.WinUI.Services.Mock
 {
@@ -96,6 +98,29 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             };
 
             return new ResponseWrapper<OtpResendResponseDto> { Success = true, Message = "OTP resent", Data = resp };
+        }
+
+        public Task<ResponseWrapper<SignupResponseDto>> SignupAsync(SignupRequestDto dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ResponseWrapper<ActivateResponseDto>> ActivateAsync(ActivateRequestDto dto)
+        {
+            return Task.FromResult(new ResponseWrapper<ActivateResponseDto>
+            {
+                Success = true,
+                Data = new ActivateResponseDto { IsValid = true }
+            });
+        }
+
+        public Task<ResponseWrapper<IsActiveResponseDto>> CheckTrialStatusAsync()
+        {
+            return Task.FromResult(new ResponseWrapper<IsActiveResponseDto>
+            {
+                Success = true,
+                Data = new IsActiveResponseDto { IsActive = true, DaysRemain = 30 }
+            });
         }
     }
 }

@@ -14,9 +14,11 @@ public class AppSettingDto
 
 		public string? Description { get; set; }
 
-		public bool IsSystem { get; set; }
+	public bool IsSystem { get; set; }
 
-		public DateTime UpdatedAt { get; set; }
+	public int? UserId { get; set; }
+
+	public DateTime UpdatedAt { get; set; }
 }
 
 public enum SettingType

@@ -200,12 +200,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\Product\" />
-  </ItemGroup>
-  <ItemGroup>
     <PRIResource Remove="Views\Order\**" />
   </ItemGroup>
   <ItemGroup>
     <PRIResource Remove="Docs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controls\" />
   </ItemGroup>
 </Project>
