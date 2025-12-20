@@ -206,6 +206,13 @@
     <PRIResource Remove="Docs\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Views\Order\CustomerSelectorDialog.cs" />
+    <Compile Include="Views\Order\OrderEditorDialog.cs" />
+    <Compile Include="Views\Order\OrderPageHelpers.cs" />
+    <Compile Include="Views\Order\ProductSelectorDialog.cs" />
+    <Compile Include="Views\Order\StatusUpdateDialog.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Controls\" />
   </ItemGroup>
 </Project>
