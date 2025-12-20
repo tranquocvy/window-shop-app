@@ -40,6 +40,51 @@ public class UpdateOrderCommandHandler : ICommandHandler<UpdateOrderCommand, Res
             {
                 return Result<OrderDto>.Failure($"Order {request.OrderId} not found", ErrorType.NotFound);
             }
+
+            // XỬ LÝ TRƯỜNG HỢP TRẢ HÀNG (COMPLETED -> RETURNED)
+            if (order.Status == (Domain.Enums.OrderStatus)OrderStatus.Completed 
+                && request.Status == (Domain.Enums.OrderStatus)OrderStatus.Returned
+                )
+            {
+                //  Hoàn tiền tích lũy cho khách (Giảm TotalPurchased)
+                if (order.CustomerId.HasValue)
+                {
+                    var customer = await _unitOfWork.Customers.GetByIdAsync(order.CustomerId.Value);
+                    if (customer != null)
+                    {
+                        // Trừ đi số tiền của đơn hàng này
+                        customer.TotalPurchased -= order.TotalAmount;
+
+                        // Đảm bảo không âm (đề phòng sai sót dữ liệu cũ)
+                        if (customer.TotalPurchased < 0) customer.TotalPurchased = 0;
+
+                        // Update Customer (nếu cần explicit update)
+                        // await _unitOfWork.Customers.UpdateAsync(customer);
+                    }
+                }
+
+                // B. (Tùy chọn) Hoàn trả tồn kho (Restock)
+                // Nếu nghiệp vụ yêu cầu hàng trả về được bán tiếp -> Cộng lại vào kho
+                
+                foreach (var item in order.OrderDetails!)
+                {
+                    var product = await _unitOfWork.Products.GetByIdAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.StockQuantity += item.Quantity;
+                    }
+                }
+
+                // C. Cập nhật trạng thái đơn hàng
+                order.Status = (Domain.Enums.OrderStatus)OrderStatus.Returned;
+
+                // Lưu và trả về ngay (Không chạy xuống logic update details bên dưới)
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                var returnDto = _mapper.Map<OrderDto>(order);
+                return Result<OrderDto>.Success(returnDto);
+            }
+
+
             // Chỉ cho phép sửa nếu đơn hàng đang là Pending (1) hoặc Processing (2)
             if (order.Status != (Domain.Enums.OrderStatus) OrderStatus.Pending 
                 && order.Status != (Domain.Enums.OrderStatus) OrderStatus.Processing
