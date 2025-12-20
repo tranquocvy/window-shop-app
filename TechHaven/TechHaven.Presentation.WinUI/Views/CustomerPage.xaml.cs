@@ -17,6 +17,7 @@ using Windows.Foundation.Collections;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Shared.DTOs.Customers;
 using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Shared.DTOs.Common;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -292,19 +293,32 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 try
                 {
-                    await ViewModel.CreateCustomerAsync(dto);
-                    
-                    // Show success notification
-                    var successDialog = new ContentDialog
+                    var resp = await ViewModel.CreateCustomerAsync(dto);
+                    if (resp != null && resp.Success)
                     {
-                        Title = "Thành công",
-                        Content = $"Đã thêm khách hàng '{name}' thành công!",
-                        CloseButtonText = "Đóng"
-                    };
-                    successDialog.XamlRoot = this.Content.XamlRoot;
-                    await successDialog.ShowAsync();
-                    
-                    dialogActive = false;
+                        var successDialog = new ContentDialog
+                        {
+                            Title = "Thành công",
+                            Content = $"Đã thêm khách hàng '{name}' thành công!",
+                            CloseButtonText = "Đóng"
+                        };
+                        successDialog.XamlRoot = this.Content.XamlRoot;
+                        await successDialog.ShowAsync();
+                        dialogActive = false;
+                    }
+                    else
+                    {
+                        var message = resp?.Message ?? "Tạo khách hàng không thành công. Vui lòng thử lại.";
+                        var err = new ContentDialog
+                        {
+                            Title = "Lỗi tạo khách hàng",
+                            Content = message,
+                            CloseButtonText = "Đóng"
+                        };
+                        err.XamlRoot = this.Content.XamlRoot;
+                        await err.ShowAsync();
+                        continue; // Reopen dialog with user's input
+                    }
                 }
                 catch (Exception ex)
                 {

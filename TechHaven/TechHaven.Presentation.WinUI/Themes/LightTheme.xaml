@@ -10,35 +10,36 @@
     <!-- ========================================================= -->
     <!-- =====================   COLORS   ========================= -->
     <!-- ========================================================= -->
+    <!-- ?? Ocean Blue Light Theme - Darker for Better Contrast -->
 
-    <!-- ========== Background Layers (Light mode) - Improved contrast ========== -->
-    <Color x:Key="TH.Color.SurfaceBackground">#AAAAAA</Color>
-    <!-- nền app -->
-    <Color x:Key="TH.Color.Layer1Background">#FFFFFFFF</Color>
-    <!-- layer phụ / container -->
-    <Color x:Key="TH.Color.CardBackground">#FFFFFFFF</Color>
-    <!-- card -->
-    <Color x:Key="TH.Color.NavBackground">#DDDDDD</Color>
-    <!-- navigation panel -->
+    <!-- ========== Background Layers (Darker Blue palette) ========== -->
+    <Color x:Key="TH.Color.SurfaceBackground">#FFC5E1EA</Color>
+    <!-- main app background - medium blue -->
+    <Color x:Key="TH.Color.Layer1Background">#FFD4E9F0</Color>
+    <!-- secondary layer - soft blue -->
+    <Color x:Key="TH.Color.CardBackground">#FFE3F2F7</Color>
+    <!-- card background - light blue -->
+    <Color x:Key="TH.Color.NavBackground">#FFB8D9E8</Color>
+    <!-- navigation panel - stronger blue -->
 
     <!-- ========== Borders ========== -->
-    <Color x:Key="TH.Color.Border">#FFD1D5DB</Color>
-    <!-- border -->
-    <Color x:Key="TH.Color.Divider">#FFE5E7EB</Color>
-    <!-- divider -->
+    <Color x:Key="TH.Color.Border">#FF8FC4D9</Color>
+    <!-- visible blue border -->
+    <Color x:Key="TH.Color.Divider">#FFA8D3E3</Color>
+    <!-- blue divider -->
 
-    <!-- ========== Text ========== -->
-    <Color x:Key="TH.Color.TextPrimary">#FF111827</Color>
-    <!-- text chính -->
-    <Color x:Key="TH.Color.TextSecondary">#333333</Color>
-    <!-- text phụ -->
-    <Color x:Key="TH.Color.TextDisabled">#FF9CA3AF</Color>
-    <!-- disabled text -->
+    <!-- ========== Text (Pure Black for maximum readability) ========== -->
+    <Color x:Key="TH.Color.TextPrimary">#FF000000</Color>
+    <!-- primary text - pure black -->
+    <Color x:Key="TH.Color.TextSecondary">#FF1A1A1A</Color>
+    <!-- secondary text - almost black -->
+    <Color x:Key="TH.Color.TextDisabled">#FF666666</Color>
+    <!-- disabled text - dark gray -->
 
-    <!-- ========== Nav Item States - Better visibility ========== -->
-    <Color x:Key="TH.Color.NavItemPointerOver">#FF2563EB</Color>
-    <!-- blue hover -->
-    <Color x:Key="TH.Color.NavItemSelected">#FF3B82F6</Color>
+    <!-- ========== Nav Item States ========== -->
+    <Color x:Key="TH.Color.NavItemPointerOver">#FF1E88E5</Color>
+    <!-- bright blue hover -->
+    <Color x:Key="TH.Color.NavItemSelected">#FF1976D2</Color>
     <!-- blue selected -->
 
     <!-- ========================================================= -->
@@ -79,7 +80,33 @@
     <SolidColorBrush x:Key="TH.TextDisabled"
                      Color="{StaticResource TH.Color.TextDisabled}" />
 
-    <!-- Map to NavigationView system resource keys so built-in template uses these colors -->
+    <!-- ========================================================= -->
+    <!-- ======== SYSTEM CONTROL OVERRIDES (TextBox, ComboBox) ====== -->
+    <!-- ========================================================= -->
+
+    <!-- TextBox Placeholder and Text Colors -->
+    <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource TH.Color.TextDisabled}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource TH.Color.TextSecondary}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource TH.Color.TextSecondary}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource TH.Color.TextSecondary}" />
+
+    <!-- ComboBox Text and Dropdown Item Colors -->
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="{StaticResource TH.Color.TextDisabled}" />
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="{StaticResource TH.Color.TextSecondary}" />
+
+    <!-- ComboBox Dropdown Items -->
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource TH.Color.TextPrimary}" />
+
+    <!-- Map to NavigationView system resource keys -->
     <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="{StaticResource TH.Color.NavItemPointerOver}" />
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="{StaticResource TH.Color.NavItemSelected}" />
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPointerOver" Color="{StaticResource TH.Color.NavItemSelected}" />
@@ -88,12 +115,30 @@
     <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedPointerOver" Color="#FFFFFFFF" />
 
-    <!-- Additional states to ensure text color remains correct -->
+    <!-- Additional states -->
     <SolidColorBrush x:Key="NavigationViewItemForegroundPressed" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="NavigationViewItemForegroundDisabled" Color="{StaticResource TH.Color.TextDisabled}" />
 
     <!-- Map success/danger colors from Common -->
     <SolidColorBrush x:Key="TH.SuccessBrush" Color="{StaticResource TH.SuccessColor}" />
     <SolidColorBrush x:Key="TH.DangerBrush" Color="{StaticResource TH.DangerColor}" />
+
+    <!-- ========================================================= -->
+    <!-- ========== CalendarDatePicker Text Colors ========== -->
+    <!-- ========================================================= -->
+    <!-- Colors for the control itself, not the dropdown -->
+    <SolidColorBrush x:Key="CalendarDatePickerForeground" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerForegroundFocused" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerForegroundDisabled" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerCalendarGlyphForeground" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerCalendarGlyphForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+
+    <!-- CalendarDatePicker TextBox (the date display field) -->
+    <SolidColorBrush x:Key="CalendarDatePickerTextForeground" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerTextForegroundPointerOver" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerTextForegroundFocused" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerTextForegroundDisabled" Color="{StaticResource TH.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="CalendarDatePickerHeaderForeground" Color="{StaticResource TH.Color.TextPrimary}" />
 
 </ResourceDictionary>

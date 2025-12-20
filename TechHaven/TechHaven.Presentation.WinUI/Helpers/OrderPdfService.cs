@@ -114,32 +114,22 @@ namespace TechHaven.Presentation.WinUI.Helpers
                                 {
                                     table.Cell().Element(CellBody).Text(d.ProductName ?? string.Empty);
                                     table.Cell().Element(CellBody).AlignCenter().Text(d.Quantity.ToString());
-                                    table.Cell().Element(CellBody).AlignRight().Text($"{d.SubTotal:N0} ?");
+                                    table.Cell().Element(CellBody).AlignRight().Text($"{d.SubTotal:N0} VND");
                                 }
 
                                 table.Cell().ColumnSpan(3).Height(6);
 
                                 table.Cell().ColumnSpan(2).Element(CellBody).AlignRight().Text("Subtotal:").SemiBold();
-                                table.Cell().Element(CellBody).AlignRight().Text($"{order.SubtotalAmount:N0} ?");
+                                table.Cell().Element(CellBody).AlignRight().Text($"{order.SubtotalAmount:N0} VND");
 
                                 table.Cell().ColumnSpan(2).Element(CellBody).AlignRight().Text("Discount:").SemiBold();
-                                table.Cell().Element(CellBody).AlignRight().Text($"{order.Discount:N0} ?");
+                                table.Cell().Element(CellBody).AlignRight().Text($"{order.Discount:N0} VND");
 
                                 table.Cell().ColumnSpan(2).Element(CellBody).AlignRight().Text("Total:").SemiBold().FontSize(12);
-                                table.Cell().Element(CellBody).AlignRight().Text($"{order.TotalAmount:N0} ?").FontSize(12);
+                                table.Cell().Element(CellBody).AlignRight().Text($"{order.TotalAmount:N0} VND").FontSize(12);
 
                                 static IContainer CellHeader(IContainer container) => container.Padding(8).Background(Colors.Grey.Lighten4).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
                                 static IContainer CellBody(IContainer container) => container.Padding(8).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
-                            });
-                        });
-
-                        // Notes
-                        col.Item().PaddingTop(8).Element(c =>
-                        {
-                            c.Border(1).BorderColor(Colors.Grey.Lighten3).Padding(10).Column(nc =>
-                            {
-                                nc.Item().Text("Notes").SemiBold();
-                                nc.Item().Text(order.Notes ?? "(none)").FontSize(10).FontColor(Colors.Grey.Darken1);
                             });
                         });
 
