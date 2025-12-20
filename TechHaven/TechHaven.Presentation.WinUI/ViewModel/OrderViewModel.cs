@@ -421,7 +421,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             get
             {
-                var count = Order.Details?.Count ?? 0;
+                var count = Order.TotalItems;
                 return $"{count} items";
             }
         }
