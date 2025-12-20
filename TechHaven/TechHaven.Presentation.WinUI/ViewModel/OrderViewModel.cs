@@ -421,10 +421,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             get
             {
-<<<<<<< Updated upstream
-=======
-                // Use TotalItems from DTO to reflect server-calculated count
->>>>>>> Stashed changes
                 var count = Order.TotalItems;
                 return $"{count} items";
             }
