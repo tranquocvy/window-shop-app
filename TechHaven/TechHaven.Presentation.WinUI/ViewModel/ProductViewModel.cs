@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Services.Http;
@@ -24,6 +25,10 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Don't cache HttpClient statically here.
         // Always obtain current client from ApiClientFactory so ResetClient / login changes take effect.
         private HttpClient HttpClient => ApiClientFactory.GetHttpClient();
+
+        // Small concurrency guard to avoid race where multiple LoadProductsAsync calls
+        // run concurrently and each applies results (causing duplicated list entries).
+        private int _loadInvocationId = 0;
 
         // Removed static shared HttpClient and the long-lived _productService.
         // We'll create HttpProductService(ApiClientFactory.GetHttpClient()) per operation so auth headers are fresh.
@@ -162,7 +167,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
                 FromPrice = PriceFrom,
                 ToPrice = PriceTo,
-                IsDraft = false,
                 Status = statusFilter
             };
         }
@@ -265,6 +269,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         public async Task LoadProductsAsync(ProductListQueryDto query = null)
         {
+            // Mark invocation id to detect/race and ensure only the latest invocation applies results.
+            int invocation = Interlocked.Increment(ref _loadInvocationId);
+
             // Nếu không truyền query (null), tự động dùng BuildQuery lấy state hiện tại
             query ??= BuildQuery();
 
@@ -273,7 +280,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             foreach (var item in Products)
                 item.PropertyChanged -= ProductItem_PropertyChanged;
 
-            // Xóa toàn bộ list cũ
+            // Xóa toàn bộ list cũ — we clear at start of each invocation.
             Products.Clear();
             // ==========================
 
@@ -281,6 +288,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             {
                 var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
                 var response = await productService.QueryProductsAsync(query);
+
+                // If a newer LoadProductsAsync started, drop these results to avoid interleaving/duplication.
+                if (invocation != _loadInvocationId)
+                {
+                    Debug.WriteLine($"[ProductViewModel] LoadProductsAsync invocation {invocation} discarded because newer invocation {_loadInvocationId} exists.");
+                    return;
+                }
+
                 if (!response.Success || response.Data == null)
                     return;
 
@@ -569,5 +584,11 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             Product.StockQuantity > 0
                 ? new SolidColorBrush(Colors.Green)
                 : new SolidColorBrush(Colors.Red);
+
+        // New: provide a faint red background when the product is a draft
+        public SolidColorBrush DraftBackground =>
+            Product != null && Product.IsDraft
+                ? new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(36, 255, 0, 0)) // alpha ~14%
+                : new SolidColorBrush(Colors.Transparent);
     }
 }
