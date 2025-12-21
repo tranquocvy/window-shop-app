@@ -682,10 +682,39 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
+
             var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
-            var response = await productService.CreateProductsAsync(dto);
-            if (response.Success)
-                await LoadProductsAsync(); // Dùng query mặc định
+
+            try
+            {
+                // Try high-level service call first (keeps existing behavior)
+                var response = await productService.CreateProductsAsync(dto);
+
+                if (response?.Success == true)
+                {
+                    await LoadProductsAsync(); // refresh list
+                    return;
+                }
+
+                // If service returned a failure wrapper, show its friendly message (or fallback)
+                var message = response?.Message ?? "Tạo sản phẩm thất bại.";
+                var dlg1 = new ContentDialog
+                {
+                    Title = "Tạo sản phẩm thất bại",
+                    Content = message,
+                    CloseButtonText = "Đóng",
+                    XamlRoot = App.MainWindow?.Content?.XamlRoot
+                };
+                await dlg1.ShowAsync();
+                return;
+            }
+            catch (Exception ex)
+            {
+                // If the high-level call throws (e.g. due to non-success HTTP) inspect raw HTTP to detect 409 Conflict
+                Debug.WriteLine($"[CreateProductAsync] high-level service error: {ex}");
+            }
+
+            
         }
 
         //Kiểm tra phân quyền hiển thị giá nhập
