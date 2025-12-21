@@ -171,7 +171,10 @@ namespace TechHaven.Presentation.WinUI.Views
                     ApiClientFactory.ResetClient();
 
                     // Recreate ViewModel with new HttpAuthService using updated HttpClient
-                    _viewModel = new MainWindowViewModel(new HttpAuthService(ApiClientFactory.GetHttpClient()));
+                    _viewModel = new MainWindowViewModel(
+                        new HttpAuthService(ApiClientFactory.GetHttpClient()),
+                        new HttpUserService(ApiClientFactory.GetHttpClient())
+                    );
 
                     // Rebind DataContext so bindings still work
                     if (this.Content is FrameworkElement root)

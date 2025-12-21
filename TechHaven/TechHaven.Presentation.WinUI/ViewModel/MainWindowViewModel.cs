@@ -19,20 +19,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAuthService _authService;
-        private readonly IUserService _userService = new HttpUserService(SharedHttpClient);
+        private readonly IUserService _userService;
         private DispatcherQueue? _dispatcher;
         private Timer? _timer;
 
         private string _otpSessionIdInternal = string.Empty;
         private int _otpExpiresInInternal = 0;
 
-        // Use http-based auth service by default, if you want to use mock, uncomment the other constructor
-        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient)) { }
-        //public MainWindowViewModel() : this(new MockAuthService()) { }
+        // Default constructor wires concrete services; prefer DI constructor below in production
+        public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient), new HttpUserService(SharedHttpClient)) { }
+        //public MainWindowViewModel() : this(new MockAuthService(), new MockUserService()) { }
 
-        public MainWindowViewModel(IAuthService authService)
+        // Use DI to supply services
+        public MainWindowViewModel(IAuthService authService, IUserService userService)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
 
             LoginCommand = new AsyncRelayCommand(LoginAsync);
             VerifyOtpCommand = new AsyncRelayCommand(VerifyOtpExecute, () => IsVerifyEnabled);
