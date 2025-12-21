@@ -49,6 +49,33 @@
     </Page.Resources>
 
     <Grid Padding="24" RowSpacing="20" Background="Transparent">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="AdaptiveStates">
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="721" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DesktopFilters.Visibility" Value="Visible" />
+                        <Setter Target="TabletFilters.Visibility" Value="Collapsed" />
+                        <Setter Target="DesktopTabs.Visibility" Value="Visible" />
+                        <Setter Target="TabletTabs.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Tablet">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DesktopFilters.Visibility" Value="Collapsed" />
+                        <Setter Target="TabletFilters.Visibility" Value="Visible" />
+                        <Setter Target="DesktopTabs.Visibility" Value="Collapsed" />
+                        <Setter Target="TabletTabs.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -102,8 +129,8 @@
             </Border>
         </Grid>
 
-        <!-- Filters: Date range and period + Search/Export (visible only to roles that can export) -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- Desktop Filters -->
+        <Border x:Name="DesktopFilters" Grid.Row="1" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <!-- Single-row layout: all filters and buttons inline -->
             <Grid ColumnSpacing="12" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
@@ -161,8 +188,55 @@
             </Grid>
         </Border>
 
-        <!-- Chart Type Tabs (visible to roles that can export/view reports) -->
-        <Grid Grid.Row="2" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- Tablet Filters -->
+        <Border x:Name="TabletFilters" Grid.Row="1" Style="{StaticResource CardStyle}" Visibility="Collapsed">
+            <Grid ColumnSpacing="8" RowSpacing="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Row 0: Start Date + Period Type -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Từ:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" />
+                <DatePicker Grid.Row="0" Grid.Column="1" Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" Height="32" HorizontalAlignment="Stretch" />
+                <ComboBox Grid.Row="0" Grid.Column="2" ItemsSource="{x:Bind ViewModel.PeriodTypes}" SelectedItem="{x:Bind ViewModel.SelectedPeriodType, Mode=TwoWay}" MinWidth="120" Height="32" HorizontalAlignment="Right" />
+
+                <!-- Row 1: End Date + View + Export -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Đến:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" />
+                <DatePicker Grid.Row="1" Grid.Column="1" Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" Height="32" HorizontalAlignment="Stretch" />
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button Command="{x:Bind ViewModel.LoadReportsCommand}"
+                            Background="{StaticResource TH.PrimaryBrush}"
+                            Foreground="White"
+                            CornerRadius="8"
+                            Padding="12,6"
+                            Height="32">
+                        <TextBlock Text="Xem" FontWeight="SemiBold" />
+                    </Button>
+                    <Button Click="ExportReport_Click"
+                            Background="{StaticResource TH.CardBackground}"
+                            BorderBrush="{StaticResource TH.BorderBrush}"
+                            BorderThickness="1"
+                            Foreground="{StaticResource TH.TextPrimary}"
+                            CornerRadius="8"
+                            Padding="12,6"
+                            Height="32">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE9F9;" VerticalAlignment="Center" />
+                            <TextBlock Text="Xuất" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Desktop Tabs -->
+        <Grid x:Name="DesktopTabs" Grid.Row="2" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -226,6 +300,62 @@
                 </Button>
             </StackPanel>
         </Grid>
+
+        <!-- Tablet Tabs -->
+        <StackPanel x:Name="TabletTabs" Grid.Row="2" Orientation="Vertical" Spacing="8" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Sản Phẩm"
+                        Click="ProductChartTab_Click"
+                        Background="{x:Bind ViewModel.SelectedChartTab, Mode=OneWay, Converter={StaticResource TabButtonBackgroundConverter}, ConverterParameter='Sản Phẩm'}"
+                        Foreground="{StaticResource TH.TextPrimary}"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12,6"
+                        Height="32"
+                        FontWeight="SemiBold"/>
+                
+                <Button Content="Doanh Thu"
+                        Click="RevenueChartTab_Click"
+                        Background="{x:Bind ViewModel.SelectedChartTab, Mode=OneWay, Converter={StaticResource TabButtonBackgroundConverter}, ConverterParameter='Doanh Thu'}"
+                        Foreground="{StaticResource TH.TextPrimary}"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12,6"
+                        Height="32"
+                        FontWeight="SemiBold"/>
+
+                <Button Content="Hoa Hồng"
+                        Click="CommissionTab_Click"
+                        Visibility="{x:Bind ViewModel.IsFullAdmin, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Background="{x:Bind ViewModel.SelectedChartTab, Mode=OneWay, Converter={StaticResource TabButtonBackgroundConverter}, ConverterParameter='Hoa Hồng'}"
+                        Foreground="{StaticResource TH.TextPrimary}"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12,6"
+                        Height="32"
+                        FontWeight="SemiBold"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Vertical" Spacing="6" Visibility="{x:Bind ViewModel.IsProductChartVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="Sản phẩm:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" FontWeight="SemiBold" />
+                <Button Height="32"
+                        MinWidth="340"
+                        Click="OpenProductPicker_Click"
+                        HorizontalContentAlignment="Stretch"
+                        Padding="12,6"
+                        CornerRadius="8"
+                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        BorderThickness="1"
+                        Background="{StaticResource TH.CardBackground}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Spacing="8">
+                        <TextBlock Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay, TargetNullValue='Chọn sản phẩm'}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
 
         <!-- Chart Area (conditional, visible to roles that can view reports) -->
         <Border Grid.Row="3" Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.CanExport, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
