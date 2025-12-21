@@ -13,21 +13,18 @@ using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using System.Threading.Tasks;
 using Windows.System;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class ShellWindow : Window
     {
         private AppWindow? _appWindow;
         private readonly SettingViewModel _settingViewModel;
         private readonly TrialModeManager _trialModeManager;
         private ChatBotManager? _chatBotManager;
+        private readonly IUserService _userService = new HttpUserService(ApiClientFactory.GetHttpClient());
 
         public ShellWindow()
         {
@@ -112,6 +109,43 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Initialize settings and navigate to last visited page (or dashboard)
             _ = InitializeSettingsAndNavigateAsync();
+
+            // Show onboarding if needed
+            _ = ShowOnboardingIfNeededAsync();
+        }
+
+        private async Task ShowOnboardingIfNeededAsync()
+        {
+            try
+            {
+                if (!AppState.HasSeenGuide)
+                {
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Chào mừng đến TechHaven",
+                        Content = "Hướng dẫn nhanh về cách sử dụng ứng dụng. Nhấn Bắt đầu để xem.",
+                        PrimaryButtonText = "Bắt đầu",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+
+                    var r = await dialog.ShowAsync();
+                    if (r == ContentDialogResult.Primary)
+                    {
+                        // Giả lập xem hướng dẫn xong. Tại đây có thể điều hướng qua các trang để giới thiệu.
+                        // Sau khi hoàn tất, cập nhật trạng thái lên server
+                        var resp = await _userService.UpdateGuideStatusAsync(true);
+                        if (resp.Success && resp.Data)
+                        {
+                            AppState.HasSeenGuide = true;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // ignore onboarding failures
+            }
         }
 
         private void InitializeChatBot()

@@ -14,6 +14,7 @@ namespace TechHaven.Presentation.WinUI.Services.Http
     {
         private readonly HttpClient _httpClient;
         private const string BaseUrl = "api/users";
+        private const string GuideStatusUrl = "api/User/guide-status";
 
         public HttpUserService(HttpClient httpClient)
         {
@@ -46,6 +47,13 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         {
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/{id}");
             return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete user");
+        }
+
+        public async Task<ResponseWrapper<bool>> UpdateGuideStatusAsync(bool hasSeenGuide)
+        {
+            var payload = new { hasSeenGuide };
+            var response = await _httpClient.PutAsJsonAsync(GuideStatusUrl, payload);
+            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to update guide status");
         }
     }
 }

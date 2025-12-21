@@ -19,6 +19,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
     {
         private static readonly HttpClient SharedHttpClient = ApiClientFactory.GetHttpClient();
         private readonly IAuthService _authService;
+        private readonly IUserService _userService = new HttpUserService(SharedHttpClient);
         private DispatcherQueue? _dispatcher;
         private Timer? _timer;
 
@@ -244,6 +245,9 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 RoleName = otpData.RoleName,
                 IsActive = true
             };
+
+            // Capture onboarding flag
+            Helpers.AppState.HasSeenGuide = otpData.HasSeenGuide;
 
             return true;
         }
