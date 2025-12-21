@@ -14,6 +14,9 @@ namespace TechHaven.Presentation.WinUI.Helpers
         public static UserDto? CurrentUser { get; set; }
         public static bool IsLoggedIn => CurrentUser != null;
 
+        // Onboarding flag sourced from OTP verify response
+        public static bool HasSeenGuide { get; set; } = true;
+
         // Backing field for API base URI (kept for HttpClient default if needed)
         private static Uri _apiBaseUri = new(
             Environment.GetEnvironmentVariable("TECHHAVEN_API_BASEURL") ??

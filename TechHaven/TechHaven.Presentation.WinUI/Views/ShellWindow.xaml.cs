@@ -13,21 +13,20 @@ using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using System.Threading.Tasks;
 using Windows.System;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Services.Onboarding;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class ShellWindow : Window
     {
         private AppWindow? _appWindow;
         private readonly SettingViewModel _settingViewModel;
         private readonly TrialModeManager _trialModeManager;
         private ChatBotManager? _chatBotManager;
+        private readonly IUserService _userService = new HttpUserService(ApiClientFactory.GetHttpClient());
+        private readonly IOnboardingService _onboardingService = new OnboardingService();
 
         public ShellWindow()
         {
@@ -112,6 +111,32 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Initialize settings and navigate to last visited page (or dashboard)
             _ = InitializeSettingsAndNavigateAsync();
+
+            // Show onboarding if needed
+            _ = ShowOnboardingIfNeededAsync();
+        }
+
+        public void NavigateTo(Type pageType)
+        {
+            try { contentFrame.Navigate(pageType); } catch { }
+        }
+
+        private async Task ShowOnboardingIfNeededAsync()
+        {
+            try
+            {
+                if (!AppState.HasSeenGuide)
+                {
+                    await _onboardingService.RunAsync(this);
+                    // After run, update server flag
+                    var resp = await _userService.UpdateGuideStatusAsync(true);
+                    if (resp.Success && resp.Data)
+                    {
+                        AppState.HasSeenGuide = true;
+                    }
+                }
+            }
+            catch { }
         }
 
         private void InitializeChatBot()
@@ -496,6 +521,11 @@ namespace TechHaven.Presentation.WinUI.Views
             catch { }
 
             return fallback;
+        }
+
+        public FrameworkElement? GetCurrentPageRoot()
+        {
+            try { return contentFrame.Content as FrameworkElement; } catch { return null; }
         }
     }
 }

@@ -79,7 +79,8 @@
             </Grid.RowDefinitions>
 
             <!-- Total products -->
-            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
+            <Border x:Name="KpiTotalProductsCard" Grid.Row="0" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12"
+                    ToolTipService.ToolTip="T?ng s? s?n ph?m hi?n có">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -99,7 +100,8 @@
             </Border>
 
             <!-- Today's Orders -->
-            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
+            <Border x:Name="KpiTodayOrdersCard" Grid.Row="0" Grid.Column="1" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12"
+                    ToolTipService.ToolTip="S? ??n hàng x? lý hôm nay">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -119,7 +121,8 @@
             </Border>
 
             <!-- Today's Revenue -->
-            <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12">
+            <Border x:Name="KpiTodayRevenueCard" Grid.Row="0" Grid.Column="2" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12"
+                    ToolTipService.ToolTip="Doanh thu c?a ngày hôm nay">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -179,7 +182,8 @@
             </Border>
 
             <!-- Row 1: LowStockProducts (right column) -->
-            <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
+            <Border x:Name="LowStockSection" Grid.Row="1" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch"
+                    ToolTipService.ToolTip="Danh sách s?n ph?m s?p h?t hàng">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" /> <!-- title -->
@@ -227,7 +231,8 @@
             </Border>
 
             <!-- Row 2: MonthlyRevenue (left two columns) -->
-            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
+            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch"
+                    ToolTipService.ToolTip="Bi?u ?? doanh thu theo tháng">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -245,7 +250,8 @@
             </Border>
 
             <!-- Row 2: TopSellingProducts (right column) -->
-            <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
+            <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch"
+                    ToolTipService.ToolTip="Danh sách s?n ph?m bán ch?y">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

@@ -157,7 +157,8 @@
                 <DatePicker Grid.Column="4" Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" Width="300" Height="32" HorizontalAlignment="Left" />
 
                 <TextBlock Grid.Column="6" Text="Theo:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" Margin="0,0,4,0" />
-                <ComboBox Grid.Column="7" ItemsSource="{x:Bind ViewModel.PeriodTypes}" SelectedItem="{x:Bind ViewModel.SelectedPeriodType, Mode=TwoWay}" Width="120" Height="32" HorizontalAlignment="Left" />
+                <ComboBox x:Name="PeriodCombo" Grid.Column="7" ItemsSource="{x:Bind ViewModel.PeriodTypes}" SelectedItem="{x:Bind ViewModel.SelectedPeriodType, Mode=TwoWay}" Width="120" Height="32" HorizontalAlignment="Left"
+                          ToolTipService.ToolTip="Chọn kỳ xem báo cáo (Ngày/Tháng/Năm)" />
 
                 <Button Grid.Column="9"
                         Command="{x:Bind ViewModel.LoadReportsCommand}"
@@ -166,11 +167,11 @@
                         CornerRadius="8"
                         Padding="10,6"
                         Height="32"
-                        ToolTipService.ToolTip="Tìm kiếm">
+                        ToolTipService.ToolTip="Tải dữ liệu báo cáo theo bộ lọc">
                     <FontIcon Glyph="&#xE721;" />
                 </Button>
 
-                <Button Grid.Column="10"
+                <Button x:Name="ExportButton" Grid.Column="10"
                         Click="ExportReport_Click"
                         Background="{StaticResource TH.CardBackground}"
                         BorderBrush="{StaticResource TH.BorderBrush}"
@@ -179,7 +180,8 @@
                         CornerRadius="8"
                         Padding="10,6"
                         Height="32"
-                        Margin="8,0,0,0">
+                        Margin="8,0,0,0"
+                        ToolTipService.ToolTip="Xuất báo cáo ra file">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE9F9;" VerticalAlignment="Center" />
                         <TextBlock Text="Xuất" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -204,28 +206,31 @@
                 <!-- Row 0: Start Date + Period Type -->
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Từ:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" />
                 <DatePicker Grid.Row="0" Grid.Column="1" Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" Height="32" HorizontalAlignment="Stretch" />
-                <ComboBox Grid.Row="0" Grid.Column="2" ItemsSource="{x:Bind ViewModel.PeriodTypes}" SelectedItem="{x:Bind ViewModel.SelectedPeriodType, Mode=TwoWay}" MinWidth="120" Height="32" HorizontalAlignment="Right" />
+                <ComboBox x:Name="TabletPeriodCombo" Grid.Row="0" Grid.Column="2" ItemsSource="{x:Bind ViewModel.PeriodTypes}" SelectedItem="{x:Bind ViewModel.SelectedPeriodType, Mode=TwoWay}" MinWidth="120" Height="32" HorizontalAlignment="Right"
+                          ToolTipService.ToolTip="Chọn kỳ xem báo cáo (Ngày/Tháng/Năm)" />
 
                 <!-- Row 1: End Date + View + Export -->
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Đến:" VerticalAlignment="Center" Foreground="{StaticResource TH.TextPrimary}" />
                 <DatePicker Grid.Row="1" Grid.Column="1" Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" Height="32" HorizontalAlignment="Stretch" />
                 <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                    <Button Command="{x:Bind ViewModel.LoadReportsCommand}"
+                    <Button x:Name="TabletSearchButton" Command="{x:Bind ViewModel.LoadReportsCommand}"
                             Background="{StaticResource TH.PrimaryBrush}"
                             Foreground="White"
                             CornerRadius="8"
                             Padding="12,6"
-                            Height="32">
+                            Height="32"
+                            ToolTipService.ToolTip="Tải dữ liệu báo cáo theo bộ lọc">
                         <TextBlock Text="Xem" FontWeight="SemiBold" />
                     </Button>
-                    <Button Click="ExportReport_Click"
+                    <Button x:Name="TabletExportButton" Click="ExportReport_Click"
                             Background="{StaticResource TH.CardBackground}"
                             BorderBrush="{StaticResource TH.BorderBrush}"
                             BorderThickness="1"
                             Foreground="{StaticResource TH.TextPrimary}"
                             CornerRadius="8"
                             Padding="12,6"
-                            Height="32">
+                            Height="32"
+                            ToolTipService.ToolTip="Xuất báo cáo ra file">
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <FontIcon Glyph="&#xE9F9;" VerticalAlignment="Center" />
                             <TextBlock Text="Xuất" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -255,7 +260,8 @@
                         CornerRadius="8"
                         Padding="16,6"
                         Height="32"
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Xem biểu đồ theo sản phẩm"/>
                 
                 <Button Content="Doanh Thu"
                         Click="RevenueChartTab_Click"
@@ -266,7 +272,8 @@
                         CornerRadius="8"
                         Padding="16,6"
                         Height="32"
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Xem biểu đồ doanh thu"/>
 
                 <!-- Commission tab only visible to full admins -->
                 <Button Content="Hoa Hồng"
@@ -279,7 +286,8 @@
                         CornerRadius="8"
                         Padding="16,6"
                         Height="32"
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Xem bảng hoa hồng"/>
             </StackPanel>
 
             <!-- Product selector moved to far right next to tabs area; now includes label -->
@@ -293,7 +301,8 @@
                         CornerRadius="8"
                         BorderBrush="{StaticResource TH.BorderBrush}"
                         BorderThickness="1"
-                        Background="{StaticResource TH.CardBackground}">
+                        Background="{StaticResource TH.CardBackground}"
+                        ToolTipService.ToolTip="Chọn sản phẩm để xem biểu đồ">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Spacing="8">
                         <TextBlock Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay, TargetNullValue='Chọn sản phẩm'}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Width="240" />
                     </StackPanel>
@@ -313,7 +322,8 @@
                         CornerRadius="8"
                         Padding="12,6"
                         Height="32"
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Xem biểu đồ theo sản phẩm"/>
                 
                 <Button Content="Doanh Thu"
                         Click="RevenueChartTab_Click"
@@ -324,7 +334,8 @@
                         CornerRadius="8"
                         Padding="12,6"
                         Height="32"
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Xem biểu đồ doanh thu"/>
 
                 <Button Content="Hoa Hồng"
                         Click="CommissionTab_Click"
@@ -336,7 +347,8 @@
                         CornerRadius="8"
                         Padding="12,6"
                         Height="32"
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Xem bảng hoa hồng"/>
             </StackPanel>
 
             <StackPanel Orientation="Vertical" Spacing="6" Visibility="{x:Bind ViewModel.IsProductChartVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -349,7 +361,8 @@
                         CornerRadius="8"
                         BorderBrush="{StaticResource TH.BorderBrush}"
                         BorderThickness="1"
-                        Background="{StaticResource TH.CardBackground}">
+                        Background="{StaticResource TH.CardBackground}"
+                        ToolTipService.ToolTip="Chọn sản phẩm để xem biểu đồ">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Spacing="8">
                         <TextBlock Text="{x:Bind ViewModel.SelectedProduct.ProductName, Mode=OneWay, TargetNullValue='Chọn sản phẩm'}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
