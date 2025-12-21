@@ -386,7 +386,7 @@
                                     </Grid.RowDefinitions>
 
                                     <!-- Product summary (layout only) -->
-                                    <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="12" CornerRadius="8" Margin="0,0,0,12">
+                                    <Border Grid.Row="0" Background="{StaticResource TH.Layer1Background}" Style="{StaticResource CardStyle}" Padding="12" CornerRadius="8" Margin="0,0,0,12">
                                         <Grid ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1*" />

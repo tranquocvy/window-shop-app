@@ -471,7 +471,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
                 var dialog = new ContentDialog
                 {
-                    Title = $"Sửa khách hàng #{selected.CustomerId}",
+                    Title = $"Sửa khách hàng {selected.CustomerName}",
                     PrimaryButtonText = "Lưu",
                     SecondaryButtonText = "Xóa",
                     CloseButtonText = "Hủy",
