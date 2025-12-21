@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Windows.System;
 using TechHaven.Presentation.WinUI.Services.Http;
 using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Services.Onboarding;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
@@ -25,6 +26,7 @@ namespace TechHaven.Presentation.WinUI.Views
         private readonly TrialModeManager _trialModeManager;
         private ChatBotManager? _chatBotManager;
         private readonly IUserService _userService = new HttpUserService(ApiClientFactory.GetHttpClient());
+        private readonly IOnboardingService _onboardingService = new OnboardingService();
 
         public ShellWindow()
         {
@@ -114,38 +116,27 @@ namespace TechHaven.Presentation.WinUI.Views
             _ = ShowOnboardingIfNeededAsync();
         }
 
+        public void NavigateTo(Type pageType)
+        {
+            try { contentFrame.Navigate(pageType); } catch { }
+        }
+
         private async Task ShowOnboardingIfNeededAsync()
         {
             try
             {
                 if (!AppState.HasSeenGuide)
                 {
-                    var dialog = new ContentDialog
+                    await _onboardingService.RunAsync(this);
+                    // After run, update server flag
+                    var resp = await _userService.UpdateGuideStatusAsync(true);
+                    if (resp.Success && resp.Data)
                     {
-                        Title = "Chào mừng đến TechHaven",
-                        Content = "Hướng dẫn nhanh về cách sử dụng ứng dụng. Nhấn Bắt đầu để xem.",
-                        PrimaryButtonText = "Bắt đầu",
-                        CloseButtonText = "Đóng",
-                        XamlRoot = this.Content.XamlRoot
-                    };
-
-                    var r = await dialog.ShowAsync();
-                    if (r == ContentDialogResult.Primary)
-                    {
-                        // Giả lập xem hướng dẫn xong. Tại đây có thể điều hướng qua các trang để giới thiệu.
-                        // Sau khi hoàn tất, cập nhật trạng thái lên server
-                        var resp = await _userService.UpdateGuideStatusAsync(true);
-                        if (resp.Success && resp.Data)
-                        {
-                            AppState.HasSeenGuide = true;
-                        }
+                        AppState.HasSeenGuide = true;
                     }
                 }
             }
-            catch
-            {
-                // ignore onboarding failures
-            }
+            catch { }
         }
 
         private void InitializeChatBot()
@@ -530,6 +521,11 @@ namespace TechHaven.Presentation.WinUI.Views
             catch { }
 
             return fallback;
+        }
+
+        public FrameworkElement? GetCurrentPageRoot()
+        {
+            try { return contentFrame.Content as FrameworkElement; } catch { return null; }
         }
     }
 }

@@ -24,7 +24,10 @@ namespace TechHaven.Presentation.WinUI.Views
         public MainWindow()
         {
             this.InitializeComponent();
-            _viewModel = new MainWindowViewModel();
+            _viewModel = new MainWindowViewModel(
+                new HttpAuthService(ApiClientFactory.GetHttpClient()),
+                new HttpUserService(ApiClientFactory.GetHttpClient())
+            );
 
             // Set DataContext on root element so XAML {Binding} works
             if (this.Content is FrameworkElement root)
@@ -170,7 +173,6 @@ namespace TechHaven.Presentation.WinUI.Views
                     AppState.SetApiBaseUri(newUrl);
                     ApiClientFactory.ResetClient();
 
-                    // Recreate ViewModel with new HttpAuthService using updated HttpClient
                     _viewModel = new MainWindowViewModel(
                         new HttpAuthService(ApiClientFactory.GetHttpClient()),
                         new HttpUserService(ApiClientFactory.GetHttpClient())

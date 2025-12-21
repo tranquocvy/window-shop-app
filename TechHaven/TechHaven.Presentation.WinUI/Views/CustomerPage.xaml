@@ -94,29 +94,32 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBox
-                    x:Name="SearchBox"
+                    x:Name="CustomerSearchBox"
                     Grid.Column="0"
                     PlaceholderText="Tìm kiếm theo Tên, SĐT, Email..."
                     VerticalContentAlignment="Center"
                     HorizontalAlignment="Stretch"
                     Height="40"
+                    ToolTipService.ToolTip="Nhập từ khoá để tìm khách hàng"
                     Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <ComboBox x:Name="SortCombo"
+                <ComboBox x:Name="CustomerSortCombo"
                           ItemsSource="{x:Bind ViewModel.SortableProperties}"
                           Grid.Column="1"
                           SelectedItem="{x:Bind ViewModel.SelectedProperty, Mode=TwoWay}"
                           HorizontalAlignment="Stretch"
                           Height="40"
-                          PlaceholderText="Tiêu chí"/>
+                          PlaceholderText="Tiêu chí"
+                          ToolTipService.ToolTip="Chọn thuộc tính để sắp xếp"/>
 
-                <ComboBox x:Name="DirectionCombo"
+                <ComboBox x:Name="CustomerDirectionCombo"
                           ItemsSource="{x:Bind ViewModel.SortDirections}"
                           Grid.Column="2"
                           SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
                           HorizontalAlignment="Stretch"
                           Height="40"
-                          PlaceholderText="Thứ tự"/>
+                          PlaceholderText="Thứ tự"
+                          ToolTipService.ToolTip="Chọn thứ tự tăng/giảm"/>
 
                 <Button
                     x:Name="AddCustomerButton"
@@ -128,7 +131,8 @@
                     FontWeight="SemiBold"
                     CornerRadius="8"
                     Height="40"
-                    Click="AddCustomer_Click"/>
+                    Click="AddCustomer_Click"
+                    ToolTipService.ToolTip="Thêm khách hàng mới"/>
             </Grid>
 
             <!-- Customers list wrapped in a card -->
@@ -232,33 +236,33 @@
 
             <!-- Paging controls -->
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0" Spacing="12">
-                <Button Command="{Binding PreviousPageCommand}"
+                <Button x:Name="CustomerPrevPageButton" Command="{Binding PreviousPageCommand}"
                         IsEnabled="{Binding CanGoPrevious}"
                         ToolTipService.ToolTip="Trang trước"
                         Width="40" 
                         Height="40"
                         CornerRadius="8"
-                        Background="{StaticResource TH.CardBackground}"
-                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        Background="{ThemeResource TH.CardBackground}"
+                        BorderBrush="{ThemeResource TH.BorderBrush}"
                         BorderThickness="1">
-                    <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{ThemeResource TH.TextPrimary}"/>
                 </Button>
 
                 <TextBlock VerticalAlignment="Center" 
                            Text="{Binding PageInfo}" 
-                           Foreground="{StaticResource TH.TextPrimary}"
+                           Foreground="{ThemeResource TH.TextPrimary}"
                            FontWeight="SemiBold"/>
 
-                <Button Command="{Binding NextPageCommand}"
+                <Button x:Name="CustomerNextPageButton" Command="{Binding NextPageCommand}"
                         IsEnabled="{Binding CanGoNext}"
                         ToolTipService.ToolTip="Trang sau"
                         Width="40" 
                         Height="40"
                         CornerRadius="8"
-                        Background="{StaticResource TH.CardBackground}"
-                        BorderBrush="{StaticResource TH.BorderBrush}"
+                        Background="{ThemeResource TH.CardBackground}"
+                        BorderBrush="{ThemeResource TH.BorderBrush}"
                         BorderThickness="1">
-                    <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+                    <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{ThemeResource TH.TextPrimary}"/>
                 </Button>
 
             </StackPanel>
@@ -281,27 +285,30 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                    <TextBox x:Name="CustomerSearchBoxTablet" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
                              PlaceholderText="Tìm kiếm theo Tên, SĐT, Email..."
                              VerticalContentAlignment="Center"
                              Height="40"
+                             ToolTipService.ToolTip="Nhập từ khoá để tìm khách hàng"
                              Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <ComboBox Grid.Row="1" Grid.Column="0"
+                    <ComboBox x:Name="CustomerSortComboTablet" Grid.Row="1" Grid.Column="0"
                               ItemsSource="{x:Bind ViewModel.SortableProperties}"
                               SelectedItem="{x:Bind ViewModel.SelectedProperty, Mode=TwoWay}"
                               Height="40"
                               HorizontalAlignment="Stretch"
-                              PlaceholderText="Tiêu chí"/>
+                              PlaceholderText="Tiêu chí"
+                              ToolTipService.ToolTip="Chọn thuộc tính để sắp xếp"/>
 
-                    <ComboBox Grid.Row="1" Grid.Column="1"
+                    <ComboBox x:Name="CustomerDirectionComboTablet" Grid.Row="1" Grid.Column="1"
                               ItemsSource="{x:Bind ViewModel.SortDirections}"
                               SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
                               Height="40"
                               HorizontalAlignment="Stretch"
-                              PlaceholderText="Thứ tự"/>
+                              PlaceholderText="Thứ tự"
+                              ToolTipService.ToolTip="Chọn thứ tự tăng/giảm"/>
 
-                    <Button Grid.Row="1" Grid.Column="2"
+                    <Button x:Name="AddCustomerButtonTablet" Grid.Row="1" Grid.Column="2"
                             Content="Thêm Khách Hàng"
                             Background="{StaticResource TH.PrimaryBrush}"
                             Foreground="White"
@@ -309,7 +316,8 @@
                             CornerRadius="8"
                             Height="40"
                             HorizontalAlignment="Stretch"
-                            Click="AddCustomer_Click"/>
+                            Click="AddCustomer_Click"
+                            ToolTipService.ToolTip="Thêm khách hàng mới"/>
                 </Grid>
 
                 <!-- Customers list wrapped in a card -->
@@ -406,33 +414,33 @@
 
                 <!-- Paging controls -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="12">
-                    <Button Command="{Binding PreviousPageCommand}"
+                    <Button x:Name="CustomerPrevPageButtonTablet" Command="{Binding PreviousPageCommand}"
                             IsEnabled="{Binding CanGoPrevious}"
                             ToolTipService.ToolTip="Trang trước"
                             Width="40" 
                             Height="40"
                             CornerRadius="8"
-                            Background="{StaticResource TH.CardBackground}"
-                            BorderBrush="{StaticResource TH.BorderBrush}"
+                            Background="{ThemeResource TH.CardBackground}"
+                            BorderBrush="{ThemeResource TH.BorderBrush}"
                             BorderThickness="1">
-                        <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+                        <FontIcon Glyph="&#xE96F;" FontSize="16" Foreground="{ThemeResource TH.TextPrimary}"/>
                     </Button>
 
                     <TextBlock VerticalAlignment="Center" 
                                Text="{Binding PageInfo}" 
-                               Foreground="{StaticResource TH.TextPrimary}"
+                               Foreground="{ThemeResource TH.TextPrimary}"
                                FontWeight="SemiBold"/>
 
-                    <Button Command="{Binding NextPageCommand}"
+                    <Button x:Name="CustomerNextPageButtonTablet" Command="{Binding NextPageCommand}"
                             IsEnabled="{Binding CanGoNext}"
                             ToolTipService.ToolTip="Trang sau"
                             Width="40" 
                             Height="40"
                             CornerRadius="8"
-                            Background="{StaticResource TH.CardBackground}"
-                            BorderBrush="{StaticResource TH.BorderBrush}"
+                            Background="{ThemeResource TH.CardBackground}"
+                            BorderBrush="{ThemeResource TH.BorderBrush}"
                             BorderThickness="1">
-                        <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{StaticResource TH.TextPrimary}"/>
+                        <FontIcon Glyph="&#xE970;" FontSize="16" Foreground="{ThemeResource TH.TextPrimary}"/>
                     </Button>
                 </StackPanel>
             </StackPanel>
