@@ -80,7 +80,7 @@
 
             <!-- Total products -->
             <Border x:Name="KpiTotalProductsCard" Grid.Row="0" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12"
-                    ToolTipService.ToolTip="T?ng s? s?n ph?m hi?n c�">
+                    ToolTipService.ToolTip="Tổng số sản phẩm hiện có">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -101,7 +101,7 @@
 
             <!-- Today's Orders -->
             <Border x:Name="KpiTodayOrdersCard" Grid.Row="0" Grid.Column="1" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12"
-                    ToolTipService.ToolTip="S? ??n h�ng x? l� h�m nay">
+                    ToolTipService.ToolTip="Số đơn hàng xử lý hôm nay">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -122,7 +122,7 @@
 
             <!-- Today's Revenue -->
             <Border x:Name="KpiTodayRevenueCard" Grid.Row="0" Grid.Column="2" Style="{StaticResource CardStyle}" Padding="16" CornerRadius="12"
-                    ToolTipService.ToolTip="Doanh thu c?a ng�y h�m nay">
+                    ToolTipService.ToolTip="Doanh thu của ngày hôm nay">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -143,11 +143,17 @@
 
             <!-- Row 1: RecentOrders (left two columns) -->
             <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
-                <StackPanel VerticalAlignment="Stretch">
-                    <TextBlock Text="Details of the 3 Most Recent Orders" Style="{StaticResource SectionTitle}" />
+                <Grid VerticalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Details of the 3 Most Recent Orders" Style="{StaticResource SectionTitle}" />
 
                     <!-- Header for columns -->
-                    <Grid Margin="0,0,0,8" Padding="8">
+                    <Grid Grid.Row="1" Margin="0,0,0,8" Padding="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="25*" />
                             <ColumnDefinition Width="25*" />
@@ -160,7 +166,15 @@
                         <TextBlock Grid.Column="3" Text="Status" Foreground="{StaticResource TH.TextPrimary}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
                     </Grid>
 
-                    <ListView ItemsSource="{Binding RecentOrders}" VerticalAlignment="Stretch" Foreground="{StaticResource TH.TextPrimary}" Padding="0" ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                    <!-- Scrollable list with fixed header -->
+                    <ListView Grid.Row="2"
+                              ItemsSource="{Binding RecentOrders}"
+                              Foreground="{StaticResource TH.TextPrimary}"
+                              Padding="0"
+                              ItemContainerStyle="{StaticResource ListViewItemNoPadding}"
+                              MaxHeight="300"
+                              ScrollViewer.VerticalScrollMode="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="dashboard:RecentOrderDto">
                                 <Grid Padding="8">
@@ -178,12 +192,12 @@
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
-                </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Row 1: LowStockProducts (right column) -->
             <Border x:Name="LowStockSection" Grid.Row="1" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch"
-                    ToolTipService.ToolTip="Danh s�ch s?n ph?m s?p h?t h�ng">
+                    ToolTipService.ToolTip="Danh sách sản phẩm sắp hết hàng">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" /> <!-- title -->
@@ -232,7 +246,7 @@
 
             <!-- Row 2: MonthlyRevenue (left two columns) -->
             <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch"
-                    ToolTipService.ToolTip="Bi?u ?? doanh thu theo th�ng">
+                    ToolTipService.ToolTip="Biểu đồ doanh thu theo tháng">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -251,7 +265,7 @@
 
             <!-- Row 2: TopSellingProducts (right column) -->
             <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch"
-                    ToolTipService.ToolTip="Danh s�ch s?n ph?m b�n ch?y">
+                    ToolTipService.ToolTip="Danh sách sản phẩm bán chạy">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
