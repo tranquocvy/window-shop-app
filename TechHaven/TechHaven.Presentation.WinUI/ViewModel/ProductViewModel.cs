@@ -713,8 +713,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 // If the high-level call throws (e.g. due to non-success HTTP) inspect raw HTTP to detect 409 Conflict
                 Debug.WriteLine($"[CreateProductAsync] high-level service error: {ex}");
             }
-
-            
+        
         }
 
         //Kiểm tra phân quyền hiển thị giá nhập

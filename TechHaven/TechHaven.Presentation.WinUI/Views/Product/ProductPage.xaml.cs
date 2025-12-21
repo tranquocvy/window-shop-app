@@ -370,16 +370,53 @@ namespace TechHaven.Presentation.WinUI.Views
                     }
 
                     var data = wrapper.Data;
-                    var sb = new StringBuilder();
 
+                    // Build a clear, user-facing message
+                    string dialogContent;
+                    if (wrapper.Success)
+                    {
+                        if (data.SuccessCount > 0)
+                        {
+                            dialogContent = $"Đã import dữ liệu thành công ({data.SuccessCount}/{data.TotalProducts}).";
+                            if (data.FailedCount > 0)
+                            {
+                                dialogContent += $" Có {data.FailedCount} dòng không được import do lỗi.";
+                            }
+                        }
+                        else
+                        {
+                            dialogContent = "Import hoàn tất nhưng không có sản phẩm nào được thêm.";
+                            if (data.FailedCount > 0)
+                                dialogContent += $" Có {data.FailedCount} dòng lỗi.";
+                        }
+                    }
+                    else
+                    {
+                        // If server returned partial results with errors, show concise errors
+                        if (data.Errors != null && data.Errors.Any())
+                        {
+                            var firstErrors = data.Errors.Take(5)
+                                .SelectMany(e => e.ErrorMessages)
+                                .Take(10)
+                                .ToArray();
+                            var errorsText = string.Join("\n", firstErrors);
+                            dialogContent = $"Import có lỗi. Hiển thị một vài lỗi:\n{errorsText}";
+                            if (data.Errors.Sum(e => e.ErrorMessages.Count) > firstErrors.Length)
+                                dialogContent += "\n...";
+                        }
+                        else
+                        {
+                            // fallback to wrapper message
+                            dialogContent = wrapper.Message ?? "Import không thành công.";
+                        }
+                    }
 
-
-                    var dlgOk = new ContentDialog 
-                    { 
-                        Title = wrapper.Success ? "Import hoàn tất" : "Import có lỗi", 
-                        Content = sb.ToString(), 
-                        CloseButtonText = "Đóng", 
-                        XamlRoot = this.Content.XamlRoot 
+                    var dlgOk = new ContentDialog
+                    {
+                        Title = wrapper.Success ? "Import hoàn tất" : "Import có lỗi",
+                        Content = dialogContent,
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
                     };
                     await dlgOk.ShowAsync();
 
