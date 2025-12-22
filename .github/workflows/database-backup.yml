@@ -2,8 +2,8 @@ name: TechHaven DB Backup
 
 on:
   schedule:
-    - cron: '0 17 * * *' # Chạy lúc 0h sáng giờ VN (17h UTC) hàng ngày
-  workflow_dispatch:      # Cho phép chạy thủ công
+    - cron: '0 17 * * *'
+  workflow_dispatch:
 
 jobs:
   backup:
@@ -11,22 +11,19 @@ jobs:
     steps:
       - name: Install PostgreSQL Client
         run: |
+          sudo apt-get install -y wget gnupg2 lsb-release
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-16
+          sudo apt-get install -y postgresql-client-17
 
       - name: Dump Database
         env:
-          # Mapping các secret vào biến môi trường để dùng bên dưới
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          # SỬA ĐỔI QUAN TRỌNG:
-          # 1. -U: Đổi từ 'postgres' sang biến ${{ secrets.DB_USER }}
-          # 2. -p: Đã đổi sang 6543 (IPv4 Pooler)
-          # 3. Thêm --no-owner --no-acl: Giúp tránh lỗi quyền khi restore sang DB khác sau này (rất nên dùng với Supabase)
-          
           pg_dump -h ${{ secrets.DB_HOST }} \
                   -U ${{ secrets.DB_USER }} \
-                  -d ${{ secrets.DB_NAME }} \
+                  -d postgres \
                   -p 6543 \
                   --no-owner --no-acl \
                   --clean --if-exists \
