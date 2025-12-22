@@ -1,9 +1,9 @@
-﻿name: TechHaven DB Backup
+name: TechHaven DB Backup
 
 on:
   schedule:
-    - cron: '0 17 * * *' # Chạy lúc 0h sáng giờ VN (17h UTC) hàng ngày
-  workflow_dispatch:      # Cho phép bạn bấm nút chạy thử bất cứ lúc nào
+    - cron: '0 17 * * *'
+  workflow_dispatch:
 
 jobs:
   backup:
@@ -11,19 +11,27 @@ jobs:
     steps:
       - name: Install PostgreSQL Client
         run: |
+          sudo apt-get install -y wget gnupg2 lsb-release
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-16
+          sudo apt-get install -y postgresql-client-17
 
       - name: Dump Database
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          # Xuất dữ liệu ra file .sql
-          pg_dump -h ${{ secrets.DB_HOST }} -U postgres -d ${{ secrets.DB_NAME }} -p 5432 > techhaven_backup.sql
+          pg_dump -h ${{ secrets.DB_HOST }} \
+                  -U ${{ secrets.DB_USER }} \
+                  -d postgres \
+                  -p 6543 \
+                  --no-owner --no-acl \
+                  --clean --if-exists \
+                  > techhaven_backup.sql
 
       - name: Upload Backup to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ github.run_id }}
           path: techhaven_backup.sql
-          retention-days: 7 # GitHub lưu file này miễn phí trong 7 ngày
+          retention-days: 7
