@@ -21,6 +21,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechHaven.Shared", "TechHav
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechHaven.Presentation.WebAPI", "TechHaven.Presentation.WebAPI\TechHaven.Presentation.WebAPI.csproj", "{72D1D8D2-556A-4B66-AB72-83726F380E9C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{D763A8C9-704F-4BBC-A0F1-02EB2A7F28E6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{4EC3F11E-AEBD-493B-BA4C-A2FFD6EDAD7E}"
+	ProjectSection(SolutionItems) = preProject
+		database-backup.yml = database-backup.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +71,7 @@ Global
 		{0ED7169C-7F8D-4511-A05B-BAD33DFAFD24} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F585E3A2-0925-4AF2-86A0-BB86713DB4FB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{72D1D8D2-556A-4B66-AB72-83726F380E9C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{4EC3F11E-AEBD-493B-BA4C-A2FFD6EDAD7E} = {D763A8C9-704F-4BBC-A0F1-02EB2A7F28E6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D9EA8A76-F4CC-4A99-B7C8-2CD6B570D129}
