@@ -1,0 +1,29 @@
+﻿name: TechHaven DB Backup
+
+on:
+  schedule:
+    - cron: '0 17 * * *' # Chạy lúc 0h sáng giờ VN (17h UTC) hàng ngày
+  workflow_dispatch:      # Cho phép bạn bấm nút chạy thử bất cứ lúc nào
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Dump Database
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          # Xuất dữ liệu ra file .sql
+          pg_dump -h ${{ secrets.DB_HOST }} -U postgres -d ${{ secrets.DB_NAME }} -p 5432 > techhaven_backup.sql
+
+      - name: Upload Backup to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: techhaven_backup.sql
+          retention-days: 7 # GitHub lưu file này miễn phí trong 7 ngày
