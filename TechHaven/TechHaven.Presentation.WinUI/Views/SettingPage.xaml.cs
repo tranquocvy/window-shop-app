@@ -314,6 +314,7 @@ namespace TechHaven.Presentation.WinUI.Views
 
         private void ClearInlineErrors()
         {
+            newUserFullNameErrorText.Visibility = Visibility.Collapsed;
             newUserEmailErrorText.Visibility = Visibility.Collapsed;
             newUserUserNameErrorText.Visibility = Visibility.Collapsed;
             newUserPasswordErrorText.Visibility = Visibility.Collapsed;
@@ -339,6 +340,14 @@ namespace TechHaven.Presentation.WinUI.Views
             catch { roleId = 1; }
 
             bool hasError = false;
+
+            // Validate Full Name
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                newUserFullNameErrorText.Text = "Full name is required.";
+                newUserFullNameErrorText.Visibility = Visibility.Visible;
+                hasError = true;
+            }
 
             if (!IsValidEmail(email))
             {
