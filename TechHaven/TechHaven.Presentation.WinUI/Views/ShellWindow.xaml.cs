@@ -67,9 +67,10 @@ namespace TechHaven.Presentation.WinUI.Views
                             ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged_ForTitlebar;
                         };
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // ignore failures applying titlebar colors
+                        // log failures applying titlebar colors to help debugging
+                        System.Diagnostics.Debug.WriteLine($"ShellWindow: ApplyTitleBarColors failed - {ex}");
                     }
                 }
             }
@@ -93,17 +94,39 @@ namespace TechHaven.Presentation.WinUI.Views
                     };
                     root.KeyboardAccelerators.Add(escAccel);
                 }
-                catch { }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"ShellWindow: RegisterRoot/KeyboardAccelerator failed - {ex}"); }
             }
 
             if (AppState.CurrentUser != null)
             {
-                string userFullName = AppState.CurrentUser.UserFullName;
-                string roleName = AppState.CurrentUser.RoleName;
+                try
+                {
+                    string userFullName = AppState.CurrentUser.UserFullName;
+                    string roleName = AppState.CurrentUser.RoleName;
 
-                currentUserFullNameText.Text = userFullName;
-                currentUserRoleText.Text = roleName;
+                    currentUserFullNameText.Text = userFullName;
+                    currentUserRoleText.Text = roleName;
 
+                    // Defensive: ensure controls exist
+                    if (avatarInitials == null || avatarEllipse == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("ShellWindow: avatarInitials or avatarEllipse is null");
+                    }
+                    else
+                    {
+                        // Generate initials from full name
+                        var initials = GetInitials(userFullName);
+                        avatarInitials.Text = initials ?? "?";
+
+                        // Choose a deterministic background color based on username hash
+                        var color = ColorFromString(AppState.CurrentUser.UserName ?? userFullName);
+                        avatarEllipse.Fill = new SolidColorBrush(color);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ShellWindow: failed to set avatar - {ex}");
+                }
             }
 
             // Initialize ChatBot
@@ -526,6 +549,26 @@ namespace TechHaven.Presentation.WinUI.Views
         public FrameworkElement? GetCurrentPageRoot()
         {
             try { return contentFrame.Content as FrameworkElement; } catch { return null; }
+        }
+
+        private static string GetInitials(string? fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName)) return "?";
+            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpper();
+            return (parts[0].Substring(0,1) + parts[^1].Substring(0,1)).ToUpper();
+        }
+
+        private static Windows.UI.Color ColorFromString(string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return Windows.UI.Color.FromArgb(255, 128, 128, 128); // Gray
+            // simple hash to color
+            int hash = 0;
+            foreach (var c in key) hash = (hash * 31) + c;
+            byte r = (byte)((hash & 0xFF0000) >> 16);
+            byte g = (byte)((hash & 0x00FF00) >> 8);
+            byte b = (byte)(hash & 0x0000FF);
+            return Windows.UI.Color.FromArgb(255, r, g, b);
         }
     }
 }

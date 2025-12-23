@@ -1,6 +1,8 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace TechHaven.Presentation.WinUI.Helpers
@@ -23,7 +25,7 @@ namespace TechHaven.Presentation.WinUI.Helpers
             string primaryButton = "Xóa",
             string closeButton = "Hủy")
         {
-            if (window == null) throw new System.ArgumentNullException(nameof(window));
+            if (window == null) throw new ArgumentNullException(nameof(window));
 
             var dialog = new ContentDialog
             {
@@ -37,6 +39,79 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary;
+        }
+
+        /// <summary>
+        /// Hiển thị dialog thông báo lỗi với danh sách errors
+        /// </summary>
+        public static async Task ShowErrorAsync(
+            Window window,
+            string title,
+            string message,
+            IEnumerable<string>? errors = null)
+        {
+            if (window == null) throw new ArgumentNullException(nameof(window));
+
+            var content = message;
+            if (errors != null && errors.Any())
+            {
+                content += "\n\nChi tiết lỗi:\n" + string.Join("\n", errors.Select(e => "• " + e));
+            }
+
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                CloseButtonText = "Đóng",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = window.Content.XamlRoot
+            };
+
+            await dialog.ShowAsync();
+        }
+
+        /// <summary>
+        /// Hiển thị dialog thông báo thành công
+        /// </summary>
+        public static async Task ShowSuccessAsync(
+            Window window,
+            string title,
+            string message)
+        {
+            if (window == null) throw new ArgumentNullException(nameof(window));
+
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "OK",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = window.Content.XamlRoot
+            };
+
+            await dialog.ShowAsync();
+        }
+
+        /// <summary>
+        /// Hiển thị dialog cảnh báo
+        /// </summary>
+        public static async Task ShowWarningAsync(
+            Window window,
+            string title,
+            string message)
+        {
+            if (window == null) throw new ArgumentNullException(nameof(window));
+
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "Đóng",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = window.Content.XamlRoot
+            };
+
+            await dialog.ShowAsync();
         }
     }
 }
