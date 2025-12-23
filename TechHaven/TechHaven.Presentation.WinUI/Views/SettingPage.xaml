@@ -154,6 +154,7 @@
                                         <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}"/>
                                         <TextBox x:Name="newUserFullNameBox" PlaceholderText="Enter full name"
                                                  ToolTipService.ToolTip="Nhập họ tên người dùng"/>
+                                        <TextBlock x:Name="newUserFullNameErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
                                     </StackPanel>
 
                                     <StackPanel Spacing="6">
@@ -300,7 +301,7 @@
                                 <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}"/>
                                 <TextBox x:Name="tabletNewUserFullNameBox" Text="{Binding ElementName=newUserFullNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter full name"
                                          ToolTipService.ToolTip="Nhập họ tên người dùng"/>
-                            </StackPanel>
+                              </StackPanel>
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Username" Style="{StaticResource FieldLabelStyle}"/>

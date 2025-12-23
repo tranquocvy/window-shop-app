@@ -319,7 +319,17 @@ namespace TechHaven.Presentation.WinUI.Views.Order
             panel.Children.Add(components.AddProductButton);
 
             components.CartPanel = new StackPanel { Spacing = 8 };
-            panel.Children.Add(new ScrollViewer { Content = components.CartPanel, MaxHeight = 300 });
+            
+            // Create ScrollViewer without margin to align scrollbar to the right edge
+            var scrollViewer = new ScrollViewer 
+            { 
+                Content = components.CartPanel, 
+                MaxHeight = 300,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            };
+            
+            panel.Children.Add(scrollViewer);
 
             components.SubtotalText = new TextBlock
             {

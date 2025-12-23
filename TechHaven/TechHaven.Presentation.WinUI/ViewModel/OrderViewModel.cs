@@ -194,14 +194,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         partial void OnFromDateChanged(DateTimeOffset? value)
         {
             PageNumber = 1;
-            _ = LoadOrdersAsync();
+            // Don't auto-reload to avoid validation issues
         }
 
         // Auto-reload when to date changes
         partial void OnToDateChanged(DateTimeOffset? value)
         {
             PageNumber = 1;
-            _ = LoadOrdersAsync();
+            // Don't auto-reload to avoid validation issues
         }
 
         // Reload when page size changes
@@ -215,6 +215,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private async Task LoadOrdersAsync()
         {
             if (IsLoading) return;
+            
+            // Validate date range - check but don't show dialog to avoid crashes
+            if (FromDate.HasValue && ToDate.HasValue && ToDate.Value < FromDate.Value)
+            {
+                // Just return without loading, the UI should handle this via SearchCommand
+                return;
+            }
+            
             IsLoading = true;
             Orders.Clear();
 
@@ -265,6 +273,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         private async Task SearchAsync()
         {
+            // Validate date range before searching
+            if (FromDate.HasValue && ToDate.HasValue && ToDate.Value < FromDate.Value)
+            {
+                try
+                {
+                    await ShowDialogAsync(
+                        "Lỗi ngày tháng", 
+                        "Ngày kết thúc không được nhỏ hơn ngày bắt đầu.\nVui lòng chọn lại khoảng thời gian hợp lệ.");
+                }
+                catch
+                {
+                    // Ignore dialog errors
+                }
+                return;
+            }
+            
             PageNumber = 1;
             await LoadOrdersAsync();
         }
