@@ -593,6 +593,24 @@ namespace TechHaven.Presentation.WinUI.Views
                     return;
                 }
 
+                // Check duplicate (case-insensitive) in current brand list
+                bool exists = ViewModel.BrandNameFilter
+                    .Where(b => !string.IsNullOrWhiteSpace(b) && b != "Không")
+                    .Any(b => string.Equals(b.Trim(), brandName, StringComparison.OrdinalIgnoreCase));
+
+                if (exists)
+                {
+                    var dupDialog = new ContentDialog
+                    {
+                        Title = "Trùng thương hiệu",
+                        Content = $"Thương hiệu '{brandName}' đã tồn tại.",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = this.Content.XamlRoot
+                    };
+                    await dupDialog.ShowAsync();
+                    return;
+                }
+
                 // Tạo sản phẩm ảo với IsDraft = true
                 var draftProduct = new ProductUpsertRequest
                 {
