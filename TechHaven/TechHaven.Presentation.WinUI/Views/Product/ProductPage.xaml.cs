@@ -614,7 +614,7 @@ namespace TechHaven.Presentation.WinUI.Views
                 // Tạo sản phẩm ảo với IsDraft = true
                 var draftProduct = new ProductUpsertRequest
                 {
-                    ProductName = $"ma_prroduct_{DateTime.Now:yyyyMMddHHmmss}",
+                    ProductName = $"ma_product_{DateTime.Now:yyyyMMddHHmmss}",
                     BrandName = brandName,
                     SellPrice = 0,
                     CostPrice = 0,
