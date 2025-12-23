@@ -79,21 +79,21 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private string _selectedPriceRange;
 
         public ObservableCollection<string> StatusFilter { get; } = new()
-        {
-            "Không",
-            "Còn hàng",
-            "Hết hàng"
-        };
+            {
+                "Không",
+                "Còn hàng",
+                "Hết hàng"
+            };
 
         public ObservableCollection<string> PriceRangeOptions { get; } = new()
-        {
-            "Tất cả",
-            "Dưới 5 triệu",
-            "Từ 5 đến 15 triệu",
-            "Từ 15 đến 30 triệu",
-            "Từ 30 đến 50 triệu",
-            "Trên 50 triệu"
-        };
+            {
+                "Tất cả",
+                "Dưới 5 triệu",
+                "Từ 5 đến 15 triệu",
+                "Từ 15 đến 30 triệu",
+                "Từ 30 đến 50 triệu",
+                "Trên 50 triệu"
+            };
 
         [ObservableProperty]
         private string _selectedBrandName = "Không";
@@ -417,10 +417,51 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     try
                     {
                         var response = await productService.DeleteProductsAsync(item.Product.ProductId);
-                        if (response?.Success == true)
-                            Products.Remove(item);
+
+                        if (response != null)
+                        {
+                            // Service returned wrapper — honor its Success flag.
+                            if (response.Success == true)
+                            {
+                                Products.Remove(item);
+                            }
+                            else
+                            {
+                                // show only on server-declared failure
+                                var message = await GetFriendlyDeleteError(response, null);
+                                var dlg = new ContentDialog
+                                {
+                                    Title = "Xóa thất bại",
+                                    Content = message,
+                                    CloseButtonText = "Đóng",
+                                    XamlRoot = App.MainWindow?.Content?.XamlRoot
+                                };
+                                await dlg.ShowAsync();
+                            }
+                        }
                         else
-                            System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Failed delete id={item.Product.ProductId} Message={response?.Message}");
+                        {
+                            // Fallback: service returned null (likely due to 204 NoContent or parse issue).
+                            // Check HTTP status directly to decide whether to show error modal.
+                            var http = ApiClientFactory.GetHttpClient();
+                            var httpResp = await http.DeleteAsync($"api/Product/{item.Product.ProductId}");
+                            if (httpResp.IsSuccessStatusCode)
+                            {
+                                Products.Remove(item);
+                            }
+                            else
+                            {
+                                var message = await GetFriendlyDeleteError(null, httpResp);
+                                var dlg = new ContentDialog
+                                {
+                                    Title = "Xóa thất bại",
+                                    Content = message,
+                                    CloseButtonText = "Đóng",
+                                    XamlRoot = App.MainWindow?.Content?.XamlRoot
+                                };
+                                await dlg.ShowAsync();
+                            }
+                        }
                     }
                     catch (HttpRequestException httpEx)
                     {
@@ -430,6 +471,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                         {
                             Title = "Lỗi mạng",
                             Content = "Không thể kết nối tới máy chủ để xóa sản phẩm.",
+                            CloseButtonText = "Đóng",
+                            XamlRoot = App.MainWindow?.Content?.XamlRoot
+                        };
+                        await errorDialog.ShowAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DeleteSelectedAsync] Unexpected error deleting id={item.Product.ProductId}: {ex}");
+                        var errorDialog = new ContentDialog
+                        {
+                            Title = "Lỗi",
+                            Content = "Đã có lỗi xảy ra khi xóa sản phẩm.",
                             CloseButtonText = "Đóng",
                             XamlRoot = App.MainWindow?.Content?.XamlRoot
                         };
@@ -486,11 +539,49 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
                     var response = await productService.DeleteProductsAsync(item.Product.ProductId);
 
-                    Products.Remove(item);
-
-                    // Update list/paging after deletion
-                    await LoadProductsAsync();
-
+                    if (response != null)
+                    {
+                        if (response.Success == true)
+                        {
+                            Products.Remove(item);
+                            await LoadProductsAsync();
+                        }
+                        else
+                        {
+                            var message = await GetFriendlyDeleteError(response, null);
+                            var dlg = new ContentDialog
+                            {
+                                Title = "Xóa thất bại",
+                                Content = message,
+                                CloseButtonText = "Đóng",
+                                XamlRoot = App.MainWindow?.Content?.XamlRoot
+                            };
+                            await dlg.ShowAsync();
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to raw HTTP check for proper status code handling
+                        var http = ApiClientFactory.GetHttpClient();
+                        var httpResp = await http.DeleteAsync($"api/Product/{item.Product.ProductId}");
+                        if (httpResp.IsSuccessStatusCode)
+                        {
+                            Products.Remove(item);
+                            await LoadProductsAsync();
+                        }
+                        else
+                        {
+                            var message = await GetFriendlyDeleteError(null, httpResp);
+                            var dlg = new ContentDialog
+                            {
+                                Title = "Xóa thất bại",
+                                Content = message,
+                                CloseButtonText = "Đóng",
+                                XamlRoot = App.MainWindow?.Content?.XamlRoot
+                            };
+                            await dlg.ShowAsync();
+                        }
+                    }
                 }
                 catch (HttpRequestException httpEx)
                 {
@@ -499,6 +590,18 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     {
                         Title = "Lỗi mạng",
                         Content = "Không thể kết nối tới máy chủ để xóa sản phẩm.",
+                        CloseButtonText = "Đóng",
+                        XamlRoot = App.MainWindow?.Content?.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DeleteProductContext] Unexpected error: {ex}");
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Lỗi",
+                        Content = "Đã có lỗi xảy ra khi xóa sản phẩm.",
                         CloseButtonText = "Đóng",
                         XamlRoot = App.MainWindow?.Content?.XamlRoot
                     };
@@ -519,6 +622,53 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             }
         }
 
+        // Convert server error into friendly message for users
+        private async Task<string> GetFriendlyDeleteError(TechHaven.Shared.DTOs.Common.ResponseWrapper<bool>? wrapper, HttpResponseMessage? httpResp)
+        {
+            // 1) Prefer server wrapper message
+            if (wrapper != null)
+            {
+                var combined = wrapper.Message ?? string.Join("; ", wrapper.Errors ?? Enumerable.Empty<string>());
+                var lc = (combined ?? string.Empty).ToLowerInvariant();
+
+                // Detect order-related server message and return user-friendly Vietnamese text
+                if (lc.Contains("order") || lc.Contains("order detail") || lc.Contains("has order") || lc.Contains("orderdetail") || lc.Contains("order_detail") || lc.Contains("đơn"))
+                {
+                    return "Không thể xóa sản phẩm do có liên quan đến đơn hàng.";
+                }
+
+                // Otherwise return server-provided text (trimmed) or generic fallback
+                return string.IsNullOrWhiteSpace(combined) ? "Xóa sản phẩm thất bại." : combined;
+            }
+
+            // 2) If we have raw HTTP response, try to read body for clues
+            if (httpResp != null)
+            {
+                try
+                {
+                    var body = await httpResp.Content.ReadAsStringAsync();
+                    var lc = (body ?? string.Empty).ToLowerInvariant();
+
+                    if (lc.Contains("order") || lc.Contains("order detail") || lc.Contains("has order") || lc.Contains("orderdetail") || lc.Contains("đơn"))
+                    {
+                        return "Không thể xóa sản phẩm do có liên quan đến đơn hàng.";
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(body))
+                        return body;
+
+                    return $"Server returned {(int)httpResp.StatusCode}.";
+                }
+                catch
+                {
+                    return $"Server returned {(int)httpResp.StatusCode}.";
+                }
+            }
+
+            // Generic fallback
+            return "Xóa sản phẩm thất bại.";
+        }
+
         // ========================
         // CRUD operations
         // ========================
@@ -532,10 +682,38 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public async Task CreateProductAsync(ProductUpsertRequest dto)
         {
             if (dto == null) return;
+
             var productService = new HttpProductService(ApiClientFactory.GetHttpClient());
-            var response = await productService.CreateProductsAsync(dto);
-            if (response.Success)
-                await LoadProductsAsync(); // Dùng query mặc định
+
+            try
+            {
+                // Try high-level service call first (keeps existing behavior)
+                var response = await productService.CreateProductsAsync(dto);
+
+                if (response?.Success == true)
+                {
+                    await LoadProductsAsync(); // refresh list
+                    return;
+                }
+
+                // If service returned a failure wrapper, show its friendly message (or fallback)
+                var message = response?.Message ?? "Tạo sản phẩm thất bại.";
+                var dlg1 = new ContentDialog
+                {
+                    Title = "Tạo sản phẩm thất bại",
+                    Content = message,
+                    CloseButtonText = "Đóng",
+                    XamlRoot = App.MainWindow?.Content?.XamlRoot
+                };
+                await dlg1.ShowAsync();
+                return;
+            }
+            catch (Exception ex)
+            {
+                // If the high-level call throws (e.g. due to non-success HTTP) inspect raw HTTP to detect 409 Conflict
+                Debug.WriteLine($"[CreateProductAsync] high-level service error: {ex}");
+            }
+        
         }
 
         //Kiểm tra phân quyền hiển thị giá nhập

@@ -51,7 +51,45 @@ namespace TechHaven.Presentation.WinUI.Services.Http
         public async Task<ResponseWrapper<bool>> DeleteProductsAsync(int id)
         {
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/{id}");
-            return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete product");
+
+            // If server returns 204 NoContent (or any success with empty body) treat as success.
+            if (response.IsSuccessStatusCode)
+            {
+                // No content -> success with boolean true
+                if (response.Content == null || response.Content.Headers.ContentLength == 0)
+                {
+                    return new ResponseWrapper<bool>
+                    {
+                        Success = true,
+                        Data = true,
+                        Message = "Deleted"
+                    };
+                }
+
+                // Otherwise attempt to read the JSON wrapper
+                return await response.EnsureSuccessAndReadWrapperAsync<bool>("Failed to delete product");
+            }
+
+            // Non-success -> try to read body for message or return generic failure
+            try
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                return new ResponseWrapper<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = string.IsNullOrWhiteSpace(body) ? $"Server returned {(int)response.StatusCode}" : body
+                };
+            }
+            catch
+            {
+                return new ResponseWrapper<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = $"Server returned {(int)response.StatusCode}"
+                };
+            }
         }
 
         public async Task<ResponseWrapper<PagingResponse<ProductDto>>> QueryProductsAsync(ProductListQueryDto query)
