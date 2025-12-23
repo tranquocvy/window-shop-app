@@ -397,7 +397,24 @@
                               IsItemClickEnabled="True"
                               ItemClick="OrdersList_ItemClick"
                               ItemTemplate="{StaticResource OrderItemDesktopTemplate}"
-                              ItemContainerStyle="{StaticResource ListViewItemNoPadding}"/>
+                              ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                        <ListView.Footer>
+                            <Grid Height="200" 
+                                  Visibility="{Binding Orders.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                <StackPanel HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"
+                                            Spacing="12">
+                                    <FontIcon Glyph="&#xE7C1;" 
+                                              FontSize="48" 
+                                              Foreground="{ThemeResource TH.TextSecondary}"/>
+                                    <TextBlock Text="Không có đơn hàng nào" 
+                                               FontSize="16"
+                                               Foreground="{ThemeResource TH.TextSecondary}"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </ListView.Footer>
+                    </ListView>
                 </Grid>
             </Border>
 
@@ -524,7 +541,24 @@
                                   IsItemClickEnabled="True"
                                   ItemClick="OrdersList_ItemClick"
                                   ItemTemplate="{StaticResource OrderItemTabletTemplate}"
-                                  ItemContainerStyle="{StaticResource ListViewItemNoPadding}"/>
+                                  ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                            <ListView.Footer>
+                                <Grid Height="200" 
+                                      Visibility="{Binding Orders.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                    <StackPanel HorizontalAlignment="Center" 
+                                                VerticalAlignment="Center"
+                                                Spacing="12">
+                                        <FontIcon Glyph="&#xE7C1;" 
+                                                  FontSize="48" 
+                                                  Foreground="{ThemeResource TH.TextSecondary}"/>
+                                        <TextBlock Text="Không có đơn hàng nào" 
+                                                   FontSize="16"
+                                                   Foreground="{ThemeResource TH.TextSecondary}"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ListView.Footer>
+                        </ListView>
                     </Grid>
                 </Border>
 

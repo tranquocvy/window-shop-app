@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Shared.DTOs.Customers;
+using System.Linq;
 
 namespace TechHaven.Presentation.WinUI.Views.Order
 {
@@ -55,11 +56,24 @@ namespace TechHaven.Presentation.WinUI.Views.Order
                 listView.ItemTemplate = _customerItemTemplate;
             }
 
+            // Add no results message
+            var noResultsText = new TextBlock
+            {
+                Text = "Không tìm thấy khách hàng nào",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                    Windows.UI.Color.FromArgb(255, 128, 128, 128)),
+                Margin = new Thickness(0, 20, 0, 0),
+                Visibility = Visibility.Collapsed
+            };
+
             var taskCompletionSource = new TaskCompletionSource<CustomerDto?>();
 
             var panel = new StackPanel { Spacing = 8 };
             panel.Children.Add(searchBox);
             panel.Children.Add(listView);
+            panel.Children.Add(noResultsText);
 
             var dialog = new ContentDialog
             {
@@ -70,6 +84,24 @@ namespace TechHaven.Presentation.WinUI.Views.Order
                 DefaultButton = ContentDialogButton.Primary,
                 XamlRoot = _xamlRoot
             };
+
+            // Update no results visibility based on search results
+            void UpdateNoResultsVisibility()
+            {
+                var hasResults = viewModel.Customers.Any();
+                var hasSearchTerm = !string.IsNullOrWhiteSpace(searchBox.Text);
+                
+                noResultsText.Visibility = !hasResults && hasSearchTerm 
+                    ? Visibility.Visible 
+                    : Visibility.Collapsed;
+                    
+                listView.Visibility = hasResults ? Visibility.Visible : Visibility.Collapsed;
+                
+                // Disable primary button if no results
+                dialog.IsPrimaryButtonEnabled = hasResults;
+            }
+
+            viewModel.Customers.CollectionChanged += (s, e) => UpdateNoResultsVisibility();
 
             listView.ItemClick += (s, e) =>
             {
@@ -92,7 +124,7 @@ namespace TechHaven.Presentation.WinUI.Views.Order
                     taskCompletionSource.TrySetResult(null);
             };
 
-            SetupSearchDebounce(searchBox, viewModel);
+            SetupSearchDebounce(searchBox, viewModel, UpdateNoResultsVisibility);
             panel.DataContext = viewModel;
 
             var showTask = dialog.ShowAsync();
@@ -107,7 +139,7 @@ namespace TechHaven.Presentation.WinUI.Views.Order
         /// <summary>
         /// Sets up debounced search functionality
         /// </summary>
-        private void SetupSearchDebounce(TextBox searchBox, CustomerViewModel viewModel)
+        private void SetupSearchDebounce(TextBox searchBox, CustomerViewModel viewModel, Action updateNoResultsVisibility)
         {
             CancellationTokenSource? searchCts = null;
 
@@ -127,6 +159,7 @@ namespace TechHaven.Presentation.WinUI.Views.Order
                         _ = App.MainWindow?.DispatcherQueue.TryEnqueue(() =>
                         {
                             viewModel.SearchTerm = searchBox.Text;
+                            updateNoResultsVisibility();
                         });
                     }
                     catch (TaskCanceledException) { }
