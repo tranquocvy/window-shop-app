@@ -27,8 +27,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private readonly IProductService _productService;
         private string? _originalImageUrl = null;
 
-        private const int MaxImageCount = 10; // Số lượng ảnh tối đa
-        private List<string?> _imageUrls = new List<string?>();
+        private List<string> _imageUrls = new List<string>();
         private int _currentImageIndex = 0;
         
         public string? OriginalImageUrl => _originalImageUrl;
@@ -38,12 +37,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         public ProductFormUserControl()
         {
             this.InitializeComponent();
-
-            // Initialize image list with MaxImageCount slots
-            for (int i = 0; i < MaxImageCount; i++)
-            {
-                _imageUrls.Add(null);
-            }
 
             // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
             _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
@@ -61,32 +54,39 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// </summary>
         private void UpdateCarouselUI()
         {
-            // Hiển thị ảnh hiện tại
-            string? currentUrl = _imageUrls[_currentImageIndex];
-            if (!string.IsNullOrWhiteSpace(currentUrl))
+            // Hiển thị ảnh hiện tại hoặc placeholder "Thêm ảnh"
+            if (_currentImageIndex >= 0 && _currentImageIndex < _imageUrls.Count)
             {
-                try
+                string currentUrl = _imageUrls[_currentImageIndex];
+                if (!string.IsNullOrWhiteSpace(currentUrl))
                 {
-                    CurrentImage.Source = new BitmapImage(new Uri(currentUrl));
+                    try
+                    {
+                        CurrentImage.Source = new BitmapImage(new Uri(currentUrl));
+                    }
+                    catch
+                    {
+                        CurrentImage.Source = null;
+                    }
                 }
-                catch
+                else
                 {
                     CurrentImage.Source = null;
                 }
             }
             else
             {
+                // Nếu index == Count, đang ở vị trí placeholder "Thêm ảnh"
                 CurrentImage.Source = null;
             }
 
             // Cập nhật thumbnails
             UpdateThumbnails();
 
-            
-
-            // Vô hiệu hóa nút nếu cần
+            // Vô hiệu hóa/kích hoạt nút điều hướng
+            // Có thể điều hướng đến cả placeholder (index == Count)
             PrevButton.IsEnabled = _currentImageIndex > 0;
-            NextButton.IsEnabled = _currentImageIndex < _imageUrls.Count - 1;
+            NextButton.IsEnabled = _currentImageIndex < _imageUrls.Count;
         }
 
         /// <summary>
@@ -101,84 +101,193 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             {
                 if (!string.IsNullOrWhiteSpace(_imageUrls[i]))
                 {
-                    var border = new Border
-                    {
-                        Width = 60,
-                        Height = 60,
-                        BorderThickness = new Thickness(2),
-                        BorderBrush = i == _currentImageIndex 
-                            ? new SolidColorBrush(Microsoft.UI.Colors.DodgerBlue) 
-                            : new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-                        CornerRadius = new CornerRadius(4),
-                        Background = new SolidColorBrush(Microsoft.UI.Colors.WhiteSmoke),
-                        Tag = i
-                    };
-
-                    var image = new Image
-                    {
-                        Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
-                    };
-
-                    try
-                    {
-                        image.Source = new BitmapImage(new Uri(_imageUrls[i]));
-                    }
-                    catch
-                    {
-                        image.Source = null;
-                    }
-
-                    border.Child = image;
-                    border.Tapped += OnThumbnailTapped;
-                    ToolTipService.SetToolTip(border, $"Ảnh {i + 1}");
-
-                    ThumbnailsPanel.Children.Add(border);
+                    var grid = CreateImageThumbnail(i);
+                    ThumbnailsPanel.Children.Add(grid);
                 }
             }
 
-            // Thêm nút "+" để thêm ảnh mới (luôn hiện sau ảnh cuối cùng nếu chưa đủ MaxImageCount ảnh)
-            int totalImages = _imageUrls.Count(url => !string.IsNullOrWhiteSpace(url));
-            if (totalImages < MaxImageCount)
+            // Thêm nút "+" để thêm ảnh mới (luôn hiện sau ảnh cuối cùng)
+            var addBorder = CreateAddImageThumbnail();
+            ThumbnailsPanel.Children.Add(addBorder);
+        }
+
+        /// <summary>
+        /// Tạo thumbnail cho ảnh
+        /// </summary>
+        private Grid CreateImageThumbnail(int index)
+        {
+            var grid = new Grid
             {
-                var addBorder = new Border
+                Width = 60,
+                Height = 60,
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+
+            var border = new Border
+            {
+                BorderThickness = new Thickness(2),
+                BorderBrush = index == _currentImageIndex 
+                    ? new SolidColorBrush(Microsoft.UI.Colors.DodgerBlue) 
+                    : new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                CornerRadius = new CornerRadius(4),
+                Background = new SolidColorBrush(Microsoft.UI.Colors.WhiteSmoke),
+                Tag = index
+            };
+
+            var image = new Image
+            {
+                Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill
+            };
+
+            try
+            {
+                image.Source = new BitmapImage(new Uri(_imageUrls[index]));
+            }
+            catch
+            {
+                image.Source = null;
+            }
+
+            border.Child = image;
+            border.Tapped += OnThumbnailTapped;
+            ToolTipService.SetToolTip(border, $"Click để chuyển đến ảnh {index + 1}");
+
+            grid.Children.Add(border);
+
+            // Nút xóa (X) ở góc trên bên phải
+            var deleteButton = new Button
+            {
+                Content = "✕",
+                Width = 24,
+                Height = 24,
+                FontSize = 12,
+                Padding = new Thickness(0),
+                Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(200, 255, 0, 0)),
+                Foreground = new SolidColorBrush(Microsoft.UI.Colors.White),
+                CornerRadius = new CornerRadius(12),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, -8, -8, 0),
+                Tag = index
+            };
+
+            deleteButton.Click += OnDeleteImageButtonClick;
+            ToolTipService.SetToolTip(deleteButton, $"Xóa ảnh {index + 1}");
+
+            grid.Children.Add(deleteButton);
+            return grid;
+        }
+
+        /// <summary>
+        /// Tạo thumbnail "Thêm ảnh"
+        /// </summary>
+        private Border CreateAddImageThumbnail()
+        {
+            var addBorder = new Border
+            {
+                Width = 60,
+                Height = 60,
+                BorderThickness = new Thickness(2),
+                BorderBrush = _currentImageIndex == _imageUrls.Count
+                    ? new SolidColorBrush(Microsoft.UI.Colors.DodgerBlue)
+                    : new SolidColorBrush(Microsoft.UI.Colors.Gray),
+                CornerRadius = new CornerRadius(4),
+                Background = new SolidColorBrush(Microsoft.UI.Colors.WhiteSmoke),
+                Tag = _imageUrls.Count // Tag = số lượng ảnh hiện tại
+            };
+
+            var icon = new FontIcon
+            {
+                Glyph = "\uE710", // Add icon
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
+                FontSize = 24,
+                Foreground = new SolidColorBrush(Microsoft.UI.Colors.Gray),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            addBorder.Child = icon;
+            addBorder.Tapped += OnAddImageThumbnailTapped;
+            ToolTipService.SetToolTip(addBorder, $"Thêm ảnh mới (Hiện có: {_imageUrls.Count})");
+
+            return addBorder;
+        }
+
+        /// <summary>
+        /// Click vào thumbnail "Thêm ảnh" → Upload ảnh trực tiếp
+        /// </summary>
+        private async void OnAddImageThumbnailTapped(object sender, TappedRoutedEventArgs e)
+        {
+            await UploadNewImageAsync();
+        }
+
+        /// <summary>
+        /// Click vào nút X để xóa ảnh
+        /// </summary>
+        private async void OnDeleteImageButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is int index)
+            {
+                if (index >= 0 && index < _imageUrls.Count)
                 {
-                    Width = 60,
-                    Height = 60,
-                    BorderThickness = new Thickness(2),
-                    BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-                    CornerRadius = new CornerRadius(4),
-                    Background = new SolidColorBrush(Microsoft.UI.Colors.WhiteSmoke),
-                    Tag = -1 // Tag đặc biệt cho nút thêm
-                };
-
-                var icon = new FontIcon
-                {
-                    Glyph = "\uE710", // Add icon
-                    FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"),
-                    FontSize = 24,
-                    Foreground = new SolidColorBrush(Microsoft.UI.Colors.Gray),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                addBorder.Child = icon;
-                addBorder.Tapped += OnAddImageTapped;
-                ToolTipService.SetToolTip(addBorder, $"Thêm ảnh mới ({totalImages}/{MaxImageCount})");
-
-                ThumbnailsPanel.Children.Add(addBorder);
+                    var imageUrl = _imageUrls[index];
+                    
+                    // Gọi API để xóa ảnh trên server
+                    try
+                    {
+                        var httpClient = ApiClientFactory.GetHttpClient();
+                        var deleteRequest = new { imageUrl = imageUrl };
+                        await httpClient.PostAsJsonAsync("api/Image", deleteRequest);
+                    }
+                    catch
+                    {
+                        // Silent fail
+                    }
+                    
+                    // Xóa khỏi list
+                    _imageUrls.RemoveAt(index);
+                    
+                    // Điều chỉnh current index nếu cần
+                    if (_currentImageIndex >= _imageUrls.Count && _imageUrls.Count > 0)
+                    {
+                        _currentImageIndex = _imageUrls.Count - 1;
+                    }
+                    else if (_imageUrls.Count == 0)
+                    {
+                        _currentImageIndex = 0;
+                    }
+                    
+                    UpdateCarouselUI();
+                }
             }
         }
 
         /// <summary>
-        /// Click vào thumbnail để chuyển ảnh
+        /// Click vào thumbnail để chuyển đến ảnh đó
         /// </summary>
         private void OnThumbnailTapped(object sender, TappedRoutedEventArgs e)
         {
-            if (sender is Border border && border.Tag is int index && index >= 0)
+            if (sender is Border border && border.Tag is int index)
             {
-                _currentImageIndex = index;
-                UpdateCarouselUI();
+                if (index >= 0 && index < _imageUrls.Count)
+                {
+                    _currentImageIndex = index;
+                    UpdateCarouselUI();
+                }
             }
+        }
+
+        /// <summary>
+        /// Click vào ảnh chính → nếu đang ở placeholder thì mở file picker
+        /// </summary>
+        private async void OnMainImageTapped(object sender, TappedRoutedEventArgs e)
+        {
+            // Nếu đang ở vị trí placeholder (index == Count), cho phép thêm ảnh
+            if (_currentImageIndex == _imageUrls.Count)
+            {
+                await UploadNewImageAsync();
+            }
+            // Nếu đang xem ảnh thật, không làm gì (hoặc có thể xem preview nếu muốn)
         }
 
         /// <summary>
@@ -186,25 +295,56 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// </summary>
         private async void OnAddImageTapped(object sender, TappedRoutedEventArgs e)
         {
-            // Tìm vị trí trống đầu tiên để thêm ảnh
-            int emptyIndex = -1;
-            for (int i = 0; i < _imageUrls.Count; i++)
+            await UploadNewImageAsync();
+        }
+
+        /// <summary>
+        /// Upload ảnh mới
+        /// </summary>
+        private async Task UploadNewImageAsync()
+        {
+            var picker = new FileOpenPicker();
+            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+
+            var window = App.MainWindow;
+            var hwnd = WindowNative.GetWindowHandle(window);
+            InitializeWithWindow.Initialize(picker, hwnd);
+
+            var file = await picker.PickSingleFileAsync();
+            if (file != null)
             {
-                if (string.IsNullOrWhiteSpace(_imageUrls[i]))
+                try
                 {
-                    emptyIndex = i;
-                    break;
+                    var randomAccess = await file.OpenAsync(FileAccessMode.Read);
+                    using (randomAccess)
+                    using (var readStream = randomAccess.AsStreamForRead())
+                    {
+                        var result = await _productService.UploadImageAsync(
+                            readStream,
+                            file.Name,
+                            file.ContentType
+                        );
+
+                        if (result.Success)
+                        {
+                            _imageUrls.Add(result.Data);
+                            _currentImageIndex = _imageUrls.Count - 1;
+                            UpdateCarouselUI();
+                        }
+                        else
+                        {
+                            await ShowErrorAsync("Lỗi Upload", result.Message);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await ShowErrorAsync("Lỗi ngoại lệ", ex.Message);
                 }
             }
-
-            if (emptyIndex == -1) return; // Không có chỗ trống
-
-            // Chuyển đến vị trí trống và mở file picker
-            _currentImageIndex = emptyIndex;
-            UpdateCarouselUI();
-            
-            // Trigger upload
-            await UploadImageAtCurrentIndex();
         }
 
         /// <summary>
@@ -224,7 +364,7 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         /// </summary>
         private void OnNextImage(object sender, RoutedEventArgs e)
         {
-            if (_currentImageIndex < _imageUrls.Count - 1)
+            if (_currentImageIndex < _imageUrls.Count)
             {
                 _currentImageIndex++;
                 UpdateCarouselUI();
@@ -262,9 +402,9 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                     BrandComboBox.ItemsSource = brandNames;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to load brands: {ex.Message}");
+                // Ignore errors while loading brands
             }
         }
 
@@ -281,17 +421,13 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             _originalImageUrl = product.ImageUrl;
             _currentImageIndex = 0;
 
-            // Reset image list with MaxImageCount
+            // Reset image list
             _imageUrls.Clear();
-            for (int i = 0; i < MaxImageCount; i++)
-            {
-                _imageUrls.Add(null);
-            }
 
             // Load main image
             if (!string.IsNullOrWhiteSpace(product.ImageUrl))
             {
-                _imageUrls[0] = product.ImageUrl;
+                _imageUrls.Add(product.ImageUrl);
             }
 
             // Load gallery images
@@ -302,16 +438,12 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                     var list = JsonSerializer.Deserialize<List<string>>(product.ImageGalleryJson);
                     if (list != null)
                     {
-                        // Load gallery images up to (MaxImageCount - 1) to account for main image
-                        for (int i = 0; i < list.Count && i < (MaxImageCount - 1); i++)
-                        {
-                            _imageUrls[i + 1] = list[i];
-                        }
+                        _imageUrls.AddRange(list.Where(url => !string.IsNullOrWhiteSpace(url)));
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Gallery Error] {ex.Message}");
+                    // Ignore errors while parsing gallery images
                 }
             }
 
@@ -388,18 +520,11 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             if (!isValid)
                 return null;
 
-            // Ảnh chính là ảnh đầu tiên trong carousel
-            string? mainImageUrl = _imageUrls[0];
+            // Ảnh chính là ảnh đầu tiên
+            string? mainImageUrl = _imageUrls.Count > 0 ? _imageUrls[0] : null;
             
             // Ảnh gallery là các ảnh còn lại
-            var galleryList = new List<string>();
-            for (int i = 1; i < _imageUrls.Count; i++)
-            {
-                if (!string.IsNullOrEmpty(_imageUrls[i]))
-                {
-                    galleryList.Add(_imageUrls[i]);
-                }
-            }
+            var galleryList = _imageUrls.Skip(1).Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
             string galleryJsonResult = JsonSerializer.Serialize(galleryList);
 
             // ========== BUILD DTO ==========
@@ -490,67 +615,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             };
 
             await dialog.ShowAsync();
-        }
-
-        /// <summary>
-        /// Chọn/thay đổi ảnh tại vị trí hiện tại trong carousel
-        /// </summary>
-        private async void OnSelectImageTapped(object sender, TappedRoutedEventArgs e)
-        {
-            await UploadImageAtCurrentIndex();
-        }
-
-        /// <summary>
-        /// Upload ảnh tại vị trí hiện tại
-        /// </summary>
-        private async Task UploadImageAtCurrentIndex()
-        {
-            // 1. Setup FileOpenPicker
-            var picker = new FileOpenPicker();
-            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-            picker.FileTypeFilter.Add(".png");
-            picker.FileTypeFilter.Add(".jpg");
-            picker.FileTypeFilter.Add(".jpeg");
-
-            var window = App.MainWindow;
-            var hwnd = WindowNative.GetWindowHandle(window);
-            InitializeWithWindow.Initialize(picker, hwnd);
-
-            // 2. Chọn file
-            var file = await picker.PickSingleFileAsync();
-            if (file != null)
-            {
-                try
-                {
-                    var randomAccess = await file.OpenAsync(FileAccessMode.Read);
-                    using (randomAccess)
-                    using (var readStream = randomAccess.AsStreamForRead())
-                    {
-                        var result = await _productService.UploadImageAsync(
-                            readStream,
-                            file.Name,
-                            file.ContentType
-                        );
-
-                        if (result.Success)
-                        {
-                            // Lưu URL vào vị trí hiện tại trong carousel
-                            _imageUrls[_currentImageIndex] = result.Data;
-                            
-                            // Cập nhật hiển thị
-                            UpdateCarouselUI();
-                        }
-                        else
-                        {
-                            await ShowErrorAsync("Lỗi Upload", result.Message);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await ShowErrorAsync("Lỗi ngoại lệ", ex.Message);
-                }
-            }
         }
     }
 }
