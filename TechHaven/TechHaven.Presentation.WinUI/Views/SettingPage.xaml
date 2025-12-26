@@ -6,8 +6,7 @@
     xmlns:local="using:TechHaven.Presentation.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource TH.SurfaceBackground}">
+    mc:Ignorable="d">
 
     <Page.Resources>
         <Style x:Key="CardStyle" TargetType="Border">
@@ -32,7 +31,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Background="Transparent">
+    <Grid x:Name="rootGrid">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="AdaptiveStates">
                 <VisualState x:Name="Desktop">
@@ -117,12 +116,14 @@
                                 
                                 <StackPanel Grid.Column="0" Spacing="8">
                                     <TextBlock x:Name="colorModeLabel" Text="Color mode" Style="{StaticResource FieldLabelStyle}"/>
-                                    <Button x:Name="themeButton" Click="ThemeButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="12,8" MinWidth="140" HorizontalAlignment="Left"/>
+                                    <Button x:Name="themeButton" Click="ThemeButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="12,8" MinWidth="140" HorizontalAlignment="Left"
+                                            ToolTipService.ToolTip="Đổi chế độ màu giao diện"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Spacing="8">
                                     <TextBlock Text="Items per page" Style="{StaticResource FieldLabelStyle}"/>
-                                    <ComboBox x:Name="pageSizeCombo" Width="140" HorizontalAlignment="Left" SelectionChanged="PageSizeCombo_SelectionChanged"/>
+                                    <ComboBox x:Name="pageSizeCombo" Width="140" HorizontalAlignment="Left" SelectionChanged="PageSizeCombo_SelectionChanged"
+                                              ToolTipService.ToolTip="Chọn số mục hiển thị mỗi trang"/>
                                 </StackPanel>
                             </Grid>
 
@@ -151,12 +152,15 @@
                                 <StackPanel Grid.Column="0" Spacing="16">
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}"/>
-                                        <TextBox x:Name="newUserFullNameBox" PlaceholderText="Enter full name"/>
+                                        <TextBox x:Name="newUserFullNameBox" PlaceholderText="Enter full name"
+                                                 ToolTipService.ToolTip="Nhập họ tên người dùng"/>
+                                        <TextBlock x:Name="newUserFullNameErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
                                     </StackPanel>
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}"/>
-                                        <TextBox x:Name="newUserEmailBox" PlaceholderText="Enter email"/>
+                                        <TextBox x:Name="newUserEmailBox" PlaceholderText="Enter email"
+                                                 ToolTipService.ToolTip="Nhập email người dùng"/>
                                         <TextBlock x:Name="newUserEmailErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </StackPanel>
@@ -164,19 +168,22 @@
                                 <StackPanel Grid.Column="1" Spacing="16">
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Username" Style="{StaticResource FieldLabelStyle}"/>
-                                        <TextBox x:Name="newUserUserNameBox" PlaceholderText="Enter username"/>
+                                        <TextBox x:Name="newUserUserNameBox" PlaceholderText="Enter username"
+                                                 ToolTipService.ToolTip="Nhập tên đăng nhập"/>
                                         <TextBlock x:Name="newUserUserNameErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
                                     </StackPanel>
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Password" Style="{StaticResource FieldLabelStyle}"/>
-                                        <PasswordBox x:Name="newUserPasswordBox" PlaceholderText="Enter password"/>
+                                        <PasswordBox x:Name="newUserPasswordBox" PlaceholderText="Enter password"
+                                                     ToolTipService.ToolTip="Nhập mật khẩu"/>
                                         <TextBlock x:Name="newUserPasswordErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
                                     </StackPanel>
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Confirm password" Style="{StaticResource FieldLabelStyle}"/>
-                                        <PasswordBox x:Name="newUserConfirmPasswordBox" PlaceholderText="Confirm password"/>
+                                        <PasswordBox x:Name="newUserConfirmPasswordBox" PlaceholderText="Confirm password"
+                                                     ToolTipService.ToolTip="Nhập lại mật khẩu"/>
                                         <TextBlock x:Name="newUserConfirmErrorText" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" Visibility="Collapsed" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </StackPanel>
@@ -184,7 +191,8 @@
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="12">
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Role" Style="{StaticResource FieldLabelStyle}"/>
-                                        <ComboBox x:Name="newUserRoleCombo" SelectedIndex="0" HorizontalAlignment="Stretch">
+                                        <ComboBox x:Name="newUserRoleCombo" SelectedIndex="0" HorizontalAlignment="Stretch"
+                                                  ToolTipService.ToolTip="Chọn vai trò người dùng">
                                             <ComboBoxItem Tag="1">Admin</ComboBoxItem>
                                             <ComboBoxItem Tag="2">Seller</ComboBoxItem>
                                         </ComboBox>
@@ -197,7 +205,8 @@
                                             Foreground="White" 
                                             Padding="12,8" 
                                             HorizontalAlignment="Stretch"
-                                            CornerRadius="6" />
+                                            CornerRadius="6"
+                                            ToolTipService.ToolTip="Tạo người dùng mới" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -209,7 +218,7 @@
         <!-- Tablet Layout (<=720px) -->
         <ScrollViewer x:Name="TabletLayout" Visibility="Collapsed">
             <StackPanel Padding="16" Spacing="16" Background="{ThemeResource TH.SurfaceBackground}">
-                <TextBlock Text="Application Settings" 
+                <TextBlock x:Name="tabletTitleText" Text="Application Settings" 
                            FontSize="20" 
                            FontWeight="Bold" 
                            Foreground="{ThemeResource TH.TextPrimary}"/>
@@ -256,12 +265,14 @@
                         <StackPanel Spacing="12">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Color mode" Style="{StaticResource FieldLabelStyle}"/>
-                                <Button Content="{Binding ElementName=themeButton, Path=Content}" Click="ThemeButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="12,8" HorizontalAlignment="Stretch"/>
+                                <Button x:Name="tabletThemeButton" Content="{Binding ElementName=themeButton, Path=Content}" Click="ThemeButton_Click" Background="{ThemeResource TH.PrimaryBrush}" Foreground="White" Padding="12,8" HorizontalAlignment="Stretch"
+                                        ToolTipService.ToolTip="Đổi chế độ màu giao diện"/>
                             </StackPanel>
 
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Items per page" Style="{StaticResource FieldLabelStyle}"/>
-                                <ComboBox SelectedIndex="{Binding ElementName=pageSizeCombo, Path=SelectedIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" SelectionChanged="PageSizeCombo_SelectionChanged">
+                                <ComboBox x:Name="tabletPageSizeCombo" SelectedIndex="{Binding ElementName=pageSizeCombo, Path=SelectedIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" SelectionChanged="PageSizeCombo_SelectionChanged"
+                                          ToolTipService.ToolTip="Chọn số mục hiển thị mỗi trang">
                                     <ComboBoxItem>10</ComboBoxItem>
                                     <ComboBoxItem>25</ComboBoxItem>
                                     <ComboBoxItem>50</ComboBoxItem>
@@ -270,7 +281,7 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <TextBlock Text="{Binding ElementName=themeStatusText, Path=Text}"
+                        <TextBlock x:Name="tabletThemeStatusText" Text="{Binding ElementName=themeStatusText, Path=Text}"
                                    Foreground="{ThemeResource TH.TextSecondary}"
                                    FontSize="12"
                                    FontStyle="Italic"/>
@@ -288,49 +299,52 @@
                         <StackPanel Spacing="12">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Full name" Style="{StaticResource FieldLabelStyle}"/>
-                                <TextBox Text="{Binding ElementName=newUserFullNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter full name"/>
-                            </StackPanel>
+                                <TextBox x:Name="tabletNewUserFullNameBox" Text="{Binding ElementName=newUserFullNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter full name"
+                                         ToolTipService.ToolTip="Nhập họ tên người dùng"/>
+                              </StackPanel>
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Username" Style="{StaticResource FieldLabelStyle}"/>
-                                <TextBox Text="{Binding ElementName=newUserUserNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter username"/>
-                                <TextBlock Visibility="{Binding ElementName=newUserUserNameErrorText, Path=Visibility}" Text="{Binding ElementName=newUserUserNameErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                                <TextBox x:Name="tabletNewUserUserNameBox" Text="{Binding ElementName=newUserUserNameBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter username"
+                                         ToolTipService.ToolTip="Nhập tên đăng nhập"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}"/>
-                                <TextBox Text="{Binding ElementName=newUserEmailBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter email"/>
-                                <TextBlock Visibility="{Binding ElementName=newUserEmailErrorText, Path=Visibility}" Text="{Binding ElementName=newUserEmailErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                                <TextBox x:Name="tabletNewUserEmailBox" Text="{Binding ElementName=newUserEmailBox, Path=Text, Mode=TwoWay}" PlaceholderText="Enter email"
+                                         ToolTipService.ToolTip="Nhập email người dùng"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Password" Style="{StaticResource FieldLabelStyle}"/>
-                                <PasswordBox Password="{Binding ElementName=newUserPasswordBox, Path=Password, Mode=TwoWay}" PlaceholderText="Enter password"/>
-                                <TextBlock Visibility="{Binding ElementName=newUserPasswordErrorText, Path=Visibility}" Text="{Binding ElementName=newUserPasswordErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                                <PasswordBox x:Name="tabletNewUserPasswordBox" Password="{Binding ElementName=newUserPasswordBox, Path=Password, Mode=TwoWay}" PlaceholderText="Enter password"
+                                             ToolTipService.ToolTip="Nhập mật khẩu"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Confirm password" Style="{StaticResource FieldLabelStyle}"/>
-                                <PasswordBox Password="{Binding ElementName=newUserConfirmPasswordBox, Path=Password, Mode=TwoWay}" PlaceholderText="Confirm password"/>
-                                <TextBlock Visibility="{Binding ElementName=newUserConfirmErrorText, Path=Visibility}" Text="{Binding ElementName=newUserConfirmErrorText, Path=Text}" Foreground="{ThemeResource TH.DangerBrush}" FontSize="11" TextWrapping="Wrap" />
+                                <PasswordBox x:Name="tabletNewUserConfirmPasswordBox" Password="{Binding ElementName=newUserConfirmPasswordBox, Path=Password, Mode=TwoWay}" PlaceholderText="Confirm password"
+                                             ToolTipService.ToolTip="Nhập lại mật khẩu"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Role" Style="{StaticResource FieldLabelStyle}"/>
-                                <ComboBox SelectedIndex="{Binding ElementName=newUserRoleCombo, Path=SelectedIndex, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                <ComboBox x:Name="tabletNewUserRoleCombo" SelectedIndex="{Binding ElementName=newUserRoleCombo, Path=SelectedIndex, Mode=TwoWay}" HorizontalAlignment="Stretch"
+                                          ToolTipService.ToolTip="Chọn vai trò người dùng">
                                     <ComboBoxItem Tag="1">Admin</ComboBoxItem>
                                     <ComboBoxItem Tag="2">Seller</ComboBoxItem>
                                 </ComboBox>
                             </StackPanel>
 
-                            <Button Content="Add User" 
+                            <Button x:Name="tabletAddUserButton" Content="Add User" 
                                     Click="AddUserButton_Click" 
                                     Background="{ThemeResource TH.PrimaryBrush}" 
                                     Foreground="White" 
                                     Padding="12,8" 
                                     HorizontalAlignment="Stretch"
                                     CornerRadius="6"
-                                    Height="44"/>
+                                    Height="44"
+                                    ToolTipService.ToolTip="Tạo người dùng mới"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

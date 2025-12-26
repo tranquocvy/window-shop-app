@@ -20,7 +20,8 @@
                         <Border BorderBrush="Gray"
                                 BorderThickness="1"
                                 CornerRadius="8"
-                                Tapped="OnSelectImageTapped">
+                                Background="WhiteSmoke"
+                                Tapped="OnMainImageTapped">
 
                             <Grid>
                                 <FontIcon Glyph="&#xE958;"

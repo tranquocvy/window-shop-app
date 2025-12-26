@@ -13,21 +13,20 @@ using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using System.Threading.Tasks;
 using Windows.System;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Presentation.WinUI.Services.Onboarding;
 
 namespace TechHaven.Presentation.WinUI.Views
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class ShellWindow : Window
     {
         private AppWindow? _appWindow;
         private readonly SettingViewModel _settingViewModel;
         private readonly TrialModeManager _trialModeManager;
         private ChatBotManager? _chatBotManager;
+        private readonly IUserService _userService = new HttpUserService(ApiClientFactory.GetHttpClient());
+        private readonly IOnboardingService _onboardingService = new OnboardingService();
 
         public ShellWindow()
         {
@@ -68,9 +67,10 @@ namespace TechHaven.Presentation.WinUI.Views
                             ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged_ForTitlebar;
                         };
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // ignore failures applying titlebar colors
+                        // log failures applying titlebar colors to help debugging
+                        System.Diagnostics.Debug.WriteLine($"ShellWindow: ApplyTitleBarColors failed - {ex}");
                     }
                 }
             }
@@ -94,17 +94,39 @@ namespace TechHaven.Presentation.WinUI.Views
                     };
                     root.KeyboardAccelerators.Add(escAccel);
                 }
-                catch { }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"ShellWindow: RegisterRoot/KeyboardAccelerator failed - {ex}"); }
             }
 
             if (AppState.CurrentUser != null)
             {
-                string userFullName = AppState.CurrentUser.UserFullName;
-                string roleName = AppState.CurrentUser.RoleName;
+                try
+                {
+                    string userFullName = AppState.CurrentUser.UserFullName;
+                    string roleName = AppState.CurrentUser.RoleName;
 
-                currentUserFullNameText.Text = userFullName;
-                currentUserRoleText.Text = roleName;
+                    currentUserFullNameText.Text = userFullName;
+                    currentUserRoleText.Text = roleName;
 
+                    // Defensive: ensure controls exist
+                    if (avatarInitials == null || avatarEllipse == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("ShellWindow: avatarInitials or avatarEllipse is null");
+                    }
+                    else
+                    {
+                        // Generate initials from full name
+                        var initials = GetInitials(userFullName);
+                        avatarInitials.Text = initials ?? "?";
+
+                        // Choose a deterministic background color based on username hash
+                        var color = ColorFromString(AppState.CurrentUser.UserName ?? userFullName);
+                        avatarEllipse.Fill = new SolidColorBrush(color);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ShellWindow: failed to set avatar - {ex}");
+                }
             }
 
             // Initialize ChatBot
@@ -112,6 +134,32 @@ namespace TechHaven.Presentation.WinUI.Views
 
             // Initialize settings and navigate to last visited page (or dashboard)
             _ = InitializeSettingsAndNavigateAsync();
+
+            // Show onboarding if needed
+            _ = ShowOnboardingIfNeededAsync();
+        }
+
+        public void NavigateTo(Type pageType)
+        {
+            try { contentFrame.Navigate(pageType); } catch { }
+        }
+
+        private async Task ShowOnboardingIfNeededAsync()
+        {
+            try
+            {
+                if (!AppState.HasSeenGuide)
+                {
+                    await _onboardingService.RunAsync(this);
+                    // After run, update server flag
+                    var resp = await _userService.UpdateGuideStatusAsync(true);
+                    if (resp.Success && resp.Data)
+                    {
+                        AppState.HasSeenGuide = true;
+                    }
+                }
+            }
+            catch { }
         }
 
         private void InitializeChatBot()
@@ -496,6 +544,31 @@ namespace TechHaven.Presentation.WinUI.Views
             catch { }
 
             return fallback;
+        }
+
+        public FrameworkElement? GetCurrentPageRoot()
+        {
+            try { return contentFrame.Content as FrameworkElement; } catch { return null; }
+        }
+
+        private static string GetInitials(string? fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName)) return "?";
+            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpper();
+            return (parts[0].Substring(0,1) + parts[^1].Substring(0,1)).ToUpper();
+        }
+
+        private static Windows.UI.Color ColorFromString(string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return Windows.UI.Color.FromArgb(255, 128, 128, 128); // Gray
+            // simple hash to color
+            int hash = 0;
+            foreach (var c in key) hash = (hash * 31) + c;
+            byte r = (byte)((hash & 0xFF0000) >> 16);
+            byte g = (byte)((hash & 0x00FF00) >> 8);
+            byte b = (byte)(hash & 0x0000FF);
+            return Windows.UI.Color.FromArgb(255, r, g, b);
         }
     }
 }

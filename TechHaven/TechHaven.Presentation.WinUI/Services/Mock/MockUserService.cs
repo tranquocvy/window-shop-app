@@ -10,6 +10,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
     public class MockUserService : IUserService
     {
         private readonly List<UserDto> _mockUsers;
+        private bool _hasSeenGuide;
 
         public MockUserService()
         {
@@ -132,6 +133,18 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
                 Success = success,
                 Message = success ? "User deleted successfully" : "User not found",
                 Data = success
+            };
+            return Task.FromResult(response);
+        }
+
+        public Task<ResponseWrapper<bool>> UpdateGuideStatusAsync(bool hasSeenGuide)
+        {
+            _hasSeenGuide = hasSeenGuide;
+            var response = new ResponseWrapper<bool>
+            {
+                Success = true,
+                Message = "Guide status updated",
+                Data = _hasSeenGuide
             };
             return Task.FromResult(response);
         }

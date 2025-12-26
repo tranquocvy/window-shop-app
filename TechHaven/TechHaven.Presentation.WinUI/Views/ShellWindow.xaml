@@ -38,11 +38,15 @@
                 <StackPanel Orientation="Horizontal" 
                             Padding="12,12,0,12" 
                             Margin="0,20,0,0">
-                    <Ellipse Width="40" Height="40">
-                        <Ellipse.Fill>
-                            <ImageBrush ImageSource="ms-appx:///Assets/avatar.jpg" Stretch="UniformToFill" />
-                        </Ellipse.Fill>
-                    </Ellipse>
+                    <Grid Width="40" Height="40">
+                        <Ellipse x:Name="avatarEllipse" Width="40" Height="40" />
+                        <TextBlock x:Name="avatarInitials"
+                                   Text=".."
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"/>
+                    </Grid>
 
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock 

@@ -124,7 +124,8 @@
                                 <FontIcon Glyph="&#xE7C3;"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem Text="Cập Nhật Trạng Thái" Click="UpdateStatus_Click">
+                        <MenuFlyoutItem Text="Cập Nhật Trạng Thái" Click="UpdateStatus_Click"
+                                        IsEnabled="{Binding CanChangeStatus}">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE70F;"/>
                             </MenuFlyoutItem.Icon>
@@ -229,7 +230,8 @@
                                     <FontIcon Glyph="&#xE7C3;"/>
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem Text="Cập Nhật Trạng Thái" Click="UpdateStatus_Click">
+                            <MenuFlyoutItem Text="Cập Nhật Trạng Thái" Click="UpdateStatus_Click"
+                                            IsEnabled="{Binding CanChangeStatus}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon Glyph="&#xE70F;"/>
                                 </MenuFlyoutItem.Icon>
@@ -302,12 +304,12 @@
                     <ColumnDefinition Width="2.5*"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0"
+                <TextBox x:Name="OrderSearchBox" Grid.Column="0" ToolTipService.ToolTip="Tìm kiếm theo chuỗi"
                          PlaceholderText="Tìm kiếm theo khách hàng"
                          Height="40"
                          Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <ComboBox Grid.Column="1"
+                <ComboBox x:Name="OrderStatusCombo" Grid.Column="1" ToolTipService.ToolTip="Lọc theo trạng thái"
                           ItemsSource="{Binding StatusList}"
                           SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
                           DisplayMemberPath="DisplayName"
@@ -316,21 +318,21 @@
                           HorizontalAlignment="Stretch"
                           SelectionChanged="StatusFilter_SelectionChanged"/>
 
-                <CalendarDatePicker Grid.Column="2"
+                <CalendarDatePicker x:Name="OrderFromDatePicker" Grid.Column="2" ToolTipService.ToolTip="Ngày bắt đầu"
                                     Date="{Binding FromDate, Mode=TwoWay}"
                                     PlaceholderText="Từ ngày"
                                     Height="40"
                                     HorizontalAlignment="Stretch"
                                     DateChanged="FromDate_DateChanged"/>
 
-                <CalendarDatePicker Grid.Column="3"
+                <CalendarDatePicker x:Name="OrderToDatePicker" Grid.Column="3" ToolTipService.ToolTip="Ngày kết thúc"
                                     Date="{Binding ToDate, Mode=TwoWay}"
                                     PlaceholderText="Đến ngày"
                                     Height="40"
                                     HorizontalAlignment="Stretch"
                                     DateChanged="ToDate_DateChanged"/>
 
-                <Button Grid.Column="4"
+                <Button x:Name="OrderSearchButton" Grid.Column="4" ToolTipService.ToolTip="Tìm kiếm khi chọn filter"
                         Content="Tìm"
                         Command="{Binding SearchCommand}"
                         Background="{ThemeResource TH.PrimaryBrush}"
@@ -340,7 +342,7 @@
                         Height="40"
                         HorizontalAlignment="Stretch"/>
 
-                <Button Grid.Column="7"
+                <Button x:Name="CreateOrderButton" Grid.Column="7" ToolTipService.ToolTip="Tạo đơn hàng mới"
                         Click="CreateOrder_Click"
                         Background="{ThemeResource TH.PrimaryBrush}"
                         Foreground="White"
@@ -395,12 +397,29 @@
                               IsItemClickEnabled="True"
                               ItemClick="OrdersList_ItemClick"
                               ItemTemplate="{StaticResource OrderItemDesktopTemplate}"
-                              ItemContainerStyle="{StaticResource ListViewItemNoPadding}"/>
+                              ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                        <ListView.Footer>
+                            <Grid Height="200" 
+                                  Visibility="{Binding Orders.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                <StackPanel HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"
+                                            Spacing="12">
+                                    <FontIcon Glyph="&#xE7C1;" 
+                                              FontSize="48" 
+                                              Foreground="{ThemeResource TH.TextSecondary}"/>
+                                    <TextBlock Text="Không có đơn hàng nào" 
+                                               FontSize="16"
+                                               Foreground="{ThemeResource TH.TextSecondary}"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </ListView.Footer>
+                    </ListView>
                 </Grid>
             </Border>
 
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0" Spacing="12">
-                <Button Command="{Binding PreviousPageCommand}"
+                <Button x:Name="OrderPrevPageButton" Command="{Binding PreviousPageCommand}"
                         IsEnabled="{Binding CanGoPrevious}"
                         ToolTipService.ToolTip="Trang trước"
                         Width="40" Height="40" CornerRadius="8"
@@ -415,7 +434,7 @@
                            Foreground="{ThemeResource TH.TextPrimary}"
                            FontWeight="SemiBold"/>
 
-                <Button Command="{Binding NextPageCommand}"
+                <Button x:Name="OrderNextPageButton" Command="{Binding NextPageCommand}"
                         IsEnabled="{Binding CanGoNext}"
                         ToolTipService.ToolTip="Trang sau"
                         Width="40" Height="40" CornerRadius="8"
@@ -434,7 +453,7 @@
                            Style="{StaticResource SectionTitle}"/>
 
                 <StackPanel Spacing="12">
-                    <TextBox PlaceholderText="Tìm kiếm theo khách hàng"
+                    <TextBox x:Name="OrderSearchBoxTablet" PlaceholderText="Tìm kiếm theo khách hàng" ToolTipService.ToolTip="Tìm kiếm đơn hàng"
                              Height="40"
                              Text="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
@@ -444,16 +463,17 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <ComboBox Grid.Column="0"
+                        <ComboBox x:Name="OrderStatusComboTablet" Grid.Column="0"
                                   ItemsSource="{Binding StatusList}"
                                   SelectedItem="{Binding SelectedStatusItem, Mode=TwoWay}"
                                   DisplayMemberPath="DisplayName"
                                   PlaceholderText="Trạng thái"
                                   Height="40"
                                   HorizontalAlignment="Stretch"
-                                  SelectionChanged="StatusFilter_SelectionChanged"/>
+                                  SelectionChanged="StatusFilter_SelectionChanged"
+                                  ToolTipService.ToolTip="Lọc theo trạng thái"/>
 
-                        <Button Grid.Column="1"
+                        <Button x:Name="OrderSearchButtonTablet" Grid.Column="1"
                                 Content="Tìm"
                                 Command="{Binding SearchCommand}"
                                 Background="{ThemeResource TH.PrimaryBrush}"
@@ -461,7 +481,8 @@
                                 FontWeight="SemiBold"
                                 CornerRadius="8"
                                 Height="40"
-                                HorizontalAlignment="Stretch"/>
+                                HorizontalAlignment="Stretch"
+                                ToolTipService.ToolTip="Tìm kiếm khi nhập filter"/>
                     </Grid>
 
                     <Grid ColumnSpacing="8">
@@ -470,14 +491,14 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <CalendarDatePicker Grid.Column="0"
+                        <CalendarDatePicker x:Name="OrderFromDatePickerTablet" Grid.Column="0" ToolTipService.ToolTip="Ngày bắt đầu"
                                             Date="{Binding FromDate, Mode=TwoWay}"
                                             PlaceholderText="Từ ngày"
                                             Height="40"
                                             HorizontalAlignment="Stretch"
                                             DateChanged="FromDate_DateChanged"/>
 
-                        <CalendarDatePicker Grid.Column="1"
+                        <CalendarDatePicker x:Name="OrderToDatePickerTablet" Grid.Column="1" ToolTipService.ToolTip="Ngày kết thúc"
                                             Date="{Binding ToDate, Mode=TwoWay}"
                                             PlaceholderText="Đến ngày"
                                             Height="40"
@@ -485,7 +506,7 @@
                                             DateChanged="ToDate_DateChanged"/>
                     </Grid>
 
-                    <Button Click="CreateOrder_Click"
+                    <Button x:Name="CreateOrderButtonTablet" Click="CreateOrder_Click" ToolTipService.ToolTip="Tạo đơn hàng mới"
                             Background="{ThemeResource TH.PrimaryBrush}"
                             Foreground="White"
                             FontWeight="SemiBold"
@@ -520,12 +541,29 @@
                                   IsItemClickEnabled="True"
                                   ItemClick="OrdersList_ItemClick"
                                   ItemTemplate="{StaticResource OrderItemTabletTemplate}"
-                                  ItemContainerStyle="{StaticResource ListViewItemNoPadding}"/>
+                                  ItemContainerStyle="{StaticResource ListViewItemNoPadding}">
+                            <ListView.Footer>
+                                <Grid Height="200" 
+                                      Visibility="{Binding Orders.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                    <StackPanel HorizontalAlignment="Center" 
+                                                VerticalAlignment="Center"
+                                                Spacing="12">
+                                        <FontIcon Glyph="&#xE7C1;" 
+                                                  FontSize="48" 
+                                                  Foreground="{ThemeResource TH.TextSecondary}"/>
+                                        <TextBlock Text="Không có đơn hàng nào" 
+                                                   FontSize="16"
+                                                   Foreground="{ThemeResource TH.TextSecondary}"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ListView.Footer>
+                        </ListView>
                     </Grid>
                 </Border>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
-                    <Button Command="{Binding PreviousPageCommand}"
+                    <Button x:Name="OrderPrevPageButtonTablet" Command="{Binding PreviousPageCommand}"
                             IsEnabled="{Binding CanGoPrevious}"
                             Width="44" Height="44" CornerRadius="8"
                             Background="{ThemeResource TH.CardBackground}"
@@ -540,7 +578,7 @@
                                FontWeight="SemiBold"
                                FontSize="14"/>
 
-                    <Button Command="{Binding NextPageCommand}"
+                    <Button x:Name="OrderNextPageButtonTablet" Command="{Binding NextPageCommand}"
                             IsEnabled="{Binding CanGoNext}"
                             Width="44" Height="44" CornerRadius="8"
                             Background="{ThemeResource TH.CardBackground}"

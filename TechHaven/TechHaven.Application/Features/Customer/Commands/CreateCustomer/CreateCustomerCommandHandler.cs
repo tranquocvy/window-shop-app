@@ -27,14 +27,14 @@ public class CreateCustomerCommandHandler : ICommandHandler<CreateCustomerComman
     try
     {
       var existingCustomer = await _unitOfWork.Customers.FirstOrDefaultAsync(p =>
-      p.PhoneNumber == request.PhoneNumber,
-      cancellationToken
-    );
+        p.PhoneNumber == request.PhoneNumber,
+        cancellationToken
+      );
 
       if (existingCustomer != null)
       {
         return Result<CustomerDto>.Failure(
-          $"Customer with name '{request.CustomerName}' and email '{request.Email}' already exists",
+          $"Customer with name '{request.CustomerName}' and phone '{request.PhoneNumber}' already exists",
           ErrorType.Conflict
         );
       }

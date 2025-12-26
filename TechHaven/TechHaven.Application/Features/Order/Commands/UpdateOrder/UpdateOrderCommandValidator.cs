@@ -12,8 +12,10 @@ public class UpdateOrderCommandValidator : AbstractValidator<UpdateOrderCommand>
 
         // Rule Discount % [0, 1]
         RuleFor(x => x.Discount)
-             .GreaterThanOrEqualTo(0).WithMessage("Discount cannot be negative.")
-             .LessThanOrEqualTo(1).WithMessage("Discount cannot exceed 100% (1.0).");
+             .GreaterThanOrEqualTo(0).WithMessage("Discount cannot be negative.");
+
+        RuleFor(x => x.Status)
+            .IsInEnum().WithMessage("Invalid order status.");
 
         RuleFor(x => x.Details)
             .NotEmpty().WithMessage("Order must contain at least one item.");

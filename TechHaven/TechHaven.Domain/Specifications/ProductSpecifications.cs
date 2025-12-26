@@ -43,9 +43,12 @@ public class ProductSearchSpecification : BaseSpecification<Product>
         && !criteria.ToPrice.HasValue
         && string.IsNullOrWhiteSpace(criteria.Brand)
         && !hasValidStatus)
-      return null;
+      return p => !p.ProductName.ToLower().StartsWith("ma_product");
 
     return p =>
+      // Loại bỏ sản phẩm ma
+      !p.ProductName.ToLower().StartsWith("ma_product") &&
+
       // Filter: IsDraft
       (!criteria.IsDraft.HasValue || p.IsDraft == criteria.IsDraft.Value) &&
 

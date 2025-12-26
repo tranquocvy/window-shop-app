@@ -114,23 +114,27 @@
 
                 <TextBox x:Name="SearchBox" Grid.Row="0" Grid.Column="0"
                          PlaceholderText="Tìm kiếm..."
+                         ToolTipService.ToolTip="Nhập tên sản phẩm để tìm nhanh"
                          Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                 <ComboBox x:Name="BrandCombo" Grid.Row="0" Grid.Column="1"
                           ItemsSource="{x:Bind ViewModel.BrandNameFilter}"
                           SelectedItem="{x:Bind ViewModel.SelectedBrandName, Mode=TwoWay}"
-                          HorizontalAlignment="Stretch" Height="40" PlaceholderText="Hãng" />
+                          HorizontalAlignment="Stretch" Height="40" PlaceholderText="Hãng"
+                          ToolTipService.ToolTip="Lọc theo hãng" />
 
                 <ComboBox x:Name="PriceCombo" Grid.Row="0" Grid.Column="2"
                           ItemsSource="{x:Bind ViewModel.PriceRangeOptions}"
                           SelectedItem="{x:Bind ViewModel.SelectedPriceRange, Mode=TwoWay}"
-                          PlaceholderText="Giá" HorizontalAlignment="Stretch" Height="40" />
+                          PlaceholderText="Giá" HorizontalAlignment="Stretch" Height="40"
+                          ToolTipService.ToolTip="Lọc theo khoảng giá" />
 
                 <ComboBox x:Name="StatusCombo" Grid.Row="0" Grid.Column="3"
                           ItemsSource="{x:Bind ViewModel.StatusFilter}"
                           SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
                           HorizontalAlignment="Stretch" Height="40" PlaceholderText="Trạng thái" 
-                          Margin="8,0,0,0"/>
+                          Margin="8,0,0,0"
+                          ToolTipService.ToolTip="Lọc theo trạng thái"/>
             </Grid>
 
             <Grid x:Name="ActionButtonsPanel" Grid.Row="0" Grid.Column="1" 
@@ -142,23 +146,23 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Content="Thêm" ToolTipService.ToolTip="Thêm Sản Phẩm"
+                <Button x:Name="AddProductButton" Grid.Column="0" Content="Thêm" ToolTipService.ToolTip="Thêm Sản Phẩm"
                    Style="{StaticResource TH.PrimaryButtonStyle}" FontWeight="Bold" Height="40" 
                    HorizontalAlignment="Stretch" Click="AddProduct_Click" />
 
-                <Button Grid.Column="1" Content="Hãng" ToolTipService.ToolTip="Thêm Danh Mục"
+                <Button x:Name="AddBrandButton" Grid.Column="1" Content="Hãng" ToolTipService.ToolTip="Thêm Danh Mục"
                    Background="{StaticResource TH.SecondaryBrush}" Foreground="White" FontWeight="Bold" Height="40" 
                    HorizontalAlignment="Stretch" Click="AddBrand_Click" />
 
-                <Button Grid.Column="2" Height="40" Padding="0" Background="{StaticResource TH.SuccessBrush}" 
-                   Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" Click="ImportExcel_Click">
+                <Button x:Name="ImportExcelButton" Grid.Column="2" Height="40" Padding="0" Background="{StaticResource TH.SuccessBrush}" 
+                   Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" Click="ImportExcel_Click" ToolTipService.ToolTip="Import file xlxs sản phẩm">
                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                         <FontIcon Glyph="&#xE8B5;" />
                         <TextBlock Text="Import" VerticalAlignment="Center" FontWeight="Bold" />
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="3" Content="Xóa"
+                <Button x:Name="DeleteSelectedButton" Grid.Column="3" Content="Xóa" ToolTipService.ToolTip="Xóa sản phẩm"
                        Background="{StaticResource TH.DangerBrush}" Foreground="White" FontWeight="Bold" Height="40"
                        HorizontalAlignment="Stretch" Command="{Binding DeleteSelectedCommand}"
                        Visibility="{x:Bind ViewModel.IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -259,9 +263,11 @@
         </Border>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Spacing="8">
-            <Button Content="Previous" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding CanGoPrevious}" />
+            <Button x:Name="ProductPrevPageButton" Content="Previous" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding CanGoPrevious}"
+                    ToolTipService.ToolTip="Trang trước" />
             <TextBlock VerticalAlignment="Center" Text="{Binding PageInfo}" Foreground="{StaticResource TH.TextPrimary}" />
-            <Button Content="Next" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoNext}" />
+            <Button x:Name="ProductNextPageButton" Content="Next" Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoNext}"
+                    ToolTipService.ToolTip="Trang sau" />
         </StackPanel>
     </Grid>
 </Page>

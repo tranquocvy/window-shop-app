@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml;
 using System.Net.Http;
 using TechHaven.Presentation.WinUI.Services.Http;
 using Windows.UI;
+using System.Threading;
 
 namespace TechHaven.Presentation.WinUI.ViewModel
 {
@@ -73,6 +74,8 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             new OrderStatusItem { DisplayName = "Cancelled", Status = OrderStatus.Cancelled },
             new OrderStatusItem { DisplayName = "Returned", Status = OrderStatus.Returned }
         };
+
+        private CancellationTokenSource? _searchDebounceCts;
 
         // Parameterless ctor chains to default OrderPdfService
         public OrderViewModel() : this(new OrderPdfService()) { }
@@ -137,22 +140,68 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Auto-reload when search keyword changes
         partial void OnSearchKeywordChanged(string? value)
         {
+            // Reset to first page for new searches
             PageNumber = 1;
-            _ = LoadOrdersAsync();
+
+            // Cancel previous debounce (if any) and create a new CTS
+            _searchDebounceCts?.Cancel();
+            _searchDebounceCts = new CancellationTokenSource();
+            var token = _searchDebounceCts.Token;
+
+            // Fire-and-forget debounce task
+            _ = DebounceSearchAsync(token);
+        }
+
+        private async Task DebounceSearchAsync(CancellationToken token)
+        {
+            try
+            {
+                // Wait 500ms
+                await Task.Delay(500, token);
+
+                if (token.IsCancellationRequested) return;
+
+                // Ensure LoadOrdersAsync is invoked on UI thread
+                try
+                {
+                    var dq = App.MainWindow?.DispatcherQueue;
+                    if (dq != null)
+                    {
+                        dq.TryEnqueue(() => _ = LoadOrdersAsync());
+                    }
+                    else
+                    {
+                        await LoadOrdersAsync();
+                    }
+                }
+                catch
+                {
+                    // fallback
+                    await LoadOrdersAsync();
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // expected when input changes before delay completes
+            }
+            catch
+            {
+                // ignore other errors silently
+            }
         }
 
         // Auto-reload when from date changes
         partial void OnFromDateChanged(DateTimeOffset? value)
         {
             PageNumber = 1;
-            _ = LoadOrdersAsync();
+            // Don't auto-reload to avoid validation issues
         }
 
         // Auto-reload when to date changes
         partial void OnToDateChanged(DateTimeOffset? value)
         {
             PageNumber = 1;
-            _ = LoadOrdersAsync();
+            // Don't auto-reload to avoid validation issues
         }
 
         // Reload when page size changes
@@ -166,6 +215,14 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         private async Task LoadOrdersAsync()
         {
             if (IsLoading) return;
+            
+            // Validate date range - check but don't show dialog to avoid crashes
+            if (FromDate.HasValue && ToDate.HasValue && ToDate.Value < FromDate.Value)
+            {
+                // Just return without loading, the UI should handle this via SearchCommand
+                return;
+            }
+            
             IsLoading = true;
             Orders.Clear();
 
@@ -216,6 +273,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [RelayCommand]
         private async Task SearchAsync()
         {
+            // Validate date range before searching
+            if (FromDate.HasValue && ToDate.HasValue && ToDate.Value < FromDate.Value)
+            {
+                try
+                {
+                    await ShowDialogAsync(
+                        "Lỗi ngày tháng", 
+                        "Ngày kết thúc không được nhỏ hơn ngày bắt đầu.\nVui lòng chọn lại khoảng thời gian hợp lệ.");
+                }
+                catch
+                {
+                    // Ignore dialog errors
+                }
+                return;
+            }
+            
             PageNumber = 1;
             await LoadOrdersAsync();
         }
@@ -372,10 +445,19 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             get
             {
-                var count = Order.Details?.Count ?? 0;
+                var count = Order.TotalItems;
                 return $"{count} items";
             }
         }
+
+        // Indicates whether the status can be changed from current status
+        public bool CanChangeStatus => Order.Status switch
+        {
+            OrderStatus.Pending => true,
+            OrderStatus.Processing => true,
+            OrderStatus.Completed => true, // can go to Returned
+            _ => false,
+        };
     }
 
     public class OrderStatusItem

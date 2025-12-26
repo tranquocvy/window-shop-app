@@ -12,5 +12,6 @@ namespace TechHaven.Presentation.WinUI.Services.Interfaces
         Task<ResponseWrapper<UserDto>> CreateUserAsync(UserCreateUpdateDto dto);
         Task<ResponseWrapper<UserDto>> UpdateUserAsync(int id, UserCreateUpdateDto dto);
         Task<ResponseWrapper<bool>> DeleteUserAsync(int id);
+        Task<ResponseWrapper<bool>> UpdateGuideStatusAsync(bool hasSeenGuide);
     }
 }
