@@ -526,10 +526,13 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                     using (randomAccess)
                     using (var readStream = randomAccess.AsStreamForRead())
                     {
+                        // Lấy brandName từ ComboBox
+                        string? brandName = BrandComboBox.SelectedItem as string;
                         var result = await _productService.UploadImageAsync(
                             readStream,
                             file.Name,
-                            file.ContentType
+                            file.ContentType,
+                            brandName ?? string.Empty
                         );
 
                         if (result.Success)

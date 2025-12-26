@@ -127,12 +127,12 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
         }
 
-        public async Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType)
+        public async Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType, string brandName)
         {
             try
             {
                 using var content = new MultipartFormDataContent();
-                content.Add(new StringContent("Apple"), "folder");
+                content.Add(new StringContent(brandName ?? string.Empty), "folder");
 
                 var streamContent = new StreamContent(stream);
                 streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
