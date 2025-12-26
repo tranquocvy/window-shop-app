@@ -22,6 +22,9 @@ using WinRT.Interop;
 
 namespace TechHaven.Presentation.WinUI.Views.Controls
 {
+    /// <summary>
+    /// UserControl for product form (add/edit product)
+    /// </summary>
     public sealed partial class ProductFormUserControl : UserControl
     {
         private readonly IProductService _productService;
@@ -30,13 +33,25 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
         private const int MaxImageCount = 10; // Số lượng ảnh tối đa
         private List<string?> _imageUrls = new List<string?>();
         private int _currentImageIndex = 0;
-        
+
+        /// <summary>
+        /// Gets the original image URL (for edit mode)
+        /// </summary>
         public string? OriginalImageUrl => _originalImageUrl;
 
         private Task? _brandsLoadingTask;
 
-        public ProductFormUserControl()
+        /// <summary>
+        /// Default constructor (for XAML designer)
+        /// </summary>
+        public ProductFormUserControl() : this(new HttpProductService(ApiClientFactory.GetHttpClient())) { }
+
+        /// <summary>
+        /// Main constructor for DI
+        /// </summary>
+        public ProductFormUserControl(IProductService productService)
         {
+            _productService = productService ?? throw new ArgumentNullException(nameof(productService));
             this.InitializeComponent();
 
             // Initialize image list with MaxImageCount slots
@@ -45,8 +60,6 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                 _imageUrls.Add(null);
             }
 
-            // Use shared HttpClient from ApiClientFactory and concrete HttpProductService
-            _productService = new HttpProductService(ApiClientFactory.GetHttpClient());
             var isAdmin = AppState.CurrentUser?.RoleName == "Admin";
             CostPricePanel.Visibility = isAdmin ? Visibility.Visible : Visibility.Collapsed;
             // Load brands from API
@@ -528,25 +541,30 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                     {
                         // Lấy brandName từ ComboBox
                         string? brandName = BrandComboBox.SelectedItem as string;
+                        if (string.IsNullOrWhiteSpace(brandName))
+                        {
+                            await ShowErrorAsync("Thiếu thương hiệu", "Vui lòng chọn thương hiệu trước khi upload ảnh.");
+                            return;
+                        }
                         var result = await _productService.UploadImageAsync(
                             readStream,
                             file.Name,
                             file.ContentType,
-                            brandName ?? string.Empty
+                            brandName
                         );
 
                         if (result.Success)
                         {
                             // Lưu URL vào vị trí hiện tại trong carousel
                             _imageUrls[_currentImageIndex] = result.Data;
-                            
                             // Cập nhật hiển thị
-                            UpdateCarouselUI();
                         }
                         else
                         {
-                            await ShowErrorAsync("Lỗi Upload", result.Message);
+                            System.Diagnostics.Debug.WriteLine($"[UploadImageAtCurrentIndex] Upload failed: {result.Message}");
+                            await ShowErrorAsync("Lỗi upload ảnh", result.Message ?? "Không thể upload ảnh.");
                         }
+                        UpdateCarouselUI();
                     }
                 }
                 catch (Exception ex)

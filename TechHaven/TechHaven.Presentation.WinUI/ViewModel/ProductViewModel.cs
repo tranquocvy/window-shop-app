@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿
+        
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
@@ -105,6 +107,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             // Load brands when ViewModel is created
             _ = LoadBrandsAsync();
+        }
+
+        // ========================
+        // Delete Image Helper
+        // ========================
+        public async Task DeleteImageAsync(string imageUrl)
+        {
+            var service = new HttpProductService(ApiClientFactory.GetHttpClient());
+            await service.DeleteImageAsync(imageUrl);
         }
 
         // ========================
@@ -733,7 +744,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         public bool IsAdmin => CurrentUserRole == "Admin";
 
-        public string CostPriceColumnWidth => IsAdmin ? "1.2*" : "0";
+        public string CostPriceColumnWidth => IsAdmin ? "1.2*" : "0*";
     }
 
 
