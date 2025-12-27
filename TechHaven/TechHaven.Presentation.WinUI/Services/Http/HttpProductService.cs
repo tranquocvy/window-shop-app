@@ -127,39 +127,23 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await _httpClient.GetWrapperFromJsonAsync<PagingResponse<ProductDto>>(url, "Failed to query products");
         }
 
-        public async Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType)
+        public async Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType, string brandName)
         {
             try
             {
-                using var content = new MultipartFormDataContent();
-                content.Add(new StringContent("Apple"), "folder");
-
-                var streamContent = new StreamContent(stream);
-                streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-                content.Add(streamContent, "file", fileName);
-
-                // Gửi lên server
-                var response = await _httpClient.PostAsync("api/Image/upload", content);
+                var response = await UploadMultipartImageAsync(stream, fileName, contentType, brandName);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // 1. Đọc chuỗi JSON trả về
                     string jsonString = await response.Content.ReadAsStringAsync();
-
-                    // 2. Bóc tách JSON để lấy link ảnh
-                    // Cấu trúc JSON: { "data": { "imageUrl": "..." } }
                     var jsonNode = JsonNode.Parse(jsonString);
-
-                    // Lấy giá trị của imageUrl, chuyển thành string
                     string? imageUrl = jsonNode?["data"]?["imageUrl"]?.ToString();
-
-                    // 3. Trả về kết quả
                     if (!string.IsNullOrEmpty(imageUrl))
                     {
                         return new ResponseWrapper<string>
                         {
                             Success = true,
-                            Data = imageUrl, // Lúc này Data chỉ còn là "https://..." sạch đẹp
+                            Data = imageUrl,
                             Message = "Upload thành công"
                         };
                     }
@@ -190,6 +174,21 @@ namespace TechHaven.Presentation.WinUI.Services.Http
                     Errors = new List<string> { ex.Message }
                 };
             }
+        }
+
+        /// <summary>
+        /// Thực hiện upload multipart/form-data lên server, trả về HttpResponseMessage
+        /// </summary>
+        private async Task<HttpResponseMessage> UploadMultipartImageAsync(Stream stream, string fileName, string contentType, string brandName)
+        {
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(brandName ?? string.Empty), "folder");
+
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            content.Add(streamContent, "file", fileName);
+
+            return await _httpClient.PostAsync("api/Image/upload", content);
         }
 
         // File: Services/Http/HttpProductService.cs

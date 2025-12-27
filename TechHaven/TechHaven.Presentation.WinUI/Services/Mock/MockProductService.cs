@@ -212,7 +212,7 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             });
         }
 
-        public Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType)
+        public Task<ResponseWrapper<string>> UploadImageAsync(Stream stream, string fileName, string contentType, string brandName)
         {
             // Giả lập upload: Không làm gì cả, chỉ trả về thành công ngay lập tức
             var response = new ResponseWrapper<string>
