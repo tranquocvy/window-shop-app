@@ -68,7 +68,7 @@ public class ResendOtpCommandHandler : ICommandHandler<ResendOtpCommand, OtpRese
     {
       IsOtpResent = true,
       NewOtpSessionId = newOtpSessionId,
-      OtpExpiresIn = OtpExpirationMinutes
+      OtpExpiresIn = OtpExpirationMinutes * 60
     };
   }
 }

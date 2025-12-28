@@ -10,47 +10,55 @@ namespace TechHaven.Infrastructure.Services.Email;
 /// </summary>
 public class BrevoEmailService : IEmailService
 {
-  private readonly ILogger<BrevoEmailService> _logger;
-  private readonly TechHaven.Infrastructure.Configuration.BrevoSettings _settings;
-  private readonly sib_api_v3_sdk.Api.TransactionalEmailsApi _apiInstance;
+    private readonly ILogger<BrevoEmailService> _logger;
+    private readonly TechHaven.Infrastructure.Configuration.BrevoSettings _settings;
+    private readonly sib_api_v3_sdk.Api.TransactionalEmailsApi _apiInstance;
 
-  public BrevoEmailService(
-      ILogger<BrevoEmailService> logger,
-      IOptions<TechHaven.Infrastructure.Configuration.BrevoSettings> settings)
-  {
-    _logger = logger;
-    _settings = settings.Value;
-
-    if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+    public BrevoEmailService(
+        ILogger<BrevoEmailService> logger,
+        IOptions<TechHaven.Infrastructure.Configuration.BrevoSettings> settings)
     {
-      throw new InvalidOperationException("Brevo API Key is not configured");
+        _logger = logger;
+        _settings = settings.Value;
+
+        if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+        {
+            throw new InvalidOperationException("Brevo API Key is not configured");
+        }
+
+        // Configure API client
+        // sib_api_v3_sdk.Client.Configuration.Default.ApiKey.Add("api-key", _settings.ApiKey);
+        if (sib_api_v3_sdk.Client.Configuration.Default.ApiKey.ContainsKey("api-key"))
+        {
+            sib_api_v3_sdk.Client.Configuration.Default.ApiKey["api-key"] = _settings.ApiKey;
+        }
+        else
+        {
+            sib_api_v3_sdk.Client.Configuration.Default.ApiKey.Add("api-key", _settings.ApiKey);
+        }
+        _apiInstance = new sib_api_v3_sdk.Api.TransactionalEmailsApi();
     }
 
-    // Configure API client
-    sib_api_v3_sdk.Client.Configuration.Default.ApiKey.Add("api-key", _settings.ApiKey);
-    _apiInstance = new sib_api_v3_sdk.Api.TransactionalEmailsApi();
-  }
-
-  public async Task SendOtpEmailAsync(
-      string recipientEmail,
-      string recipientName,
-      string otpCode,
-      CancellationToken cancellationToken = default)
-  {
-    _logger.LogInformation(
-        "Attempting to send OTP email via Brevo to {Email} (User: {UserName})",
-        MaskEmail(recipientEmail), recipientName);
-
-    try
+    public async Task SendOtpEmailAsync(
+        string recipientEmail,
+        string recipientName,
+        string otpCode,
+        CancellationToken cancellationToken = default)
     {
-      // Create sender
-      var sender = new sib_api_v3_sdk.Model.SendSmtpEmailSender(
-          name: _settings.SenderName,
-          email: _settings.SenderEmail
-      );
+        _logger.LogInformation(
+            "Attempting to send OTP email via Brevo to {Email} (User: {UserName})",
+            MaskEmail(recipientEmail), recipientName);
 
-      // Create recipient
-      var to = new System.Collections.Generic.List<sib_api_v3_sdk.Model.SendSmtpEmailTo>
+        try
+        {
+            // Create sender
+            var sender = new sib_api_v3_sdk.Model.SendSmtpEmailSender(
+                name: _settings.SenderName,
+                email: _settings.SenderEmail
+            );
+
+            // Create recipient
+            var to = new System.Collections.Generic.List<sib_api_v3_sdk.Model.SendSmtpEmailTo>
             {
                 new sib_api_v3_sdk.Model.SendSmtpEmailTo(
                     email: recipientEmail,
@@ -58,61 +66,61 @@ public class BrevoEmailService : IEmailService
                 )
             };
 
-      // Create email content
-      var subject = "Your TechHaven OTP Code";
-      var htmlContent = GenerateOtpEmailHtml(recipientName, otpCode);
-      var textContent = $"Your OTP code is: {otpCode}. Valid for 5 minutes.";
+            // Create email content
+            var subject = "Your TechHaven OTP Code";
+            var htmlContent = GenerateOtpEmailHtml(recipientName, otpCode);
+            var textContent = $"Your OTP code is: {otpCode}. Valid for 5 minutes.";
 
-      // Create email message
-      var sendSmtpEmail = new sib_api_v3_sdk.Model.SendSmtpEmail(
-          sender: sender,
-          to: to,
-          subject: subject,
-          htmlContent: htmlContent,
-          textContent: textContent
-      );
+            // Create email message
+            var sendSmtpEmail = new sib_api_v3_sdk.Model.SendSmtpEmail(
+                sender: sender,
+                to: to,
+                subject: subject,
+                htmlContent: htmlContent,
+                textContent: textContent
+            );
 
-      // Send email
-      var result = await _apiInstance.SendTransacEmailAsync(sendSmtpEmail);
+            // Send email
+            var result = await _apiInstance.SendTransacEmailAsync(sendSmtpEmail);
 
-      _logger.LogInformation(
-          "OTP email sent successfully via Brevo to {Email}. MessageId: {MessageId}",
-          MaskEmail(recipientEmail),
-          result.MessageId);
+            _logger.LogInformation(
+                "OTP email sent successfully via Brevo to {Email}. MessageId: {MessageId}",
+                MaskEmail(recipientEmail),
+                result.MessageId);
+        }
+        catch (sib_api_v3_sdk.Client.ApiException ex)
+        {
+            var errorCode = ex.ErrorCode;
+            var errorMessage = ex.Message;
+            var errorContent = ex.ErrorContent?.ToString() ?? "No content";
+
+            //   _logger.LogError(
+            //       ex,
+            //       "Brevo API error. StatusCode: {StatusCode}, Message: {Message}, Response: {Response}",
+            //       errorCode,
+            //       errorMessage,
+            //       errorContent);
+
+            throw new InvalidOperationException(
+                $"Brevo API error ({errorCode}): {errorMessage}", ex);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to send OTP email via Brevo to {Email}",
+                MaskEmail(recipientEmail));
+
+            throw new InvalidOperationException(
+                $"Failed to send OTP email: {ex.Message}", ex);
+        }
     }
-    catch (sib_api_v3_sdk.Client.ApiException ex)
+
+    private string GenerateOtpEmailHtml(string recipientName, string otpCode)
     {
-      var errorCode = ex.ErrorCode;
-      var errorMessage = ex.Message;
-      var errorContent = ex.ErrorContent?.ToString() ?? "No content";
+        _logger.LogDebug("Generating OTP email HTML for {UserName}", recipientName);
 
-    //   _logger.LogError(
-    //       ex,
-    //       "Brevo API error. StatusCode: {StatusCode}, Message: {Message}, Response: {Response}",
-    //       errorCode,
-    //       errorMessage,
-    //       errorContent);
-
-      throw new InvalidOperationException(
-          $"Brevo API error ({errorCode}): {errorMessage}", ex);
-    }
-    catch (System.Exception ex)
-    {
-      _logger.LogError(
-          ex,
-          "Failed to send OTP email via Brevo to {Email}",
-          MaskEmail(recipientEmail));
-
-      throw new InvalidOperationException(
-          $"Failed to send OTP email: {ex.Message}", ex);
-    }
-  }
-
-  private string GenerateOtpEmailHtml(string recipientName, string otpCode)
-  {
-    _logger.LogDebug("Generating OTP email HTML for {UserName}", recipientName);
-
-    return $@"
+        return $@"
 <!DOCTYPE html>
 <html lang='vi'>
 <head>
@@ -157,24 +165,24 @@ public class BrevoEmailService : IEmailService
     </div>
 </body>
 </html>";
-  }
+    }
 
-  /// <summary>
-  /// Mask email for security logging
-  /// </summary>
-  private string MaskEmail(string email)
-  {
-    if (string.IsNullOrEmpty(email) || !email.Contains('@'))
-      return "***@***.***";
+    /// <summary>
+    /// Mask email for security logging
+    /// </summary>
+    private string MaskEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email) || !email.Contains('@'))
+            return "***@***.***";
 
-    var parts = email.Split('@');
-    var localPart = parts[0];
-    var domain = parts[1];
+        var parts = email.Split('@');
+        var localPart = parts[0];
+        var domain = parts[1];
 
-    var maskedLocal = localPart.Length > 2
-        ? localPart.Substring(0, 2) + "***"
-        : "***";
+        var maskedLocal = localPart.Length > 2
+            ? localPart.Substring(0, 2) + "***"
+            : "***";
 
-    return $"{maskedLocal}@{domain}";
-  }
+        return $"{maskedLocal}@{domain}";
+    }
 }
