@@ -37,7 +37,7 @@ public class Order
     [Required(ErrorMessage = "Order date is required.")]
     [Display(Name = "Order Date")]
     [DataType(DataType.DateTime)]
-    public DateTime OrderDate { get; set; } = DateTime.Now;
+    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the current status of the order.

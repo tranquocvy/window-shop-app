@@ -1,0 +1,14 @@
+# Bỏ qua thư mục build rác từ máy local
+**/bin/
+**/obj/
+
+# Bỏ qua git
+.git/
+
+# Bỏ qua các file cấu hình IDE
+.vs/
+.vscode/
+
+# Bỏ qua project Windows để đỡ copy nặng máy
+TechHaven.Presentation.WinUI/
+TechHaven.Presentation.WinUI.Package/

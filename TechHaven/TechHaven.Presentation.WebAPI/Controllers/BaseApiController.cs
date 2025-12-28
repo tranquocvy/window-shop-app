@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Domain.Common;
+using TechHaven.Infrastructure.Authorization;
 using TechHaven.Shared.DTOs.Common;
 
 [ApiController]
@@ -104,5 +105,15 @@ public abstract class BaseApiController : ControllerBase
       Message = result.ErrorMessage ?? "Operation failed",
       Errors = errors
     });
+  }
+
+  protected int GetCurrentUserIdOrThrow()
+  {
+    var userId = User.GetCurrentUserId();
+    if (userId == null)
+    {
+      throw new UnauthorizedAccessException("User ID not found in token");
+    }
+    return userId.Value;
   }
 }

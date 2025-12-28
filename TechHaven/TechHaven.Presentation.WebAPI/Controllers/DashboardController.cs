@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+
 // using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Application.Features.Dashboard.Queries.GetDashboard;
@@ -10,7 +12,7 @@ namespace TechHaven.Presentation.WebAPI.Controllers;
 /// <summary>
 /// Controller for dashboard overview data
 /// </summary>
-// [Authorize] // Uncomment when authentication is ready
+[Authorize]
 public class DashboardController : BaseApiController
 {
   private readonly IMediator _mediator;

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Application.Interfaces;
@@ -8,6 +9,7 @@ namespace TechHaven.Presentation.WebAPI.Controllers;
 /// <summary>
 /// Controller for handling image uploads
 /// </summary>
+[Authorize]
 public class ImageController : BaseApiController
 {
   private readonly IImageUploadService _imageUploadService;

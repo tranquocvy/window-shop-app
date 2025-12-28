@@ -12,6 +12,6 @@ public class GetTopSellingProductsValidator : AbstractValidator<GetCommissionRep
 
     RuleFor(x => x.Year)
     .NotEmpty().WithMessage("Year is required")
-    .InclusiveBetween(2000, DateTime.Now.Year).WithMessage($"Year must be between 2000 and {DateTime.Now.Year}");   
+    .InclusiveBetween(2000, DateTime.UtcNow.Year).WithMessage($"Year must be between 2000 and {DateTime.UtcNow.Year}");   
   }
 }

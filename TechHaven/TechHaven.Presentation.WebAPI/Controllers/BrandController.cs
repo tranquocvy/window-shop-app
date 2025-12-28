@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Application.Features.Brand.Queries.GetBrandsQuery;
 using TechHaven.Shared.DTOs.Brands;
@@ -6,6 +7,7 @@ using TechHaven.Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
+[Authorize]
 public class BrandController : BaseApiController
 {
   private readonly IMediator _mediator;

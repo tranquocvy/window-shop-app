@@ -69,7 +69,7 @@ public class Customer
     /// </summary>
     [Display(Name = "Created At")]
     [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the date and time when the customer was last updated.

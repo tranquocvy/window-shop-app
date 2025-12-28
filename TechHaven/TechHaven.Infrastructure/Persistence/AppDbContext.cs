@@ -122,22 +122,22 @@ public class AppDbContext : DbContext
             {
                 if (entry.State == EntityState.Added)
                 {
-                    customer.CreatedAt = DateTime.Now;
+                    customer.CreatedAt = DateTime.UtcNow;
                 }
                 else if (entry.State == EntityState.Modified)
                 {
-                    customer.UpdatedAt = DateTime.Now;
+                    customer.UpdatedAt = DateTime.UtcNow;
                 }
             }
             else if (entry.Entity is Product product)
             {
                 if (entry.State == EntityState.Added)
                 {
-                    product.CreatedAt = DateTime.Now;
+                    product.CreatedAt = DateTime.UtcNow;
                 }
                 else if (entry.State == EntityState.Modified)
                 {
-                    product.UpdatedAt = DateTime.Now;
+                    product.UpdatedAt = DateTime.UtcNow;
                 }
             }
             else if (entry.Entity is AppSetting appSetting && entry.State == EntityState.Modified)
@@ -146,7 +146,7 @@ public class AppDbContext : DbContext
             }
             else if (entry.Entity is Commission commission && entry.State == EntityState.Added)
             {
-                commission.CreatedAt = DateTime.Now;
+                commission.CreatedAt = DateTime.UtcNow;
             }
         }
     }

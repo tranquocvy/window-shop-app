@@ -14,6 +14,7 @@ using TechHaven.Infrastructure.Authorization;
 using TechHaven.Infrastructure.Authorization.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using TechHaven.Infrastructure.Services.AI;
+using TechHaven.Infrastructure.Services.Email;
 
 namespace TechHaven.Infrastructure;
 
@@ -90,7 +91,23 @@ public static class DependencyInjection
         // ============================================
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IOtpService, OtpService>();
-        services.AddScoped<IEmailService, EmailService>();
+        // services.AddScoped<IEmailService, EmailService>();
+
+        // ============================================
+        // Configure Brevo Email Service
+        // ============================================
+        services.Configure<BrevoSettings>(options =>
+        {
+            options.ApiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") ?? "";
+            options.SenderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") ?? "";
+            options.SenderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") ?? "TechHaven";
+        });
+
+        services.Configure<SecuritySettings>(configuration.GetSection("SecuritySettings"));
+
+        // Register Brevo Email Service
+        services.AddScoped<IEmailService, BrevoEmailService>();
+
         services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         // ============================================
@@ -185,7 +202,7 @@ public static class DependencyInjection
             configuration.GetSection("SmtpSettings"));
 
         // Register Email Service
-        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailService, BrevoEmailService>();
 
         // 7. Supabase Storage Configuration
         services.Configure<SupabaseSettings>(options =>
