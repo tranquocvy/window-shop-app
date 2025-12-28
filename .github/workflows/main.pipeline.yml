@@ -12,6 +12,8 @@ jobs:
   build-backend:
     name: Build ASP.NET Core
     runs-on: ubuntu-latest
+    # Chỉ chạy job này nếu là push lên nhánh main
+    if: github.ref == 'refs/heads/cicd'
 
     steps:
     # 1. Lấy code về
@@ -40,3 +42,35 @@ jobs:
     # Tuy nhiên, tôi để sẵn mẫu ở đây. Nếu bạn có project test, hãy trỏ vào nó.
     # - name: Run Unit Tests
     #   run: dotnet test TechHaven.Tests/TechHaven.Tests.csproj --no-build -c Release
+  
+  build-and-push-docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    # Chỉ chạy job này SAU KHI job build-backend thành công VÀ là push lên nhánh main
+    needs: build-backend
+    if: github.ref == 'refs/heads/cicd' && needs.build-backend.result == 'success'
+
+    steps:
+      # 1. Lấy code về
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # 2. Đăng nhập Docker Hub
+      # Sử dụng action 'docker/login-action' để đăng nhập an toàn bằng secrets
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Build và Push Docker Image
+      # Sử dụng action 'docker/build-push-action' để thực hiện cả 2 việc
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./TechHaven # Build từ thư mục gốc của repo
+          file: ./TechHaven/Dockerfile # Sử dụng Dockerfile này
+          push: true # Đẩy lên registry sau khi build
+          tags: | # Đặt các tag cho image
+            ${{ secrets.DOCKERHUB_USERNAME }}/techhaven-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/techhaven-backend:v1.2

@@ -8,11 +8,11 @@ WORKDIR /src
 # --- COPY ONLY .csproj FILES & RESTORE ---
 # Copy các file .csproj của các dự án LIÊN QUAN ĐẾN BACKEND
 # Chúng ta BỎ QUA WinUI và Package vì Linux không build được chúng
-COPY TechHaven.Domain/*.csproj ./TechHaven.Domain/
-COPY TechHaven.Application/*.csproj ./TechHaven.Application/
-COPY TechHaven.Infrastructure/*.csproj ./TechHaven.Infrastructure/
-COPY TechHaven.Shared/*.csproj ./TechHaven.Shared/
-COPY TechHaven.Presentation.WebAPI/*.csproj ./TechHaven.Presentation.WebAPI/
+COPY ./TechHaven.Domain/*.csproj ./TechHaven.Domain/
+COPY ./TechHaven.Application/*.csproj ./TechHaven.Application/
+COPY ./TechHaven.Infrastructure/*.csproj ./TechHaven.Infrastructure/
+COPY ./TechHaven.Shared/*.csproj ./TechHaven.Shared/
+COPY ./TechHaven.Presentation.WebAPI/*.csproj ./TechHaven.Presentation.WebAPI/
 
 # Restore dependencies
 # [QUAN TRỌNG] Chỉ restore cho WebAPI project. SKD sẽ tự đọc .prj và lan truyền các Prj liên quan và restore
