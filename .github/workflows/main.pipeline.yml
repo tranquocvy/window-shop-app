@@ -9,27 +9,34 @@ on:
 
 # 2. JOBS: Các công việc cần làm
 jobs:
-  # Tên của công việc đầu tiên: "build-test"
-  check-environment:
-    # 3. RUNNER: Chạy trên môi trường nào?
-    # ubuntu-latest là máy ảo Linux mới nhất của GitHub
+  build-backend:
+    name: Build ASP.NET Core
     runs-on: ubuntu-latest
 
-    # 4. STEPS: Các bước thực hiện tuần tự
     steps:
-      # Bước 1: Tải code từ kho chứa về máy ảo Runner
-      # 'uses' là cách gọi các Action có sẵn do cộng đồng viết
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
+    # 1. Lấy code về
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
 
-      # Bước 2: Chạy thử một lệnh Shell đơn giản
-      - name: Say Hello
-        run: echo "Hello TechHaven! I am Robot GitHub Actions."
+    # 2. Cài đặt .NET SDK 8.0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
 
-      # Bước 3: Kiểm tra xem máy ảo này có gì
-      - name: Check .NET Version
-        run: dotnet --version
+    # 3. Khôi phục thư viện (Restore)
+    # LƯU Ý: Chỉ restore cho WebAPI để tránh lỗi WinUI trên Linux
+    - name: Restore Dependencies
+      run: dotnet restore TechHaven/TechHaven.Presentation.WebAPI/TechHaven.Presentation.WebAPI.csproj
 
-      # Bước 4: Kiểm tra xem có thấy file solution không
-      - name: List files
-        run: ls -R
+    # 4. Build Code (Biên dịch)
+    # --no-restore: Tận dụng kết quả bước trên
+    # -c Release: Build cấu hình tối ưu cho production
+    - name: Build WebAPI
+      run: dotnet build TechHaven/TechHaven.Presentation.WebAPI/TechHaven.Presentation.WebAPI.csproj --no-restore -c Release
+
+    # 5. Chạy Unit Test (Optional)
+    # Nếu bạn chưa viết test, bước này có thể bỏ qua hoặc comment lại.
+    # Tuy nhiên, tôi để sẵn mẫu ở đây. Nếu bạn có project test, hãy trỏ vào nó.
+    # - name: Run Unit Tests
+    #   run: dotnet test TechHaven.Tests/TechHaven.Tests.csproj --no-build -c Release
