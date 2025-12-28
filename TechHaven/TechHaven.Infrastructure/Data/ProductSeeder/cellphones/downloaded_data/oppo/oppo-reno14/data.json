@@ -1,0 +1,13 @@
+{
+    "ProductName": "OPPO Reno14 5G 12GB 256GB",
+    "BrandName": "Oppo",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "MediaTek Dimensity 8350 5G, tối đa 3.35GHz",
+    "ScreenSize": 6.59,
+    "BatteryCapacity": 6000,
+    "ImageUrl": "oppo-reno14_main.jpg",
+    "ImageGalleryJson": "[\"oppo-reno14_gallery_1.jpg\", \"oppo-reno14_gallery_2.jpg\"]",
+    "SellPrice": 2610000.0,
+    "Description": "Tần số quét 120Hz, độ sáng 1200 nits, kính GG7i"
+}

@@ -1,0 +1,56 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TechHaven.Shared.DTOs.Reports;
+using CommissionQueryDto = TechHaven.Shared.DTOs.Reports.CommissionQueryDto;
+
+namespace TechHaven.Presentation.WinUI.Services.Interfaces
+{
+    public interface IReportService
+    {
+        /// <summary>
+        /// Get product sales report (for line chart)
+        /// </summary>
+        Task<List<ProductSalesTrendDto>> GetProductSalesReportAsync(ReportQueryDto query);
+
+        /// <summary>
+        /// Get revenue and profit report (trend with summary)
+        /// </summary>
+        Task<SalesTrendDto> GetRevenueReportAsync(ReportQueryDto query);
+
+        /// <summary>
+        /// Get list of products for dropdown or search
+        /// </summary>
+        Task<List<ProductSummaryDto>> GetProductsAsync(string? keyword = null);
+
+        /// <summary>
+        /// Get commission report grouped by user (admin only)
+        /// </summary>
+        Task<List<CommissionReportDto>> GetCommissionReportAsync(CommissionQueryDto query);
+
+        /// <summary>
+        /// Get single product detail for product chart
+        /// </summary>
+        Task<ProductSalesTrendDto> GetProductDetailAsync(int productId, ReportQueryDto query);
+
+        /// <summary>
+        /// Export sales report as an Excel file (bytes)
+        /// </summary>
+        Task<byte[]> ExportSalesAsync(ReportQueryDto query);
+
+        /// <summary>
+        /// Export product detail report as Excel (for selected product)
+        /// </summary>
+        Task<byte[]> ExportProductAsync(int productId, ReportQueryDto query);
+
+        /// <summary>
+        /// Export commission report as Excel
+        /// </summary>
+        Task<byte[]> ExportCommissionAsync(CommissionQueryDto query);
+    }
+
+    public class ProductSummaryDto
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+    }
+}

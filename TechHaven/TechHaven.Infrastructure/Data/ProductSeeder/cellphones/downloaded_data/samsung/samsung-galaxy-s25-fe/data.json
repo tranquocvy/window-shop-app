@@ -1,0 +1,13 @@
+{
+    "ProductName": "Samsung Galaxy S25 FE 8GB 128GB",
+    "BrandName": "Samsung",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "Exynos 2400",
+    "ScreenSize": 6.7,
+    "BatteryCapacity": 4900,
+    "ImageUrl": "samsung-galaxy-s25-fe_main.jpg",
+    "ImageGalleryJson": "[\"samsung-galaxy-s25-fe_gallery_1.jpg\", \"samsung-galaxy-s25-fe_gallery_2.jpg\"]",
+    "SellPrice": 20000000,
+    "Description": "Độ sáng tối đa 1900 nits\nGorilla® Victus+\n16 triệu màu"
+}

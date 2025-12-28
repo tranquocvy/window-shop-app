@@ -12,16 +12,6 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Helpers\**" />
-    <Compile Remove="Services\**" />
-    <EmbeddedResource Remove="Helpers\**" />
-    <EmbeddedResource Remove="Services\**" />
-    <None Remove="Helpers\**" />
-    <None Remove="Services\**" />
-    <Page Remove="Helpers\**" />
-    <Page Remove="Services\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -37,6 +27,10 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+  </ItemGroup>
+
   <!--
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
     Tools extension to be activated for this project even if the Windows App SDK Nuget
@@ -46,12 +40,11 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.0.0-rc6.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6901" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
+    <PackageReference Include="QuestPDF" Version="2025.7.4" />
   </ItemGroup>
 
   <!--
@@ -69,14 +62,160 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <SelfContained Condition="'$(Configuration)' != 'Debug'">true</SelfContained>
+    <!-- Enable JSON reflection for System.Text.Json when trimming -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- Preserve all assemblies to avoid trimming issues -->
+    <TrimMode>partial</TrimMode>
   </PropertyGroup>
   <ItemGroup>
-    <PRIResource Remove="Services\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <PRIResource Remove="Helpers\**" />
+    <Compile Remove="Docs\**" />
+    <Compile Remove="ViewModels\**" />
+    <Compile Remove="Views\Order\**" />
+    <EmbeddedResource Remove="Docs\**" />
+    <EmbeddedResource Remove="ViewModels\**" />
+    <EmbeddedResource Remove="Views\Order\**" />
+    <None Remove="Docs\**" />
+    <None Remove="ViewModels\**" />
+    <None Remove="Views\Order\**" />
+    <Page Remove="Docs\**" />
+    <Page Remove="ViewModels\**" />
+    <Page Remove="Views\Order\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="ViewModels\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Assets\RoleToVisibilityConverter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Themes\MidnightTheme.xaml" />
+    <None Remove="Views\CustomerPage.xaml" />
+    <None Remove="Views\DashboardPage.xaml" />
+    <None Remove="Views\OrderPage.xaml" />
+    <None Remove="Views\ProductEditDialog.xaml" />
+    <None Remove="Views\ProductPage.xaml" />
+    <None Remove="Views\ReportPage.xaml" />
+    <None Remove="Views\SettingPage.xaml" />
+    <None Remove="Views\ShellWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Remove="Views\AddCustomerDialog.xaml" />
+    <Page Remove="Views\CustomersPage.xaml" />
+    <Page Remove="Views\MainShellPage.xaml" />
+    <Page Remove="Views\OrdersPage.xaml" />
+    <Page Remove="Views\Pages\CustomersPage.xaml" />
+    <Page Remove="Views\Pages\DashboardPage.xaml" />
+    <Page Remove="Views\Pages\LoginPlaceholder.xaml" />
+    <Page Remove="Views\Pages\OrdersPage.xaml" />
+    <Page Remove="Views\Pages\ProductsPage.xaml" />
+    <Page Remove="Views\Pages\ReportsPage.xaml" />
+    <Page Remove="Views\Pages\SettingsPage.xaml" />
+    <Page Remove="Views\ProductsPage.xaml" />
+    <Page Remove="Views\ProductsSellerPage.xaml" />
+    <Page Remove="Views\ReportsPage.xaml" />
+    <Page Remove="Views\SettingsPage.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Themes\Common.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Accents.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\CustomerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\DarkTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\LightTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\HyperVioletTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Themes\MidnightTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\ProductEditDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\ProductPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\ShellWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\SettingPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\ReportPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\OrderPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\DashboardPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <None Update="Views\MainShellPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\OrdersPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\CustomersPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\DashboardPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\LoginPlaceholder.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\OrdersPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\ProductsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\ReportsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\Pages\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\ProductsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\ProductsSellerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\ReportsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Views\Order\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="Docs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Views\Order\CustomerSelectorDialog.cs" />
+    <Compile Include="Views\Order\OrderEditorDialog.cs" />
+    <Compile Include="Views\Order\OrderPageHelpers.cs" />
+    <Compile Include="Views\Order\ProductSelectorDialog.cs" />
+    <Compile Include="Views\Order\StatusUpdateDialog.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controls\" />
   </ItemGroup>
 </Project>

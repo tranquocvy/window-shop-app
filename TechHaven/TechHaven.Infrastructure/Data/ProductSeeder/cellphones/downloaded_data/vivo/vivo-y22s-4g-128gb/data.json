@@ -1,0 +1,13 @@
+{
+    "ProductName": "vivo Y22S 4GB 128GB",
+    "BrandName": "Vivo",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "Qualcomm Snapdragon 680",
+    "ScreenSize": 6.55,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "vivo-y22s-4g-128gb_main.jpg",
+    "ImageGalleryJson": "[\"vivo-y22s-4g-128gb_gallery_1.jpg\"]",
+    "SellPrice": 20000000,
+    "Description": null
+}

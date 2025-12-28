@@ -1,0 +1,13 @@
+{
+    "ProductName": "OPPO A18 4GB 128GB",
+    "BrandName": "Oppo",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "MediaTek Helio G85 8 nhân",
+    "ScreenSize": 6.56,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "oppo-a18_main.jpg",
+    "ImageGalleryJson": "[\"oppo-a18_gallery_1.jpg\", \"oppo-a18_gallery_2.jpg\"]",
+    "SellPrice": 20000000,
+    "Description": "Tần số quét 90Hz, 16 triệu màu, Kính cường lực Panda, 720 nits,"
+}

@@ -1,0 +1,13 @@
+{
+    "ProductName": "realme Note 60 4GB 64GB",
+    "BrandName": "Realme",
+    "Color": "Titan",
+    "StorageCapacity": 64,
+    "Processor": "UNISOC T612",
+    "ScreenSize": 6.74,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "realme-note-60_main.jpg",
+    "ImageGalleryJson": "[\"realme-note-60_gallery_1.jpg\", \"realme-note-60_gallery_2.jpg\"]",
+    "SellPrice": 20000000,
+    "Description": "Tần số quét 90Hz, Độ sáng tối đa 560nit\n16.7 triệu màu\nPanda - MN228"
+}

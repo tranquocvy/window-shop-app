@@ -1,0 +1,13 @@
+{
+    "ProductName": "iPhone 14 128GB | Chính hãng VN/A",
+    "BrandName": "Apple",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "Apple A15 Bionic 6 nhân",
+    "ScreenSize": 6.1,
+    "BatteryCapacity": 3,
+    "ImageUrl": "iphone-14_main.jpg",
+    "ImageGalleryJson": "[\"iphone-14_gallery_1.jpg\", \"iphone-14_gallery_2.jpg\"]",
+    "SellPrice": 20000000,
+    "Description": "Tần số quét 60Hz, 1200 nits, Kính cường lực Ceramic Shield, Super Retina XDR"
+}

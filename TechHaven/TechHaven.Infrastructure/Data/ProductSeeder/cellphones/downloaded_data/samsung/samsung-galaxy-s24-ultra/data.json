@@ -1,0 +1,13 @@
+{
+    "ProductName": "Samsung Galaxy S24 Ultra 12GB 256GB",
+    "BrandName": "Samsung",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "Snapdragon 8 Gen 3 For Galaxy",
+    "ScreenSize": 6.8,
+    "BatteryCapacity": 5,
+    "ImageUrl": "samsung-galaxy-s24-ultra_main.jpg",
+    "ImageGalleryJson": "[\"samsung-galaxy-s24-ultra_gallery_1.jpg\", \"samsung-galaxy-s24-ultra_gallery_2.jpg\"]",
+    "SellPrice": 7490000.0,
+    "Description": "Độ sáng cao nhất 2,600 nits, 120Hz, Corning® Gorilla® Armor®, 16 triệu màu"
+}
