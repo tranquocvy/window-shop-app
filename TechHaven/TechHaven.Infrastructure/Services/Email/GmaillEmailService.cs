@@ -6,18 +6,18 @@ using MailKit.Security;
 using TechHaven.Application.Interfaces;
 using TechHaven.Infrastructure.Configuration;
 
-namespace TechHaven.Infrastructure.Services;
+namespace TechHaven.Infrastructure.Services.Email;
 
 /// <summary>
 /// Email service using SMTP for sending emails.
 /// </summary>
-public class EmailService : IEmailService
+public class GmailEmailService : IEmailService
 {
-  private readonly ILogger<EmailService> _logger;
+  private readonly ILogger<GmailEmailService> _logger;
   private readonly SmtpSettings _smtpSettings;
 
-  public EmailService(
-      ILogger<EmailService> logger,
+  public GmailEmailService(
+      ILogger<GmailEmailService> logger,
       IOptions<SmtpSettings> smtpSettings)
   {
     _logger = logger;
