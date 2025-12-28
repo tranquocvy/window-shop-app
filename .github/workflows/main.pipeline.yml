@@ -1,0 +1,35 @@
+name: TechHaven CI/CD Pipeline
+
+# 1. EVENT: Khi nào thì chạy?
+on:
+  push:
+    branches: [ "cicd" ] # Chạy khi có code push vào nhánh main
+  pull_request:
+    branches: [ "cicd" ] # Chạy khi có ai đó tạo Pull Request vào main
+
+# 2. JOBS: Các công việc cần làm
+jobs:
+  # Tên của công việc đầu tiên: "build-test"
+  check-environment:
+    # 3. RUNNER: Chạy trên môi trường nào?
+    # ubuntu-latest là máy ảo Linux mới nhất của GitHub
+    runs-on: ubuntu-latest
+
+    # 4. STEPS: Các bước thực hiện tuần tự
+    steps:
+      # Bước 1: Tải code từ kho chứa về máy ảo Runner
+      # 'uses' là cách gọi các Action có sẵn do cộng đồng viết
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Bước 2: Chạy thử một lệnh Shell đơn giản
+      - name: Say Hello
+        run: echo "Hello TechHaven! I am Robot GitHub Actions."
+
+      # Bước 3: Kiểm tra xem máy ảo này có gì
+      - name: Check .NET Version
+        run: dotnet --version
+
+      # Bước 4: Kiểm tra xem có thấy file solution không
+      - name: List files
+        run: ls -R
