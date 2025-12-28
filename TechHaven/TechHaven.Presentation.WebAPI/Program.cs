@@ -1,14 +1,17 @@
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using DotNetEnv;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using TechHaven.Application;
+using TechHaven.Application.Interfaces;
 using TechHaven.Infrastructure;
 using TechHaven.Infrastructure.Data;
 using TechHaven.Infrastructure.Persistence;
-using DotNetEnv;
-using Serilog;
+using TechHaven.Infrastructure.Services;
 using TechHaven.Presentation.WebAPI.Middleware;
-using TechHaven.Shared.DTOs.Common;
-using Microsoft.AspNetCore.Mvc;
 using TechHaven.Presentation.WebAPI.Seeders;
+using TechHaven.Shared.DTOs.Common;
 
 // ============================================
 // Serilog Configuration Guide
@@ -93,7 +96,6 @@ try
         });
 
     builder.Services.AddEndpointsApiExplorer();
-
     builder.Services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new()
@@ -191,6 +193,9 @@ try
 
     // IMPORTANT: Authentication must come before Authorization
     app.UseAuthentication();
+    // 2. [MỚI] Đăng ký TenantMiddleware: Middleware này phải chạy SAU Authentication (để đọc được context.User) nhưng TRƯỚC Controllers (để kịp đổi DB).
+    app.UseMiddleware<TenantMiddleware>();
+
     app.UseAuthorization();
 
     app.MapControllers();

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +33,13 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // 1. Đăng ký TenantService (QUAN TRỌNG: Đặt trước AddDbContext)
+        // Tại sao Scoped? Vì mỗi request HTTP cần một connection string riêng biệt
+        services.AddScoped<ITenantService, TenantService>();
+        // Đăng ký ExternalAuthService - Dynamic Db connection string
+        services.AddScoped<IExternalAuthService, ExternalAuthService>();
+
+        //2. Cấu hình DbContext
         services.AddDbContext<AppDbContext>(options =>
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection")
@@ -92,6 +99,8 @@ public static class DependencyInjection
         services.AddSingleton<IOtpService, OtpService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        // Đăng ký Helper mã hóa chuỗi
+         services.AddScoped<IStringEncryptionHelper, StringEncryptionHelper>();
 
         // ============================================
         // 5. Memory Cache for OTP

@@ -13,7 +13,7 @@ public interface IJwtTokenService
     /// </summary>
     /// <param name="user">The authenticated user.</param>
     /// <returns>The JWT token string.</returns>
-    string GenerateAccessToken(User user);
+    string GenerateAccessToken(User user, string? encryptedDbConfig = null);
 
     /// <summary>
     /// Generates a refresh token.
