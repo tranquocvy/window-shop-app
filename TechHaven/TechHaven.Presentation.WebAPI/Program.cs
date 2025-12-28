@@ -10,82 +10,73 @@ using TechHaven.Shared.DTOs.Common;
 using Microsoft.AspNetCore.Mvc;
 using TechHaven.Presentation.WebAPI.Seeders;
 
-// ============================================
-// Serilog Configuration Guide
-// ============================================
-// Logging Levels (từ thấp đến cao):
-// - Verbose: Chi tiết cực kỳ nhiều, chỉ dùng khi debug sâu
-// - Debug: Thông tin debug, không dùng trong production
-// - Information: Luồng bình thường của app (API calls, database queries)
-// - Warning: Vấn đề không nghiêm trọng nhưng cần chú ý
-// - Error: Lỗi xảy ra nhưng app vẫn chạy được
-// - Fatal: Lỗi nghiêm trọng khiến app crash
-// ============================================
-
-// Load environment variables FIRST, before creating builder
+// Load environment variables FIRST
 Env.Load();
 
-// Configure Serilog BEFORE creating builder
+// Configure Serilog with environment-aware settings
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+var logLevel = environment == "Development" 
+    ? Serilog.Events.LogEventLevel.Debug 
+    : Serilog.Events.LogEventLevel.Information;
+
 Log.Logger = new LoggerConfiguration()
-    // .MinimumLevel.Information()
-    .MinimumLevel.Debug()
+    .MinimumLevel.Is(logLevel)
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithThreadId()
     .Enrich.WithMachineName()
+    .Enrich.WithProperty("Environment", environment)
+    .Enrich.WithProperty("Application", "TechHaven")
     .WriteTo.Console(
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .WriteTo.File(
-        path: "logs/techhaven-.log",
+        path: environment == "Development" ? "logs/techhaven-.log" : "/app/logs/techhaven-.log",
         rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+        retainedFileCountLimit: environment == "Development" ? 7 : 30,
+        fileSizeLimitBytes: 104857600, // 100MB
+        rollOnFileSizeLimit: true,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj} {Properties:j}{NewLine}{Exception}")
     .CreateLogger();
 
 try
 {
-    Log.Information("Starting TechHaven API");
+    Log.Information("Starting TechHaven API in {Environment} mode", environment);
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // Ensure the app uses the same port/url as configured by TECHHAVEN_API_BASEURL when present,
-    // otherwise fall back to the team's default (http://localhost:5207)
+    // Configure URLs
     var explicitUrl = Environment.GetEnvironmentVariable("TECHHAVEN_API_BASEURL") ?? "http://localhost:5207";
-    try
-    {
-        builder.WebHost.UseUrls(explicitUrl);
-        Log.Information("Configured URLs from environment/fallback: {Url}", explicitUrl);
-    }
-    catch (Exception exUrls)
-    {
-        Log.Warning(exUrls, "Failed to call UseUrls with {Url}", explicitUrl);
-    }
+    builder.WebHost.UseUrls(explicitUrl);
+    Log.Information("Configured URLs: {Url}", explicitUrl);
 
-    // Use Serilog for logging
+    // Use Serilog
     builder.Host.UseSerilog();
 
-    // Add environment variables to configuration BEFORE registering services
+    // Add configuration sources
     builder.Configuration.AddEnvironmentVariables();
 
-    // Add services to the container
+    // Add services
     builder.Services.AddControllers()
         .ConfigureApiBehaviorOptions(options =>
         {
-            // Customize validation error response
             options.InvalidModelStateResponseFactory = context =>
             {
                 var errors = context.ModelState
                     .Where(e => e.Value?.Errors.Count > 0)
-                    .SelectMany(e => e.Value!.Errors.Select(x =>
-                        $"{e.Key}: {x.ErrorMessage}"))
+                    .Select(e => new
+                    {
+                        Field = e.Key,
+                        Errors = e.Value?.Errors.Select(x => x.ErrorMessage).ToArray()
+                    })
                     .ToList();
 
                 var response = new ResponseWrapper<object>
                 {
                     Success = false,
                     Message = "Validation failed",
-                    Errors = errors
+                    Data = errors
                 };
 
                 return new BadRequestObjectResult(response);
@@ -93,20 +84,18 @@ try
         });
 
     builder.Services.AddEndpointsApiExplorer();
-
     builder.Services.AddSwaggerGen(options =>
     {
-        options.SwaggerDoc("v1", new()
+        options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
         {
             Title = "TechHaven API",
             Version = "v1",
-            Description = "API for TechHaven Store Management System"
+            Description = "API for TechHaven Shop Management System"
         });
 
-        // Thêm cấu hình cho Bearer token
         options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
-            Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
             Name = "Authorization",
             In = Microsoft.OpenApi.Models.ParameterLocation.Header,
             Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
@@ -140,38 +129,30 @@ try
 
     var app = builder.Build();
 
-    // THÊM Global Exception Handler (phải đặt đầu tiên)
+    // Global Exception Handler
     app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-    // Add request logging middleware
+    // Request logging
     app.UseSerilogRequestLogging(options =>
     {
-        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000}ms";
-        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-        {
-            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-            diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
-        };
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        options.GetLevel = (httpContext, elapsed, ex) => ex != null
+            ? Serilog.Events.LogEventLevel.Error
+            : httpContext.Response.StatusCode > 499
+                ? Serilog.Events.LogEventLevel.Error
+                : Serilog.Events.LogEventLevel.Information;
     });
 
-    // Seed the database
+    // Database migration and seeding
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
         try
         {
             var context = services.GetRequiredService<AppDbContext>();
-            var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-            var seedLogger = loggerFactory.CreateLogger("DbInitializer");
-            await DbInitializer.SeedAsync(context, seedLogger);
-
-            var productSeeder = services.GetRequiredService<CellphoneProductSeeder>();
-            await productSeeder.SeedAsync();
-
-            var orderSeeder = services.GetRequiredService<OrderSeeder>();
-            await orderSeeder.SeedAsync();
-
-            Log.Information("Database seeding completed successfully");
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            await DbInitializer.SeedAsync(context, logger);
+            Log.Information("Database initialized successfully");
         }
         catch (Exception ex)
         {
@@ -180,34 +161,19 @@ try
         }
     }
 
-    // // Configure the HTTP request pipeline.
-    // if (app.Environment.IsDevelopment())
-    // {
-    //     app.UseSwagger();
-    //     app.UseSwaggerUI();
-    // }
-
+    // Swagger (enabled in all environments for now, can be restricted later)
     app.UseSwagger();
     app.UseSwaggerUI();
 
     app.UseHttpsRedirection();
-
-    // IMPORTANT: Authentication must come before Authorization
     app.UseAuthentication();
     app.UseAuthorization();
-
     app.MapControllers();
 
-    // Log the server URLs
-    // foreach (var url in app.Urls)
-    // {
-    //     Log.Information("Server is running at {Url}", url);
-    // }
-    // Log the server URLs
     var urls = builder.WebHost.GetSetting("urls") ?? explicitUrl;
     Log.Information("Server is running at {Urls}", urls);
-
     Log.Information("TechHaven API started successfully");
+
     app.Run();
 }
 catch (Exception ex)

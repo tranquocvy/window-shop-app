@@ -41,7 +41,7 @@ public class CreateProductCommandHandler
 
       // Create product
       var product = _mapper.Map<Domain.Entities.Product>(request);
-      product.CreatedAt = DateTime.Now;
+      product.CreatedAt = DateTime.UtcNow;
       product.UpdatedAt = null;
 
       await _unitOfWork.Products.AddAsync(product, cancellationToken);

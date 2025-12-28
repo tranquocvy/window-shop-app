@@ -103,6 +103,8 @@ public static class DependencyInjection
             options.SenderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") ?? "TechHaven";
         });
 
+        services.Configure<SecuritySettings>(configuration.GetSection("SecuritySettings"));
+
         // Register Brevo Email Service
         services.AddScoped<IEmailService, BrevoEmailService>();
 

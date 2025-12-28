@@ -12,10 +12,18 @@ public class OtpService : IOtpService
     private readonly ConcurrentDictionary<string, (int UserId, string OtpCode, DateTime ExpiryTime)> _otpStore = new();
     private readonly ILogger<OtpService> _logger;
     private const int OtpExpirationMinutes = 5;
+    private readonly Timer _cleanupTimer;
 
     public OtpService(ILogger<OtpService> logger)
     {
         _logger = logger;
+        // Cleanup every 5 minutes
+        _cleanupTimer = new Timer(
+            CleanupExpiredOtps,
+            null,
+            TimeSpan.FromMinutes(5),
+            TimeSpan.FromMinutes(5)
+        );
     }
 
     public (string OtpSessionId, string OtpCode) GenerateOtp(int userId)
@@ -23,7 +31,7 @@ public class OtpService : IOtpService
         // OLD: Dễ đoán mã OTP nếu như có mã nguồn
         // Generate 6-digit OTP
         // var otpCode = new Random().Next(100000, 999999).ToString();
-        
+
         // NEW: SỬ DỤNG Cryptographically Secure Random
         var otpCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
 
@@ -41,7 +49,7 @@ public class OtpService : IOtpService
             expiryTime);
 
         // Clean up expired OTPs
-        CleanupExpiredOtps();
+        CleanupExpiredOtps(null);
 
         return (sessionId, otpCode);
     }
@@ -109,20 +117,37 @@ public class OtpService : IOtpService
         return storedOtp.UserId;
     }
 
-    private void CleanupExpiredOtps()
+    private void CleanupExpiredOtps(object? state)
     {
-        var now = DateTime.UtcNow;
-        var expiredKeys = _otpStore
-            .Where(kvp => kvp.Value.ExpiryTime < now)
-            .Select(kvp => kvp.Key)
-            .ToList();
-
-        foreach (var key in expiredKeys)
+        try
         {
-            if (_otpStore.TryRemove(key, out _))
+            var now = DateTime.UtcNow;
+            var expiredKeys = _otpStore
+                .Where(kvp => kvp.Value.ExpiryTime < now)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in expiredKeys)
             {
-                _logger.LogDebug("Removed expired OTP session {SessionId}", key);
+                if (_otpStore.TryRemove(key, out _))
+                {
+                    _logger.LogDebug("Cleaned up expired OTP: {SessionId}", key);
+                }
+            }
+
+            if (expiredKeys.Count > 0)
+            {
+                _logger.LogInformation("Cleaned up {Count} expired OTP entries", expiredKeys.Count);
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during OTP cleanup");
+        }
+    }
+
+    public void Dispose()
+    {
+        _cleanupTimer?.Dispose();
     }
 }

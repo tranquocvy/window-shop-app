@@ -25,7 +25,7 @@ public class HealthController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(HealthCheckResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(HealthCheckResponse), StatusCodes.Status503ServiceUnavailable)]
-    public async Task<IActionResult> Get()
+    public Task<IActionResult> Get()
     {
         try
         {
@@ -38,7 +38,7 @@ public class HealthController : ControllerBase
                 Uptime = GetUptime()
             };
 
-            return Ok(response);
+            return Task.FromResult<IActionResult>(Ok(response));
         }
         catch (Exception ex)
         {
@@ -53,7 +53,7 @@ public class HealthController : ControllerBase
                 Error = ex.Message
             };
 
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
+            return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status503ServiceUnavailable, response));
         }
     }
 

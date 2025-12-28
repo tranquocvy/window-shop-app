@@ -1,19 +1,11 @@
 # ==========================================
-# STAGE 1: THE BUILDER (SDK Image)
-# Chứa đầy đủ công cụ: MSBuild, Nuget, C# Compiler
+# STAGE 1: THE BUILDER
+# Xây dựng ứng dụng trong môi trường build đầy đủ
 # ==========================================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# --- TỐI ƯU LAYER CACHING ---
-# Chỉ copy file .csproj trước. 
-# Tại sao? Vì source code thay đổi hàng ngày, nhưng dependencies (thư viện) ít khi đổi.
-# Nếu file .csproj không đổi, Docker sẽ bỏ qua bước 'dotnet restore' và dùng cache -> Build siêu nhanh.
-
-# Copy các file cấu hình Solution
-COPY *.sln ./
-# [QUAN TRỌNG] Copy file cấu hình chung nếu có
-COPY Directory.Build.props ./
+# --- COPY ONLY .csproj FILES & RESTORE ---
 # Copy các file .csproj của các dự án LIÊN QUAN ĐẾN BACKEND
 # Chúng ta BỎ QUA WinUI và Package vì Linux không build được chúng
 COPY TechHaven.Domain/*.csproj ./TechHaven.Domain/
@@ -45,8 +37,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
 # --- SECURITY BEST PRACTICE ---
-# Mặc định container chạy quyền root. Điều này nguy hiểm.
 # ASP.NET 8 Image có sẵn user 'app' (non-root). Hãy dùng nó.
+USER app
+
+# Tạo thư mục logs với quyền ghi
+USER root
+RUN mkdir -p /app/logs && chown -R app:app /app/logs
 USER app
 
 # Copy "Sản phẩm" (.dll) từ Stage 1 (build) sang Stage 2
@@ -54,6 +50,13 @@ COPY --from=build /app/publish .
 
 # Cấu hình cổng (Chỉ mang tính chất tài liệu, docker-compose sẽ map port thực tế)
 EXPOSE 5207
+
+# Biến môi trường cho production
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:5207
+
+# Volume cho logs
+VOLUME ["/app/logs"]
 
 # Chạy ứng dụng
 ENTRYPOINT ["dotnet", "TechHaven.Presentation.WebAPI.dll"]

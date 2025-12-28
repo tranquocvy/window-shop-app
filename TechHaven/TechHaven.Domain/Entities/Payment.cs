@@ -47,7 +47,7 @@ public class Payment
     [Required(ErrorMessage = "Payment date is required.")]
     [Display(Name = "Payment Date")]
     [DataType(DataType.DateTime)]
-    public DateTime PaymentDate { get; set; } = DateTime.Now;
+    public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the order navigation property.

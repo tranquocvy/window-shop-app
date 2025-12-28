@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using TechHaven.Application.Interfaces;
+using TechHaven.Infrastructure.Configuration; // Thêm dòng này
 
 namespace TechHaven.Infrastructure.Services;
 
@@ -7,11 +9,16 @@ namespace TechHaven.Infrastructure.Services;
 /// </summary>
 public class PasswordHasher : IPasswordHasher
 {
-    private const int WorkFactor = 12; // Config được từ appsettings
-    
+    private readonly int _workFactor;
+
+    public PasswordHasher(IOptions<SecuritySettings> settings)
+    {
+        _workFactor = settings.Value.BcryptWorkFactor;
+    }
+
     public string HashPassword(string password)
     {
-        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: WorkFactor);
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: _workFactor);
     }
 
     public bool VerifyPassword(string password, string passwordHash)

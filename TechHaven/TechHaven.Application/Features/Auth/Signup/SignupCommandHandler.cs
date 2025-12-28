@@ -11,13 +11,16 @@ public class SignupCommandHandler : ICommandHandler<SignupCommand, SignupRespons
 {
   private readonly IUnitOfWork _unitOfWork;
   private readonly ILogger<SignupCommandHandler> _logger;
+  private readonly IPasswordHasher _passwordHasher;
 
   public SignupCommandHandler(
-      IUnitOfWork unitOfWork,
-      ILogger<SignupCommandHandler> logger)
+    IUnitOfWork unitOfWork,
+    ILogger<SignupCommandHandler> logger,
+    IPasswordHasher passwordHasher)
   {
     _unitOfWork = unitOfWork;
     _logger = logger;
+    _passwordHasher = passwordHasher;
   }
 
   public async Task<SignupResponseDto> Handle(
@@ -62,7 +65,7 @@ public class SignupCommandHandler : ICommandHandler<SignupCommand, SignupRespons
       UserFullName = request.UserFullName,
       Email = request.Email,
       UserName = request.UserName,
-      PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
+      PasswordHash = _passwordHasher.HashPassword(request.Password), // Sử dụng service
       RoleId = request.RoleId,
       IsActive = true,
       HasSeenGuide = false,
