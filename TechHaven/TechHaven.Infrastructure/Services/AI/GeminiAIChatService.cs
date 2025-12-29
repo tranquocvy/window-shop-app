@@ -50,6 +50,7 @@ public class GeminiAIChatService : IAIChatService
     // Register plugins
     builder.Plugins.AddFromObject(new ProductPlugin(unitOfWork), "ProductPlugin");
     builder.Plugins.AddFromObject(new OrderPlugin(unitOfWork), "OrderPlugin");
+    builder.Plugins.AddFromObject(new DashboardPlugin(unitOfWork), "DashboardPlugin");
 
     _kernel = builder.Build();
     _chatService = _kernel.GetRequiredService<IChatCompletionService>();
