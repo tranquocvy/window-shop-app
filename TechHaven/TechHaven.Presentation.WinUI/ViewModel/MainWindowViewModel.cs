@@ -352,7 +352,15 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             {
                 if (!string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
                 {
-                    TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken);
+                    // Save refresh token with encrypted DB config
+                    // Use the config from OTP response if available, otherwise use the internal one from login
+                    var dbConfigToSave = !string.IsNullOrWhiteSpace(otpData.EncryptedDbConfig) 
+                        ? otpData.EncryptedDbConfig 
+                        : _encryptedDbConfigInternal;
+                    
+                    // Clear DB config if this is a standard login (no encrypted config)
+                    bool clearDbConfig = string.IsNullOrWhiteSpace(dbConfigToSave);
+                    TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken, dbConfigToSave, clearDbConfig);
                 }
             }
             catch { }
