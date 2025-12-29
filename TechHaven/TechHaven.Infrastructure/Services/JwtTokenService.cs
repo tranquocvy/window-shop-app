@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,7 +18,7 @@ public class JwtTokenService : IJwtTokenService
         _configuration = configuration;
     }
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(User user, string? encryptedDbConfig = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
@@ -34,6 +34,11 @@ public class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
             new Claim("RoleId", user.RoleId.ToString())
         };
+        // [MỚI] Nếu có config DB riêng, nhét vào Claim - Dynamic DB Connection
+        if (!string.IsNullOrEmpty(encryptedDbConfig))
+        {
+            claims.Add(new Claim("db_config", encryptedDbConfig));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -1,8 +1,7 @@
 namespace TechHaven.Shared.DTOs.Auth;
 
-public class OtpResendRequestDto
+public class RefreshTokenExternalRequestDto
 {
-    public string OtpSessionId { get; set; } = string.Empty;
-
+    public string RefreshToken { get; set; } = string.Empty;
     public string EncryptedDbConfig { get; set; } = string.Empty;
 }

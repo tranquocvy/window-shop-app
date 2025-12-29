@@ -17,4 +17,6 @@ public class OtpVerifyResponseDto
     public string RoleName { get; set; } = string.Empty;
 
     public bool HasSeenGuide { get; set; } = false;
+
+    public string? EncryptedDbConfig { get; set; }
 }

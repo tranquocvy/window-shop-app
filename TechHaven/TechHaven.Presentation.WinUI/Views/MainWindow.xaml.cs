@@ -41,6 +41,9 @@ namespace TechHaven.Presentation.WinUI.Views
                 versionTextBlock.Text = AppVersion;
             }
             catch { }
+
+            // DB config is NOT persisted for security reasons
+            // User must re-enter external DB credentials each login
         }
 
         // Phương thức xử lý sự kiện Click
@@ -133,6 +136,125 @@ namespace TechHaven.Presentation.WinUI.Views
         private async void configTextBlock_Tapped(object sender, TappedRoutedEventArgs e)
         {
             await ShowSettingsDialogAsync();
+        }
+
+        // Advanced DB Config text tapped
+        private async void advancedConfigTextBlock_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await ShowDatabaseConfigDialogAsync();
+        }
+
+        // Show database configuration dialog
+        private async Task ShowDatabaseConfigDialogAsync()
+        {
+            var hostBox = new TextBox
+            {
+                Text = _viewModel.DbHost,
+                PlaceholderText = "",
+                Width = 400,
+                BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var portBox = new TextBox
+            {
+                Text = _viewModel.DbPort,
+                PlaceholderText = "",
+                Width = 190,
+                BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6)
+            };
+
+            var dbNameBox = new TextBox
+            {
+                Text = _viewModel.DbName,
+                PlaceholderText = "",
+                Width = 190,
+                BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6)
+            };
+
+            var dbUserBox = new TextBox
+            {
+                Text = _viewModel.DbUser,
+                PlaceholderText = "",
+                Width = 400,
+                BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var dbPassBox = new PasswordBox
+            {
+                Password = _viewModel.DbPass,
+                PlaceholderText = "",
+                Width = 400,
+                BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var portDbNameGrid = new Grid { Margin = new Thickness(0, 0, 0, 10) };
+            portDbNameGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            portDbNameGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
+            portDbNameGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var portStack = new StackPanel();
+            portStack.Children.Add(new TextBlock { Text = "Port", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 5) });
+            portStack.Children.Add(portBox);
+            Grid.SetColumn(portStack, 0);
+
+            var dbNameStack = new StackPanel();
+            dbNameStack.Children.Add(new TextBlock { Text = "Database Name", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 5) });
+            dbNameStack.Children.Add(dbNameBox);
+            Grid.SetColumn(dbNameStack, 2);
+
+            portDbNameGrid.Children.Add(portStack);
+            portDbNameGrid.Children.Add(dbNameStack);
+
+            var stack = new StackPanel();
+            stack.Children.Add(new TextBlock 
+            { 
+                Text = "Leave all fields empty to use standard login with default database", 
+                FontSize = 12, 
+                Foreground = new SolidColorBrush(Colors.Gray), 
+                FontStyle = Windows.UI.Text.FontStyle.Italic,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 15)
+            });
+            stack.Children.Add(new TextBlock { Text = "Host", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 5) });
+            stack.Children.Add(hostBox);
+            stack.Children.Add(portDbNameGrid);
+            stack.Children.Add(new TextBlock { Text = "Database User", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 5) });
+            stack.Children.Add(dbUserBox);
+            stack.Children.Add(new TextBlock { Text = "Database Password", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 5) });
+            stack.Children.Add(dbPassBox);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Database Configuration (Advanced)",
+                Content = stack,
+                PrimaryButtonText = "Save",
+                CloseButtonText = "Cancel",
+                XamlRoot = this.Content.XamlRoot,
+                DefaultButton = ContentDialogButton.Primary
+            };
+
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                _viewModel.DbHost = hostBox.Text?.Trim() ?? string.Empty;
+                _viewModel.DbPort = portBox.Text?.Trim() ?? string.Empty;
+                _viewModel.DbName = dbNameBox.Text?.Trim() ?? string.Empty;
+                _viewModel.DbUser = dbUserBox.Text?.Trim() ?? string.Empty;
+                _viewModel.DbPass = dbPassBox.Password?.Trim() ?? string.Empty;
+            }
         }
 
         // Show settings dialog and apply new API URL if saved. Returns true if saved/applied.

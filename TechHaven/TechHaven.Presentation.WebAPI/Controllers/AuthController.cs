@@ -1,19 +1,23 @@
-using System.Linq;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using TechHaven.Application.Common.Exceptions;
-using TechHaven.Shared.DTOs.Common;
-using TechHaven.Shared.DTOs.Auth;
-using TechHaven.Application.Features.Auth.Login;
-using TechHaven.Application.Features.Auth.VerifyOtp;
-using TechHaven.Application.Features.Auth.RefreshToken;
-using TechHaven.Application.Features.Auth.ResendOtp;
-using TechHaven.Application.Features.Auth.Queries.GetCurrentUser;
-using TechHaven.Application.Features.Auth.Signup;
 using TechHaven.Application.Features.Auth.Activate;
+using TechHaven.Application.Features.Auth.Login;
+using TechHaven.Application.Features.Auth.LoginExternal;
+using TechHaven.Application.Features.Auth.Queries.GetCurrentUser;
 using TechHaven.Application.Features.Auth.Queries.IsActive;
+using TechHaven.Application.Features.Auth.RefreshToken;
+using TechHaven.Application.Features.Auth.RefreshTokenExternal;
+using TechHaven.Application.Features.Auth.ResendOtp;
+using TechHaven.Application.Features.Auth.ResendOtpExternal;
+using TechHaven.Application.Features.Auth.Signup;
+using TechHaven.Application.Features.Auth.VerifyOtp;
+using TechHaven.Application.Features.Auth.VerifyOtpExternal;
+using TechHaven.Shared.DTOs.Auth;
+using TechHaven.Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
@@ -84,10 +88,10 @@ public class AuthController : ControllerBase
     }
   }
 
-  /// <summary>
-  /// Step 2: Verify OTP code and receive JWT access token.
-  /// </summary>
-  [HttpPost("verify-otp")]
+    /// <summary>
+    /// Step 2: Verify OTP code and receive JWT access token.
+    /// </summary>
+    [HttpPost("verify-otp")]
   [ProducesResponseType(typeof(ResponseWrapper<OtpVerifyResponseDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
   public async Task<ActionResult<ResponseWrapper<OtpVerifyResponseDto>>> VerifyOtp([FromBody] OtpVerifyRequestDto request)
@@ -211,11 +215,168 @@ public class AuthController : ControllerBase
     }
   }
 
-  /// <summary>
-  /// Get current user information from access token
-  /// </summary>
-  /// <returns>User information</returns>
-  [HttpGet("me")]
+ #region External Auth Flow (BYOD - Bring your own database)
+
+    /// <summary>
+    /// Login with external database credentials (BYOD - Bring your own database).
+    /// </summary>
+    [HttpPost("login-external")]
+    public async Task<ActionResult<ResponseWrapper<LoginResponseDto>>> LoginExternal([FromBody] LoginExternalCommand command)
+    {
+        // Lưu ý: Dùng trực tiếp Command làm Body request để nhanh gọn. 
+        // Chuẩn thì nên tạo LoginExternalRequestDto rồi map sang Command.
+        try
+        {
+            _logger.LogInformation("External login attempt for user {UserName} on host {Host}", command.UserName, command.DbHost);
+            var result = await _mediator.Send(command);
+
+            // Nếu thành công, trả về token ngay (hoặc flow OTP tùy bạn chọn)
+            return Ok(new ResponseWrapper<LoginResponseDto>
+            {
+                Success = true,
+                Message = "OTP sent to email. Please verify with the returned config token.",
+                Data = result // Trong result.AccessToken lúc này chứa EncryptedDbConfig
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "External login failed");
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Step 2: Verify OTP for external DB login.
+    /// </summary>
+    [HttpPost("verify-otp-external")]
+    [ProducesResponseType(typeof(ResponseWrapper<OtpVerifyResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ResponseWrapper<OtpVerifyResponseDto>>> VerifyOtpExternal([FromBody] VerifyOtpExternalCommand command)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "OTP verification attempt for session {SessionId}",
+                command.OtpSessionId);
+            // Lưu ý: Dùng trực tiếp Command làm Body request để nhanh gọn. 
+            // Chuẩn thì nên tạo LoginExternalRequestDto rồi map sang Command.
+
+            var result = await _mediator.Send(command);
+            _logger.LogInformation(
+           "OTP verification succeed for session {SessionId}",
+           command.OtpSessionId);
+            return Ok(new ResponseWrapper<OtpVerifyResponseDto>
+            {
+                Success = true,
+                Message = "External login successful.",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+               "OTP verification failed for session {SessionId}",
+               command.OtpSessionId);
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Resend OTP for external DB login flow.
+    /// </summary>
+    [HttpPost("resend-otp-external")]
+    [ProducesResponseType(typeof(ResponseWrapper<OtpResendResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ResponseWrapper<OtpResendResponseDto>>> ResendOtpExternal([FromBody] ResendOtpExternalCommand command)
+    {
+        try
+        {
+            _logger.LogInformation(
+              "OTP resend requested for session {SessionId}",
+              command.OtpSessionId);
+            var result = await _mediator.Send(command);
+            return Ok(new ResponseWrapper<OtpResendResponseDto>
+            {
+                Success = true,
+                Message = "OTP resent successfully.",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to resend OTP for session {SessionId}",
+                command.OtpSessionId);
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Step 3: Refresh access token for external database users
+    /// </summary>
+    [HttpPost("refresh-token-external")]
+    [ProducesResponseType(typeof(ResponseWrapper<RefreshTokenResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ResponseWrapper<RefreshTokenResponseDto>>> RefreshTokenExternal(
+        [FromBody] RefreshTokenExternalCommand command)
+    {
+        try
+        {
+            _logger.LogInformation("Refresh token external requested");
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Refresh token external issued successfully");
+
+            return Ok(new ResponseWrapper<RefreshTokenResponseDto>
+            {
+                Success = true,
+                Message = "Token refreshed successfully",
+                Data = result
+            });
+        }
+        catch (ValidationException vex)
+        {
+            _logger.LogError(vex, "Refresh token external validation failed");
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Token refresh failed",
+                Errors = vex.Errors.SelectMany(kvp => kvp.Value).ToList()
+            });
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refresh token external request failed");
+
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Token refresh failed",
+                Errors = new List<string> { ex.Message }
+            });
+        }
+    }
+
+    #endregion
+
+
+    #region Common Features (Used for both Default & External via Middleware)
+    /// <summary>
+    /// Get current user information from access token
+    /// </summary>
+    /// <returns>User information</returns>
+    [HttpGet("me")]
   [Authorize] // Yêu cầu access token hợp lệ
   [ProducesResponseType(typeof(ResponseWrapper<UserInfoDto>), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status401Unauthorized)]
@@ -395,4 +556,5 @@ public class AuthController : ControllerBase
             });
         }
     }
+    #endregion
 }

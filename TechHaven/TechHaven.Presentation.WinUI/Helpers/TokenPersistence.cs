@@ -17,11 +17,12 @@ namespace TechHaven.Presentation.WinUI.Helpers
     public static class TokenPersistence
     {
         private const string ResourceName = "TechHaven.RefreshToken";
+        private const string EncryptedDbConfigResourceName = "TechHaven.EncryptedDbConfig";
 
         // Toggle for using mock restore flow (useful for offline testing)
         public static bool UseMock { get; set; } = false;
 
-        public static void SaveRefreshToken(string refreshToken)
+        public static void SaveRefreshToken(string refreshToken, string? encryptedDbConfig = null, bool clearDbConfigIfNull = false)
         {
             if (string.IsNullOrWhiteSpace(refreshToken))
             {
@@ -31,7 +32,8 @@ namespace TechHaven.Presentation.WinUI.Helpers
             try
             {
                 var vault = new PasswordVault();
-                // remove existing entries for resource
+                
+                // Remove existing refresh token entries
                 try
                 {
                     var existing = vault.RetrieveAll().Where(c => c.Resource == ResourceName).ToList();
@@ -43,9 +45,33 @@ namespace TechHaven.Presentation.WinUI.Helpers
                     Debug.WriteLine($"SaveRefreshToken: error removing existing entries: {exExisting.Message}");
                 }
 
+                // Save refresh token
                 var cred = new PasswordCredential(ResourceName, Environment.MachineName, refreshToken);
                 vault.Add(cred);
                 Debug.WriteLine($"SaveRefreshToken: saved refresh token (length={refreshToken.Length}) to PasswordVault");
+
+                // Save encrypted DB config if provided
+                if (!string.IsNullOrWhiteSpace(encryptedDbConfig))
+                {
+                    try
+                    {
+                        // Remove existing DB config entries
+                        var existingDbConfig = vault.RetrieveAll().Where(c => c.Resource == EncryptedDbConfigResourceName).ToList();
+                        foreach (var e in existingDbConfig)
+                            vault.Remove(e);
+                    }
+                    catch { }
+
+                    var dbConfigCred = new PasswordCredential(EncryptedDbConfigResourceName, Environment.MachineName, encryptedDbConfig);
+                    vault.Add(dbConfigCred);
+                    Debug.WriteLine($"SaveRefreshToken: saved encrypted DB config (length={encryptedDbConfig.Length}) to PasswordVault");
+                }
+                else if (clearDbConfigIfNull)
+                {
+                    // Only remove DB config if explicitly requested (e.g., switching from external to standard login)
+                    RemoveEncryptedDbConfig();
+                    Debug.WriteLine("SaveRefreshToken: cleared DB config as requested");
+                }
             }
             catch (Exception ex)
             {
@@ -65,7 +91,7 @@ namespace TechHaven.Presentation.WinUI.Helpers
                     Debug.WriteLine("GetRefreshToken: no entry found in PasswordVault");
                     return null;
                 }
-                // retrieve requires setting user name on the credential instance
+                
                 var cred = vault.Retrieve(ResourceName, entry.UserName);
                 cred.RetrievePassword();
                 Debug.WriteLine($"GetRefreshToken: retrieved token from PasswordVault (length={cred.Password?.Length ?? 0})");
@@ -78,39 +104,92 @@ namespace TechHaven.Presentation.WinUI.Helpers
             }
         }
 
+        public static string? GetEncryptedDbConfig()
+        {
+            try
+            {
+                var vault = new PasswordVault();
+                var list = vault.RetrieveAll();
+                var entry = list.FirstOrDefault(x => x.Resource == EncryptedDbConfigResourceName);
+                if (entry == null)
+                {
+                    Debug.WriteLine("GetEncryptedDbConfig: no entry found in PasswordVault");
+                    return null;
+                }
+                
+                var cred = vault.Retrieve(EncryptedDbConfigResourceName, entry.UserName);
+                cred.RetrievePassword();
+                Debug.WriteLine($"GetEncryptedDbConfig: retrieved config from PasswordVault (length={cred.Password?.Length ?? 0})");
+                return cred.Password;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"GetEncryptedDbConfig: error reading PasswordVault: {ex.Message}");
+                return null;
+            }
+        }
+
+        private static void RemoveEncryptedDbConfig()
+        {
+            try
+            {
+                var vault = new PasswordVault();
+                var existing = vault.RetrieveAll().Where(c => c.Resource == EncryptedDbConfigResourceName).ToList();
+                foreach (var e in existing)
+                {
+                    try
+                    {
+                        vault.Remove(e);
+                    }
+                    catch { }
+                }
+                
+                if (existing.Count > 0)
+                    Debug.WriteLine($"RemoveEncryptedDbConfig: removed {existing.Count} config(s) from PasswordVault");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"RemoveEncryptedDbConfig: error: {ex.Message}");
+            }
+        }
+
         public static void RemoveRefreshToken()
         {
             try
             {
                 var vault = new PasswordVault();
-                // remove all entries matching the resource name (matches SaveRefreshToken behavior)
+                
+                // Remove refresh token
                 try
                 {
                     var existing = vault.RetrieveAll().Where(c => c.Resource == ResourceName).ToList();
                     if (existing.Count == 0)
                     {
                         Debug.WriteLine("RemoveRefreshToken: no entry to remove");
-                        return;
                     }
-
-                    foreach (var e in existing)
+                    else
                     {
-                        try
+                        foreach (var e in existing)
                         {
-                            vault.Remove(e);
+                            try
+                            {
+                                vault.Remove(e);
+                            }
+                            catch (Exception exRem)
+                            {
+                                Debug.WriteLine($"RemoveRefreshToken: failed to remove one entry: {exRem.Message}");
+                            }
                         }
-                        catch (Exception exRem)
-                        {
-                            Debug.WriteLine($"RemoveRefreshToken: failed to remove one entry: {exRem.Message}");
-                        }
+                        Debug.WriteLine($"RemoveRefreshToken: removed {existing.Count} refresh token(s) from PasswordVault");
                     }
-
-                    Debug.WriteLine($"RemoveRefreshToken: removed {existing.Count} refresh token(s) from PasswordVault");
                 }
                 catch (Exception exExisting)
                 {
                     Debug.WriteLine($"RemoveRefreshToken: error retrieving entries: {exExisting.Message}");
                 }
+
+                // Also remove encrypted DB config
+                RemoveEncryptedDbConfig();
             }
             catch (Exception ex)
             {
@@ -133,16 +212,23 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
                 Debug.WriteLine($"TryRestoreSessionAsync: found persisted token (length={token.Length})");
 
+                // Check if we have encrypted DB config (external DB session)
+                var encryptedDbConfig = GetEncryptedDbConfig();
+                var isExternalSession = !string.IsNullOrWhiteSpace(encryptedDbConfig);
+                
+                if (isExternalSession)
+                {
+                    Debug.WriteLine($"TryRestoreSessionAsync: detected external DB session (config length={encryptedDbConfig!.Length})");
+                }
+
                 // If mock mode enabled, perform offline restore
                 if (UseMock)
                 {
                     Debug.WriteLine("TryRestoreSessionAsync: using mock restore path");
 
-                    // Set in-memory tokens and a fake current user so UI can proceed without backend
                     TokenStore.RefreshToken = token;
                     TokenStore.AccessToken = "mock-access-token";
 
-                    // set a simple user placeholder
                     AppState.CurrentUser = new UserDto
                     {
                         UserId = 1,
@@ -160,28 +246,72 @@ namespace TechHaven.Presentation.WinUI.Helpers
                 TokenStore.RefreshToken = token;
 
                 using var client = new HttpClient { BaseAddress = AppState.ApiBaseUri };
-                var dto = new RefreshTokenRequestDto { RefreshToken = token };
-                var resp = await client.PostAsJsonAsync("api/Auth/refresh-token", dto).ConfigureAwait(false);
+                
+                // Choose endpoint based on session type
+                string endpoint;
+                object dto;
+                
+                if (isExternalSession)
+                {
+                    endpoint = "api/Auth/refresh-token-external";
+                    dto = new RefreshTokenExternalRequestDto 
+                    { 
+                        RefreshToken = token,
+                        EncryptedDbConfig = encryptedDbConfig!
+                    };
+                    Debug.WriteLine("TryRestoreSessionAsync: using refresh-token-external endpoint");
+                }
+                else
+                {
+                    endpoint = "api/Auth/refresh-token";
+                    dto = new RefreshTokenRequestDto { RefreshToken = token };
+                    Debug.WriteLine("TryRestoreSessionAsync: using refresh-token endpoint");
+                }
+
+                var resp = await client.PostAsJsonAsync(endpoint, dto).ConfigureAwait(false);
                 var content = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Debug.WriteLine($"TryRestoreSessionAsync: refresh endpoint returned status {resp.StatusCode}");
-                if (!resp.IsSuccessStatusCode) { Debug.WriteLine("TryRestoreSessionAsync: refresh failed, removing persisted token"); RemoveRefreshToken(); TokenStore.RefreshToken = null; return false; }
+                
+                if (!resp.IsSuccessStatusCode) 
+                { 
+                    Debug.WriteLine("TryRestoreSessionAsync: refresh failed, removing persisted token"); 
+                    RemoveRefreshToken(); 
+                    TokenStore.RefreshToken = null; 
+                    return false; 
+                }
 
                 var wrapper = await resp.Content.ReadFromJsonAsync<ResponseWrapper<RefreshTokenResponseDto>>().ConfigureAwait(false);
-                if (wrapper == null || !wrapper.Success || wrapper.Data == null) { Debug.WriteLine("TryRestoreSessionAsync: wrapper invalid, removing persisted token"); RemoveRefreshToken(); TokenStore.RefreshToken = null; return false; }
+                if (wrapper == null || !wrapper.Success || wrapper.Data == null) 
+                { 
+                    Debug.WriteLine("TryRestoreSessionAsync: wrapper invalid, removing persisted token"); 
+                    RemoveRefreshToken(); 
+                    TokenStore.RefreshToken = null; 
+                    return false; 
+                }
 
                 TokenStore.AccessToken = wrapper.Data.AccessToken;
                 TokenStore.RefreshToken = wrapper.Data.NewRefreshToken;
 
-                // update persisted refresh token if backend rotated it
-                SaveRefreshToken(TokenStore.RefreshToken ?? string.Empty);
+                // Update persisted tokens
+                // For external sessions: preserve or update the encrypted DB config from response
+                // For standard sessions: don't clear the existing DB config (in case it was there from a previous external session)
+                string? newEncryptedDbConfig = null;
+                if (isExternalSession)
+                {
+                    // External session: use the config from response if available, otherwise keep the existing one
+                    newEncryptedDbConfig = !string.IsNullOrWhiteSpace(wrapper.Data.EncryptedDbConfig) 
+                        ? wrapper.Data.EncryptedDbConfig 
+                        : encryptedDbConfig;
+                }
+                // For standard session, don't pass any config and don't clear it
+                SaveRefreshToken(TokenStore.RefreshToken ?? string.Empty, newEncryptedDbConfig);
 
-                // try to populate current user from API now that we have access token
+                // Try to populate current user from API
                 try
                 {
                     using var userClient = new HttpClient { BaseAddress = AppState.ApiBaseUri };
                     userClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenStore.AccessToken);
 
-                    // try common endpoints
                     ResponseWrapper<UserDto>? userWrapper = null;
                     try
                     {

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
@@ -25,6 +26,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private string _otpSessionIdInternal = string.Empty;
         private int _otpExpiresInInternal = 0;
+        private string _encryptedDbConfigInternal = string.Empty;
 
         // Default constructor wires concrete services; prefer DI constructor below in production
         public MainWindowViewModel() : this(new HttpAuthService(SharedHttpClient), new HttpUserService(SharedHttpClient)) { }
@@ -78,6 +80,22 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         [ObservableProperty]
         private bool rememberMe = false;
 
+        // Database configuration properties
+        [ObservableProperty]
+        private string dbHost = string.Empty;
+
+        [ObservableProperty]
+        private string dbPort = string.Empty;
+
+        [ObservableProperty]
+        private string dbName = string.Empty;
+
+        [ObservableProperty]
+        private string dbUser = string.Empty;
+
+        [ObservableProperty]
+        private string dbPass = string.Empty;
+
         // Called by source-generator when IsVerifyEnabled changes
         partial void OnIsVerifyEnabledChanged(bool value)
         {
@@ -88,25 +106,81 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             ErrorMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(Username)) { ErrorMessage = "Please enter username."; return; }
-            if (string.IsNullOrWhiteSpace(Password)) { ErrorMessage = "Please enter password."; return; }
+            if (string.IsNullOrWhiteSpace(Username)) { ErrorMessage = "Vui lòng nhập tên đăng nhập."; return; }
+            if (string.IsNullOrWhiteSpace(Password)) { ErrorMessage = "Vui lòng nhập mật khẩu."; return; }
 
             try
             {
-                IsVerifyEnabled = true; // reset state
-                var result = await _authService.VerifyLoginAsync(Username, Password);
-                if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Login failed."; return; }
+                IsVerifyEnabled = true;
 
-                _otpSessionIdInternal = result.Data.OtpSessionId ?? string.Empty;
-                RequiresOtp = result.Data.RequiresOtp;
+                // Check if using external database configuration
+                bool isExternalLogin = !string.IsNullOrWhiteSpace(DbHost) || 
+                                      !string.IsNullOrWhiteSpace(DbUser) || 
+                                      !string.IsNullOrWhiteSpace(DbPass);
 
-                // Build single OTP info string (simple)
-                var name = result.Data.UserFullName ?? string.Empty;
-                var email = result.Data.MaskedEmail ?? string.Empty;
+                LoginResponseDto? loginData;
+
+                if (isExternalLogin)
+                {
+                    // Validate external DB fields
+                    if (string.IsNullOrWhiteSpace(DbHost)) { ErrorMessage = "Vui lòng nhập database host."; return; }
+                    if (string.IsNullOrWhiteSpace(DbUser)) { ErrorMessage = "Vui lòng nhập database user."; return; }
+                    if (string.IsNullOrWhiteSpace(DbPass)) { ErrorMessage = "Vui lòng nhập database password."; return; }
+
+                    // External login
+                    var externalDto = new LoginExternalRequestDto
+                    {
+                        UserName = Username,
+                        Password = Password,
+                        DbHost = DbHost,
+                        DbPort = string.IsNullOrWhiteSpace(DbPort) ? "5432" : DbPort,
+                        DbName = string.IsNullOrWhiteSpace(DbName) ? "postgres" : DbName,
+                        DbUser = DbUser,
+                        DbPass = DbPass
+                    };
+
+                    var result = await _authService.VerifyLoginExternalAsync(externalDto);
+                    if (!result.Success || result.Data == null)
+                    {
+                        var errorMsg = result.Message ?? "Đăng nhập thất bại.";
+                        if (result.Errors != null && result.Errors.Any())
+                        {
+                            errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                        }
+                        ErrorMessage = errorMsg;
+                        return;
+                    }
+
+                    loginData = result.Data;
+                    _encryptedDbConfigInternal = loginData.EncryptedDbConfig ?? string.Empty;
+                }
+                else
+                {
+                    // Standard login - DB config is never persisted for security
+                    var result = await _authService.VerifyLoginAsync(Username, Password);
+                    if (!result.Success || result.Data == null)
+                    {
+                        var errorMsg = result.Message ?? "Đăng nhập thất bại.";
+                        if (result.Errors != null && result.Errors.Any())
+                        {
+                            errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                        }
+                        ErrorMessage = errorMsg;
+                        return;
+                    }
+
+                    loginData = result.Data;
+                    _encryptedDbConfigInternal = string.Empty;
+                }
+
+                _otpSessionIdInternal = loginData.OtpSessionId ?? string.Empty;
+                RequiresOtp = loginData.RequiresOtp;
+
+                var name = loginData.UserFullName ?? string.Empty;
+                var email = loginData.MaskedEmail ?? string.Empty;
                 OtpInfo = string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(email) ? string.Empty : $"Xin chào {name}. Đã gửi OTP tới {email}".Trim();
 
-                // Set remaining seconds directly and store expiry for resend
-                _otpExpiresInInternal = result.Data.OtpExpiresIn;
+                _otpExpiresInInternal = loginData.OtpExpiresIn;
                 OtpRemaining = _otpExpiresInInternal;
 
                 if (RequiresOtp)
@@ -125,9 +199,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     IsActive = true
                 };
             }
+            catch (HttpRequestException ex)
+            {
+                ErrorMessage = $"Lỗi kết nối:\n{ex.Message}\n\nVui lòng kiểm tra:\n- Server có đang chạy không?\n- URL server có đúng không?";
+            }
             catch (Exception ex)
             {
-                ErrorMessage = $"Error: {ex.Message}";
+                ErrorMessage = $"Lỗi không xác định:\n{ex.Message}";
             }
         }
 
@@ -191,20 +269,45 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (string.IsNullOrWhiteSpace(_otpSessionIdInternal)) return;
             ErrorMessage = string.Empty;
 
-            var dto = new OtpResendRequestDto { OtpSessionId = _otpSessionIdInternal };
+            var dto = new OtpResendRequestDto 
+            { 
+                OtpSessionId = _otpSessionIdInternal,
+                EncryptedDbConfig = _encryptedDbConfigInternal
+            };
             var result = await _authService.ResendOtpAsync(dto);
-            if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
+            
+            if (!result.Success || result.Data == null)
+            {
+                var errorMsg = result.Message ?? "Không thể gửi lại OTP.";
+                
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                }
+                
+                ErrorMessage = errorMsg;
+                return;
+            }
 
             var resp = result.Data;
-            if (!resp.IsOtpResent) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
+            if (!resp.IsOtpResent)
+            {
+                var errorMsg = result.Message ?? "Không thể gửi lại OTP.";
+                
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                }
+                
+                ErrorMessage = errorMsg;
+                return;
+            }
 
-            // Update internal session id and expiry from response
             if (!string.IsNullOrWhiteSpace(resp.NewOtpSessionId))
             {
                 _otpSessionIdInternal = resp.NewOtpSessionId;
             }
 
-            // Use returned expiry if available, otherwise keep previous
             if (resp.OtpExpiresIn > 0)
             {
                 _otpExpiresInInternal = resp.OtpExpiresIn;
@@ -220,23 +323,50 @@ namespace TechHaven.Presentation.WinUI.ViewModel
             if (string.IsNullOrWhiteSpace(_otpSessionIdInternal)) return false;
             ErrorMessage = string.Empty;
 
-            var dto = new OtpVerifyRequestDto { OtpSessionId = _otpSessionIdInternal, OtpCode = otpCode };
+            var dto = new OtpVerifyRequestDto 
+            { 
+                OtpSessionId = _otpSessionIdInternal, 
+                OtpCode = otpCode,
+                EncryptedDbConfig = _encryptedDbConfigInternal
+            };
             var result = await _authService.VerifyOtpAsync(dto);
-            if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Invalid OTP code."; return false; }
+            
+            if (!result.Success || result.Data == null)
+            {
+                var errorMsg = result.Message ?? "Mã OTP không hợp lệ.";
+                
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                }
+                
+                ErrorMessage = errorMsg;
+                return false;
+            }
 
             var otpData = result.Data;
             TokenStore.AccessToken = otpData.AccessToken;
             TokenStore.RefreshToken = otpData.RefreshToken;
 
-            // persist refresh token if requested
             try
             {
                 if (!string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
                 {
-                    TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken);
+                    // Save refresh token with encrypted DB config
+                    // Use the config from OTP response if available, otherwise use the internal one from login
+                    var dbConfigToSave = !string.IsNullOrWhiteSpace(otpData.EncryptedDbConfig) 
+                        ? otpData.EncryptedDbConfig 
+                        : _encryptedDbConfigInternal;
+                    
+                    // Clear DB config if this is a standard login (no encrypted config)
+                    bool clearDbConfig = string.IsNullOrWhiteSpace(dbConfigToSave);
+                    TokenPersistence.SaveRefreshToken(TokenStore.RefreshToken, dbConfigToSave, clearDbConfig);
                 }
             }
             catch { }
+
+            // DB credentials are NEVER saved for security reasons
+            // User must re-enter external DB config on each login if needed
 
             Helpers.AppState.CurrentUser = new UserDto
             {
@@ -248,7 +378,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 IsActive = true
             };
 
-            // Capture onboarding flag
             Helpers.AppState.HasSeenGuide = otpData.HasSeenGuide;
 
             return true;

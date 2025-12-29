@@ -12,4 +12,7 @@ public class LoginResponseDto
     public int OtpExpiresIn { get; set; }
 
     public string OtpSessionId { get; set; } = string.Empty;
+
+    //For Dynamic connection string, Client will take this varible to store in local storage/memory and use "verify-external-otp" request
+    public string EncryptedDbConfig { get; set; } = string.Empty;
 }

@@ -26,15 +26,29 @@ namespace TechHaven.Presentation.WinUI.Services.Http
             return await response.EnsureSuccessAndReadWrapperAsync<LoginResponseDto>("Failed to verify login");
         }
 
+        public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginExternalAsync(LoginExternalRequestDto dto)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/login-external", dto);
+            return await response.EnsureSuccessAndReadWrapperAsync<LoginResponseDto>("Failed to verify external login");
+        }
+
         public async Task<ResponseWrapper<OtpVerifyResponseDto>> VerifyOtpAsync(OtpVerifyRequestDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/verify-otp", dto);
+            var endpoint = string.IsNullOrWhiteSpace(dto.EncryptedDbConfig) 
+                ? $"{BaseUrl}/verify-otp" 
+                : $"{BaseUrl}/verify-otp-external";
+            
+            var response = await _httpClient.PostAsJsonAsync(endpoint, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OtpVerifyResponseDto>("Failed to verify OTP");
         }
 
         public async Task<ResponseWrapper<OtpResendResponseDto>> ResendOtpAsync(OtpResendRequestDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/resend-otp", dto);
+            var endpoint = string.IsNullOrWhiteSpace(dto.EncryptedDbConfig) 
+                ? $"{BaseUrl}/resend-otp" 
+                : $"{BaseUrl}/resend-otp-external";
+            
+            var response = await _httpClient.PostAsJsonAsync(endpoint, dto);
             return await response.EnsureSuccessAndReadWrapperAsync<OtpResendResponseDto>("Failed to resend OTP");
         }
 

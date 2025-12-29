@@ -33,7 +33,60 @@ namespace TechHaven.Presentation.WinUI.Helpers
         {
             try
             {
-                var result = await response.Content.ReadFromJsonAsync<ResponseWrapper<T>>();
+                // Read content as string first to check if it's valid JSON
+                var contentString = await response.Content.ReadAsStringAsync();
+
+                // Check if content is empty
+                if (string.IsNullOrWhiteSpace(contentString))
+                {
+                    return new ResponseWrapper<T>
+                    {
+                        Success = false,
+                        Message = "Server returned empty response",
+                        Errors = new List<string> { $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}" }
+                    };
+                }
+
+                // Check if content is HTML (common error page response)
+                if (contentString.TrimStart().StartsWith("<") || contentString.TrimStart().StartsWith("<!DOCTYPE"))
+                {
+                    return new ResponseWrapper<T>
+                    {
+                        Success = false,
+                        Message = $"{failureMessage} - Server returned HTML error page",
+                        Errors = new List<string> 
+                        { 
+                            $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}",
+                            "Server returned HTML instead of JSON. Please check API URL and endpoint."
+                        }
+                    };
+                }
+
+                // Try to parse as JSON
+                ResponseWrapper<T>? result;
+                try
+                {
+                    result = System.Text.Json.JsonSerializer.Deserialize<ResponseWrapper<T>>(
+                        contentString,
+                        new System.Text.Json.JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                }
+                catch (System.Text.Json.JsonException jsonEx)
+                {
+                    return new ResponseWrapper<T>
+                    {
+                        Success = false,
+                        Message = $"{failureMessage} - Invalid JSON response",
+                        Errors = new List<string> 
+                        { 
+                            $"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}",
+                            $"JSON Parse Error: {jsonEx.Message}",
+                            $"Response preview: {(contentString.Length > 200 ? contentString.Substring(0, 200) + "..." : contentString)}"
+                        }
+                    };
+                }
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -70,7 +123,7 @@ namespace TechHaven.Presentation.WinUI.Helpers
                 {
                     Success = false,
                     Message = failureMessage,
-                    Errors = new List<string> { ex.Message }
+                    Errors = new List<string> { $"Exception: {ex.Message}", $"Stack: {ex.StackTrace}" }
                 };
             }
         }
