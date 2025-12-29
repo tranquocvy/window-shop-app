@@ -109,8 +109,14 @@
                         Click="loginButton_Click"
                         />
 
-                <!-- Settings as clickable TextBlock below login -->
-                <TextBlock x:Name="configTextBlock" Text="Settings" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="configTextBlock_Tapped" />
+                <!-- Settings link hidden as default URL is now set -->
+                <!-- <TextBlock x:Name="configTextBlock" Text="Settings" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="configTextBlock_Tapped" /> -->
+
+                <!-- Error message hidden - shown in dialog instead -->
+                <!-- <TextBlock x:Name="errorTextBlock" Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="350"/> -->
+
+                <!-- Advanced DB Config link -->
+                <TextBlock x:Name="advancedConfigTextBlock" Text="Advanced (Database Config)" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="advancedConfigTextBlock_Tapped" />
 
             </StackPanel>
         </Grid>

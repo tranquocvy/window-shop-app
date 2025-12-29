@@ -44,6 +44,12 @@ namespace TechHaven.Presentation.WinUI.Services.Mock
             return new ResponseWrapper<LoginResponseDto> { Success = true, Message = "Login accepted, OTP required", Data = loginResponse };
         }
 
+        public async Task<ResponseWrapper<LoginResponseDto>> VerifyLoginExternalAsync(LoginExternalRequestDto dto)
+        {
+            // Mock external login - same as standard login for testing
+            return await VerifyLoginAsync(dto.UserName, dto.Password);
+        }
+
         public Task<ResponseWrapper<OtpVerifyResponseDto>> VerifyOtpAsync(OtpVerifyRequestDto dto)
         {
             if (!_otpSessions.TryGetValue(dto.OtpSessionId, out var entry))

@@ -69,15 +69,19 @@
     <TrimMode>partial</TrimMode>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Controls\**" />
     <Compile Remove="Docs\**" />
     <Compile Remove="ViewModels\**" />
     <Compile Remove="Views\Order\**" />
+    <EmbeddedResource Remove="Controls\**" />
     <EmbeddedResource Remove="Docs\**" />
     <EmbeddedResource Remove="ViewModels\**" />
     <EmbeddedResource Remove="Views\Order\**" />
+    <None Remove="Controls\**" />
     <None Remove="Docs\**" />
     <None Remove="ViewModels\**" />
     <None Remove="Views\Order\**" />
+    <Page Remove="Controls\**" />
     <Page Remove="Docs\**" />
     <Page Remove="ViewModels\**" />
     <Page Remove="Views\Order\**" />
@@ -216,6 +220,6 @@
     <Compile Include="Views\Order\StatusUpdateDialog.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Controls\" />
+    <PRIResource Remove="Controls\**" />
   </ItemGroup>
 </Project>
