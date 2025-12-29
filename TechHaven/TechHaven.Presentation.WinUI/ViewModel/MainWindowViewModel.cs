@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
@@ -88,24 +89,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         {
             ErrorMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(Username)) { ErrorMessage = "Please enter username."; return; }
-            if (string.IsNullOrWhiteSpace(Password)) { ErrorMessage = "Please enter password."; return; }
+            if (string.IsNullOrWhiteSpace(Username)) { ErrorMessage = "Vui lòng nhập tên đăng nhập."; return; }
+            if (string.IsNullOrWhiteSpace(Password)) { ErrorMessage = "Vui lòng nhập mật khẩu."; return; }
 
             try
             {
-                IsVerifyEnabled = true; // reset state
+                IsVerifyEnabled = true;
                 var result = await _authService.VerifyLoginAsync(Username, Password);
-                if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Login failed."; return; }
+                
+                if (!result.Success || result.Data == null)
+                {
+                    var errorMsg = result.Message ?? "Đăng nhập thất bại.";
+                    
+                    if (result.Errors != null && result.Errors.Any())
+                    {
+                        errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                    }
+                    
+                    ErrorMessage = errorMsg;
+                    return;
+                }
 
                 _otpSessionIdInternal = result.Data.OtpSessionId ?? string.Empty;
                 RequiresOtp = result.Data.RequiresOtp;
 
-                // Build single OTP info string (simple)
                 var name = result.Data.UserFullName ?? string.Empty;
                 var email = result.Data.MaskedEmail ?? string.Empty;
                 OtpInfo = string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(email) ? string.Empty : $"Xin chào {name}. Đã gửi OTP tới {email}".Trim();
 
-                // Set remaining seconds directly and store expiry for resend
                 _otpExpiresInInternal = result.Data.OtpExpiresIn;
                 OtpRemaining = _otpExpiresInInternal;
 
@@ -125,9 +136,13 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                     IsActive = true
                 };
             }
+            catch (HttpRequestException ex)
+            {
+                ErrorMessage = $"Lỗi kết nối:\n{ex.Message}\n\nVui lòng kiểm tra:\n- Server có đang chạy không?\n- URL server có đúng không?";
+            }
             catch (Exception ex)
             {
-                ErrorMessage = $"Error: {ex.Message}";
+                ErrorMessage = $"Lỗi không xác định:\n{ex.Message}";
             }
         }
 
@@ -193,18 +208,39 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             var dto = new OtpResendRequestDto { OtpSessionId = _otpSessionIdInternal };
             var result = await _authService.ResendOtpAsync(dto);
-            if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
+            
+            if (!result.Success || result.Data == null)
+            {
+                var errorMsg = result.Message ?? "Không thể gửi lại OTP.";
+                
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                }
+                
+                ErrorMessage = errorMsg;
+                return;
+            }
 
             var resp = result.Data;
-            if (!resp.IsOtpResent) { ErrorMessage = result.Message ?? "Unable to resend OTP."; return; }
+            if (!resp.IsOtpResent)
+            {
+                var errorMsg = result.Message ?? "Không thể gửi lại OTP.";
+                
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                }
+                
+                ErrorMessage = errorMsg;
+                return;
+            }
 
-            // Update internal session id and expiry from response
             if (!string.IsNullOrWhiteSpace(resp.NewOtpSessionId))
             {
                 _otpSessionIdInternal = resp.NewOtpSessionId;
             }
 
-            // Use returned expiry if available, otherwise keep previous
             if (resp.OtpExpiresIn > 0)
             {
                 _otpExpiresInInternal = resp.OtpExpiresIn;
@@ -222,13 +258,24 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
             var dto = new OtpVerifyRequestDto { OtpSessionId = _otpSessionIdInternal, OtpCode = otpCode };
             var result = await _authService.VerifyOtpAsync(dto);
-            if (!result.Success || result.Data == null) { ErrorMessage = result.Message ?? "Invalid OTP code."; return false; }
+            
+            if (!result.Success || result.Data == null)
+            {
+                var errorMsg = result.Message ?? "Mã OTP không hợp lệ.";
+                
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    errorMsg += "\n\nChi tiết lỗi:\n" + string.Join("\n", result.Errors);
+                }
+                
+                ErrorMessage = errorMsg;
+                return false;
+            }
 
             var otpData = result.Data;
             TokenStore.AccessToken = otpData.AccessToken;
             TokenStore.RefreshToken = otpData.RefreshToken;
 
-            // persist refresh token if requested
             try
             {
                 if (!string.IsNullOrWhiteSpace(TokenStore.RefreshToken))
@@ -248,7 +295,6 @@ namespace TechHaven.Presentation.WinUI.ViewModel
                 IsActive = true
             };
 
-            // Capture onboarding flag
             Helpers.AppState.HasSeenGuide = otpData.HasSeenGuide;
 
             return true;
