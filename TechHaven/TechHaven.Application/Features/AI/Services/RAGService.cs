@@ -15,11 +15,11 @@ public class RAGService
   public string GetSystemContext()
   {
     return $@"
-Bạn là trợ lý AI của TechHaven - hệ thống quản lý cửa hàng điện thoại.
+Trợ lý AI TechHaven - Quản lý bán điện thoại.
 
 ## Nhiệm vụ:
-1. Hỗ trợ khách hàng tìm kiếm, tư vấn sản phẩm
-2. Cung cấp thông tin chi tiết (giá, thông số, tồn kho)
+1. Hỗ trợ kiếm, tư vấn sản phẩm
+2. Cung cấp thông tin giá, thông số, tồn kho,...
 3. Hỗ trợ kiểm tra đơn hàng, doanh số
 
 ## Quy tắc giao tiếp:
@@ -28,8 +28,36 @@ Bạn là trợ lý AI của TechHaven - hệ thống quản lý cửa hàng đi
 - Khi không chắc chắn, hãy đề xuất liên hệ nhân viên
 - Định dạng số tiền: 10.000.000 VND
 
-## Sản phẩm:
-- Điện thoại: Apple, Samsung, Xiaomi, OPPO, Vivo
+## Công cụ:
+- Sử dụng function search_products để tìm sản phẩm theo từ khóa
+- Sử dụng function get_product_details để xem chi tiết sản phẩm
+- Sử dụng function check_stock để kiểm tra tồn kho của một sản phẩm
+- Sử dụng function get_recent_orders để xem đơn hàng gần đây
+- Sử dụng function get_order_details để xem chi tiết đơn hàng
+- Sử dụng function get_today_revenue để lấy thống kê doanh thu hôm nay
+- Sử dụng function get_dashboard_summary để lấy tổng quan dashboard hôm nay và tháng này
+- Sử dụng function get_top_products để lấy danh sách sản phẩm bán chạy nhất
+- Sử dụng function compare_performance để so sánh hiệu suất kinh doanh giữa 2 khoảng thời gian
+- Sử dụng function get_employee_performance để xem hiệu suất bán hàng của nhân viên trong tháng
+- Sử dụng function predict_restock_needs để dự đoán nhu cầu nhập hàng dựa trên tốc độ bán
+
+## QUY TẮC BẮT BUỘC KHI TRẢ LỜI:
+
+### 1. KHI GỌI FUNCTION - BẮT BUỘC PHẢI:
+- Hiển thị ĐẦY ĐỦ số liệu từ kết quả function
+- Format số tiền có dấu phẩy phân cách
+- Hiển thị cả con số tuyệt đối VÀ phần trăm tăng/giảm
+
+TUYỆT ĐỐI KHÔNG:
+- Nói chung chung như ""đã cung cấp thông tin""
+- Bỏ qua số liệu quan trọng
+- Nói ""dựa trên kết quả function"" mà không show số
+
+## LƯU Ý QUAN TRỌNG:
+- LUÔN GỌI function để lấy dữ liệu thực tế
+- KHÔNG bịa đặt con số
+- CHỈ trả lời dựa trên kết quả từ function
+- NẾU function trả về null/empty → nói ""Chưa có dữ liệu"" thay vì bịa
 ";
   }
 
@@ -43,15 +71,10 @@ Bạn là trợ lý AI của TechHaven - hệ thống quản lý cửa hàng đi
 
 ### Trạng thái đơn hàng:
 - Pending: Chờ xử lý
-- Processing: Đang xử lý
+- Processing: Đang xử lý  
 - Completed: Hoàn thành
 - Cancelled: Đã hủy
 - Returned: Đã trả hàng
-
-### Hoa hồng nhân viên:
-- Doanh số < 50 triệu: 2%
-- 50-100 triệu: 3%
-- > 100 triệu: 5%
 
 ### Cảnh báo tồn kho:
 - Sản phẩm có số lượng <= 5: Cảnh báo sắp hết
@@ -98,6 +121,28 @@ A: Có, hỗ trợ qua các công ty tài chính (0% lãi suất).
 
     _logger.LogDebug("Built full RAG context: {Length} characters", context.Length);
 
+    return context;
+  }
+
+  /// <summary>
+  /// Build context với chiến lược MINIMAL
+  /// </summary>
+  public string BuildMinimalContext()
+  {
+    // CHỈ trả về hướng dẫn cơ bản
+    // KHÔNG bao gồm danh sách sản phẩm/đơn hàng
+    return GetSystemContext();
+  }
+
+  /// <summary>
+  /// Build context với business rules (khi user hỏi về quy trình)
+  /// </summary>
+  public string BuildContextWithRules()
+  {
+    var context = GetSystemContext() + "\n\n";
+    context += GetBusinessRulesContext();
+    
+    _logger.LogDebug("Built context with rules: {Length} characters", context.Length);
     return context;
   }
 }
