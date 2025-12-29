@@ -26,4 +26,11 @@ public interface IExternalAuthService
     /// [MỚI] Cập nhật Refresh Token vào DB External
     /// </summary>
     Task UpdateRefreshTokenAsync(string connectionString, int userId, string refreshToken, DateTime expiryTime);
+   /// <summary>
+   /// Tìm User theo Refresh Token từ DB External
+   /// </summary>
+   /// <param name="connectionString"></param>
+   /// <param name="refreshToken"></param>
+   /// <returns></returns>
+    Task<User?> GetUserByRefreshTokenFromExternalDbAsync(string connectionString, string refreshToken);
 }

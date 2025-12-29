@@ -104,4 +104,14 @@ public class ExternalAuthService : IExternalAuthService
         // Lưu ý: Nếu user null (rất hiếm khi xảy ra ở bước này vì đã verify ID), 
         // ta có thể bỏ qua hoặc throw exception tùy nhu cầu, ở đây tôi chọn bỏ qua cho an toàn.
     }
+    public async Task<User?> GetUserByRefreshTokenFromExternalDbAsync(string connectionString, string refreshToken)
+    {
+        using var context = CreateDynamicContext(connectionString);
+
+        // Tìm trực tiếp bằng RefreshToken, Include Role để lát nữa tạo AccessToken
+        return await context.Users
+            .AsNoTracking()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+    }
 }

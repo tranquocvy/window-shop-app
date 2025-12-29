@@ -10,6 +10,7 @@ using TechHaven.Application.Features.Auth.LoginExternal;
 using TechHaven.Application.Features.Auth.Queries.GetCurrentUser;
 using TechHaven.Application.Features.Auth.Queries.IsActive;
 using TechHaven.Application.Features.Auth.RefreshToken;
+using TechHaven.Application.Features.Auth.RefreshTokenExternal;
 using TechHaven.Application.Features.Auth.ResendOtp;
 using TechHaven.Application.Features.Auth.ResendOtpExternal;
 using TechHaven.Application.Features.Auth.Signup;
@@ -320,10 +321,57 @@ public class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Step 3: Refresh access token for external database users
+    /// </summary>
+    [HttpPost("refresh-token-external")]
+    [ProducesResponseType(typeof(ResponseWrapper<RefreshTokenResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseWrapper<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ResponseWrapper<RefreshTokenResponseDto>>> RefreshTokenExternal(
+        [FromBody] RefreshTokenExternalCommand command)
+    {
+        try
+        {
+            _logger.LogInformation("Refresh token external requested");
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Refresh token external issued successfully");
+
+            return Ok(new ResponseWrapper<RefreshTokenResponseDto>
+            {
+                Success = true,
+                Message = "Token refreshed successfully",
+                Data = result
+            });
+        }
+        catch (ValidationException vex)
+        {
+            _logger.LogError(vex, "Refresh token external validation failed");
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Token refresh failed",
+                Errors = vex.Errors.SelectMany(kvp => kvp.Value).ToList()
+            });
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refresh token external request failed");
+
+            return BadRequest(new ResponseWrapper<object>
+            {
+                Success = false,
+                Message = "Token refresh failed",
+                Errors = new List<string> { ex.Message }
+            });
+        }
+    }
+
     #endregion
 
 
-#region Common Features (Used for both Default & External via Middleware)
+    #region Common Features (Used for both Default & External via Middleware)
     /// <summary>
     /// Get current user information from access token
     /// </summary>
