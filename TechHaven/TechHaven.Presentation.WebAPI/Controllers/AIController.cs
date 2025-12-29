@@ -8,7 +8,7 @@ using TechHaven.Shared.DTOs.Common;
 
 namespace TechHaven.Presentation.WebAPI.Controllers;
 
-[Authorize]
+// [Authorize]
 public class AIController : BaseApiController
 {
   private readonly IAIChatService _aiChatService;
