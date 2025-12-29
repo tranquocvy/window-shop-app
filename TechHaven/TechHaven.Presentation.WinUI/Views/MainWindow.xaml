@@ -109,8 +109,8 @@
                         Click="loginButton_Click"
                         />
 
-                <!-- Settings link hidden as default URL is now set -->
-                <!-- <TextBlock x:Name="configTextBlock" Text="Settings" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="configTextBlock_Tapped" /> -->
+                <!-- Settings link to configure API URL -->
+                <TextBlock x:Name="configTextBlock" Text="Settings" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="configTextBlock_Tapped" />
 
                 <!-- Error message hidden - shown in dialog instead -->
                 <!-- <TextBlock x:Name="errorTextBlock" Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="350"/> -->

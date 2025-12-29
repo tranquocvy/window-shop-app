@@ -335,6 +335,9 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
             {
                 try
                 {
+                    // Get the selected brand name, or use "Unknown" if not selected
+                    string brandName = (BrandComboBox.SelectedItem as string) ?? "Unknown";
+
                     var randomAccess = await file.OpenAsync(FileAccessMode.Read);
                     using (randomAccess)
                     using (var readStream = randomAccess.AsStreamForRead())
@@ -342,7 +345,8 @@ namespace TechHaven.Presentation.WinUI.Views.Controls
                         var result = await _productService.UploadImageAsync(
                             readStream,
                             file.Name,
-                            file.ContentType
+                            file.ContentType,
+                            brandName
                         );
 
                         if (result.Success)
