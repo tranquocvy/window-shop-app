@@ -32,7 +32,11 @@ public class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.GivenName, user.UserFullName),
             new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
-            new Claim("RoleId", user.RoleId.ToString())
+            new Claim("RoleId", user.RoleId.ToString()),
+
+            // [MỚI] Thêm 2 claims này để Middleware kiểm tra
+            new Claim("created_at", user.CreatedAt.ToString("o")), // Format ISO 8601
+            new Claim("is_active", user.IsActive.ToString())
         };
         // [MỚI] Nếu có config DB riêng, nhét vào Claim - Dynamic DB Connection
         if (!string.IsNullOrEmpty(encryptedDbConfig))
