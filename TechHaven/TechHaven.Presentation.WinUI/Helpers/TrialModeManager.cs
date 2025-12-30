@@ -178,7 +178,27 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
                 if (result.Data.IsValid)
                 {
-                    // Success: remove overlay
+                    // Success: Refresh token to get updated claims with IsActive = true
+                    resultText.Text = "Activation successful! Updating session...";
+                    
+                    try
+                    {
+                        var refreshed = await TokenPersistence.TryRestoreSessionAsync();
+                        if (refreshed)
+                        {
+                            System.Diagnostics.Debug.WriteLine("HandleActivateAsync: Token refreshed successfully after activation");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("HandleActivateAsync: Token refresh failed after activation");
+                        }
+                    }
+                    catch (Exception exRefresh)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"HandleActivateAsync: Error refreshing token after activation: {exRefresh.Message}");
+                    }
+
+                    // Remove overlay
                     RemoveOverlay();
 
                     var successDialog = new ContentDialog
@@ -268,6 +288,26 @@ namespace TechHaven.Presentation.WinUI.Helpers
 
                     if (result?.Success == true && result.Data?.IsValid == true)
                     {
+                        // Success: Refresh token to get updated claims with IsActive = true
+                        activationResultText.Text = "Activation successful! Updating session...";
+                        
+                        try
+                        {
+                            var refreshed = await TokenPersistence.TryRestoreSessionAsync();
+                            if (refreshed)
+                            {
+                                System.Diagnostics.Debug.WriteLine("ShowWarningDialog: Token refreshed successfully after activation");
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine("ShowWarningDialog: Token refresh failed after activation");
+                            }
+                        }
+                        catch (Exception exRefresh)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"ShowWarningDialog: Error refreshing token after activation: {exRefresh.Message}");
+                        }
+
                         var okDialog = new ContentDialog
                         {
                             Title = "Activated",

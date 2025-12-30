@@ -126,8 +126,6 @@ namespace TechHaven.Presentation.WinUI.Views
             App.MainWindow = shellWindow;
             shellWindow.Activate();
 
-            _ = shellWindow.TriggerTrialCheckAsync();
-
             // Close login window
             this.Close();
         }

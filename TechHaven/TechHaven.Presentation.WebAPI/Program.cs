@@ -172,6 +172,8 @@ try
     app.UseAuthentication();
     // 2. [MỚI] Đăng ký TenantMiddleware: Middleware này phải chạy SAU Authentication (để đọc được context.User) nhưng TRƯỚC Controllers (để kịp đổi DB).
     app.UseMiddleware<TenantMiddleware>();
+    // 3. [MỚI] TrialBlockerMiddleware (Đặt sau Authentication để đọc được User)
+    app.UseMiddleware<TrialBlockerMiddleware>();
 
     app.UseAuthorization();
     app.MapControllers();
