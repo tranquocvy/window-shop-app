@@ -222,4 +222,7 @@
   <ItemGroup>
     <PRIResource Remove="Controls\**" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Examples\" />
+  </ItemGroup>
 </Project>

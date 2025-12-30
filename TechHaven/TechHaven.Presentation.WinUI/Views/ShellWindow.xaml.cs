@@ -114,13 +114,27 @@ namespace TechHaven.Presentation.WinUI.Views
                     }
                     else
                     {
-                        // Generate initials from full name
-                        var initials = GetInitials(userFullName);
-                        avatarInitials.Text = initials ?? "?";
+                        try
+                        {
+                            // Generate initials from full name
+                            var initials = GetInitials(userFullName);
+                            avatarInitials.Text = initials ?? "?";
 
-                        // Choose a deterministic background color based on username hash
-                        var color = ColorFromString(AppState.CurrentUser.UserName ?? userFullName);
-                        avatarEllipse.Fill = new SolidColorBrush(color);
+                            // Choose a deterministic background color based on username hash
+                            var color = ColorFromString(AppState.CurrentUser.UserName ?? userFullName);
+                            avatarEllipse.Fill = new SolidColorBrush(color);
+                        }
+                        catch (Exception exAvatar)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"ShellWindow: avatar setup error: {exAvatar}");
+                            // Set fallback values
+                            try
+                            {
+                                avatarInitials.Text = "?";
+                                avatarEllipse.Fill = new SolidColorBrush(Colors.Gray);
+                            }
+                            catch { }
+                        }
                     }
                 }
                 catch (Exception ex)

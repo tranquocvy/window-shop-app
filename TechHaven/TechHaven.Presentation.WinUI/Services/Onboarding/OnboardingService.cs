@@ -147,12 +147,16 @@ namespace TechHaven.Presentation.WinUI.Services.Onboarding
                     await Task.Delay(300);
                 }
             }
-            catch { }
+            catch (Exception ex) 
+            { 
+                System.Diagnostics.Debug.WriteLine($"OnboardingService: Navigation error: {ex}");
+            }
 
             var root = shell.GetCurrentPageRoot();
             if (root == null) 
             {
                 // Fallback to dialog if can't get root
+                System.Diagnostics.Debug.WriteLine("OnboardingService: No page root, using dialog fallback");
                 var result = await ShowDialogAsync(shell, step);
                 return result;
             }
@@ -161,21 +165,41 @@ namespace TechHaven.Presentation.WinUI.Services.Onboarding
             FrameworkElement? target = null;
             if (!string.IsNullOrEmpty(step.TargetElementName))
             {
-                // Support multiple possible names separated by |
-                var possibleNames = step.TargetElementName.Split('|');
-                foreach (var name in possibleNames)
+                try
                 {
-                    target = (root as FrameworkElement)?.FindName(name.Trim()) as FrameworkElement;
-                    if (target != null) break;
+                    // Support multiple possible names separated by |
+                    var possibleNames = step.TargetElementName.Split('|');
+                    foreach (var name in possibleNames)
+                    {
+                        target = (root as FrameworkElement)?.FindName(name.Trim()) as FrameworkElement;
+                        if (target != null) break;
+                    }
+                    
+                    if (target == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"OnboardingService: Target element '{step.TargetElementName}' not found");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"OnboardingService: Error finding target element: {ex}");
+                    target = null;
                 }
             }
 
             // Try TeachingTip first for better UX if we have a target
             if (target != null && _currentStepIndex == 0)
             {
-                // For first step, use TeachingTip without Previous button
-                var tipResult = await ShowTeachingTipAsync(shell, root, target, step, false);
-                return tipResult;
+                try
+                {
+                    // For first step, use TeachingTip without Previous button
+                    var tipResult = await ShowTeachingTipAsync(shell, root, target, step, false);
+                    return tipResult;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"OnboardingService: TeachingTip error: {ex}, fallback to dialog");
+                }
             }
 
             // Use ContentDialog for better control over buttons including Previous

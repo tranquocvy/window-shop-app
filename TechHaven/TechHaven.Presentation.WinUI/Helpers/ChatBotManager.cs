@@ -208,17 +208,20 @@ namespace TechHaven.Presentation.WinUI.Helpers
                 Background = (Brush)Application.Current.Resources["LayerFillColorAltBrush"],
                 Padding = new Thickness(12),
                 CornerRadius = new CornerRadius(8),
-                MaxWidth = 300
+                MaxWidth = 400
             };
 
-            var textBlock = new TextBlock
-            {
-                Text = message,
-                TextWrapping = TextWrapping.Wrap,
-                Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
-            };
+            // Parse markdown content from AI response
+            // Supports: Headers, Bold, Italic, Code, Tables, Blockquotes, Lists, etc.
+            // Example AI response:
+            //   # Analysis
+            //   | Product | Stock |
+            //   |---------|-------|
+            //   | iPhone  | 50    |
+            //   > **Note**: Stock is good!
+            var markdownContent = MarkdownHelper.ParseMarkdown(message);
 
-            border.Child = textBlock;
+            border.Child = markdownContent;
             stackPanel.Children.Add(border);
 
             var timestampText = new TextBlock

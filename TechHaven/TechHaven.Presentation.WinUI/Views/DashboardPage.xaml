@@ -230,7 +230,9 @@
                                         <ColumnDefinition Width="10*" />
                                         <ColumnDefinition Width="35*" />
                                     </Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0" Source="{x:Bind Image_Url}" Width="40" Height="40" Stretch="UniformToFill" />
+                                    <Border Grid.Column="0" Width="40" Height="40" Background="{StaticResource TH.Layer1Background}" CornerRadius="4">
+                                        <Image Source="{x:Bind Image_Url, Mode=OneWay, FallbackValue={x:Null}, TargetNullValue={x:Null}}" Stretch="UniformToFill" />
+                                    </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" FontSize="13" />
                                         <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" TextTrimming="CharacterEllipsis" />
@@ -298,7 +300,9 @@
                                         <ColumnDefinition Width="10*" />
                                         <ColumnDefinition Width="35*" />
                                     </Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0" Source="{x:Bind Image_Url}" Width="40" Height="40" Stretch="UniformToFill" />
+                                    <Border Grid.Column="0" Width="40" Height="40" Background="{StaticResource TH.Layer1Background}" CornerRadius="4">
+                                        <Image Source="{x:Bind Image_Url, Mode=OneWay, FallbackValue={x:Null}, TargetNullValue={x:Null}}" Stretch="UniformToFill" />
+                                    </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" FontSize="13" />
                                         <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" TextTrimming="CharacterEllipsis" />
@@ -450,7 +454,9 @@
                                             <ColumnDefinition Width="10*" />
                                             <ColumnDefinition Width="35*" />
                                         </Grid.ColumnDefinitions>
-                                        <Image Grid.Column="0" Source="{x:Bind Image_Url}" Width="40" Height="40" Stretch="UniformToFill" />
+                                        <Border Grid.Column="0" Width="40" Height="40" Background="{StaticResource TH.Layer1Background}" CornerRadius="4">
+                                            <Image Source="{x:Bind Image_Url, Mode=OneWay, FallbackValue={x:Null}, TargetNullValue={x:Null}}" Stretch="UniformToFill" />
+                                        </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" FontSize="13" />
                                             <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" TextTrimming="CharacterEllipsis" />
@@ -498,7 +504,9 @@
                                             <ColumnDefinition Width="10*" />
                                             <ColumnDefinition Width="35*" />
                                         </Grid.ColumnDefinitions>
-                                        <Image Grid.Column="0" Source="{x:Bind Image_Url}" Width="40" Height="40" Stretch="UniformToFill" />
+                                        <Border Grid.Column="0" Width="40" Height="40" Background="{StaticResource TH.Layer1Background}" CornerRadius="4">
+                                            <Image Source="{x:Bind Image_Url, Mode=OneWay, FallbackValue={x:Null}, TargetNullValue={x:Null}}" Stretch="UniformToFill" />
+                                        </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="{StaticResource TH.TextPrimary}" TextTrimming="CharacterEllipsis" FontSize="13" />
                                             <TextBlock Text="{x:Bind BrandName}" FontSize="12" Foreground="{StaticResource TH.TextDisabled}" TextTrimming="CharacterEllipsis" />
