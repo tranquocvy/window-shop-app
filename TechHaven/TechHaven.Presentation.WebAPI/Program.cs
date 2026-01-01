@@ -155,6 +155,10 @@ try
             var context = services.GetRequiredService<AppDbContext>();
             var logger = services.GetRequiredService<ILogger<Program>>();
             await DbInitializer.SeedAsync(context, logger);
+            // var productSeeder = services.GetRequiredService<CellphoneProductSeeder>();
+            // await productSeeder.SeedAsync();
+            var orderSeeder = services.GetRequiredService<OrderSeeder>();
+            await orderSeeder.SeedAsync();
             Log.Information("Database initialized successfully");
         }
         catch (Exception ex)
