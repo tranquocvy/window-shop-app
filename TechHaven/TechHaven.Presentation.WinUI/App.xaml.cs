@@ -4,6 +4,8 @@ using TechHaven.Presentation.WinUI.Helpers;
 using TechHaven.Presentation.WinUI.Themes;
 using TechHaven.Presentation.WinUI.ViewModel;
 using TechHaven.Presentation.WinUI.Views;
+using System.Globalization;
+using Windows.Globalization;
 
 // QuestPDF license types
 using QuestPDF;
@@ -31,6 +33,16 @@ namespace TechHaven.Presentation.WinUI
         public App()
         {
             this.InitializeComponent();
+            
+            // Force Vietnamese culture for formatting and UI
+            try
+            {
+                var vi = new CultureInfo("vi-VN");
+                CultureInfo.DefaultThreadCurrentCulture = vi;
+                CultureInfo.DefaultThreadCurrentUICulture = vi;
+                ApplicationLanguages.PrimaryLanguageOverride = "vi-VN";
+            }
+            catch { }
             
             // Add global exception handler
             this.UnhandledException += App_UnhandledException;
