@@ -7,26 +7,34 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Common\**" />
-    <Compile Remove="DTOs\**" />
-    <Compile Remove="Interfaces\**" />
-    <Compile Remove="Mappings\**" />
-    <Compile Remove="UseCases\**" />
-    <EmbeddedResource Remove="Common\**" />
-    <EmbeddedResource Remove="DTOs\**" />
-    <EmbeddedResource Remove="Interfaces\**" />
-    <EmbeddedResource Remove="Mappings\**" />
-    <EmbeddedResource Remove="UseCases\**" />
-    <None Remove="Common\**" />
-    <None Remove="DTOs\**" />
-    <None Remove="Interfaces\**" />
-    <None Remove="Mappings\**" />
-    <None Remove="UseCases\**" />
+    <ProjectReference Include="..\TechHaven.Domain\TechHaven.Domain.csproj" />
+    <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TechHaven.Domain\TechHaven.Domain.csproj" />
-    <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+
+    <PackageReference Include="FluentValidation" Version="12.1.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+
+    <PackageReference Include="MediatR" Version="11.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+    
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.2" />
+
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.68.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Order\Queries\" />
   </ItemGroup>
 
 </Project>

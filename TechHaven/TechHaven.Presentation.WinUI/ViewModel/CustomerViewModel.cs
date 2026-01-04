@@ -1,0 +1,361 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using TechHaven.Presentation.WinUI.Helpers;
+using TechHaven.Presentation.WinUI.Services.Http;
+using TechHaven.Presentation.WinUI.Services.Interfaces;
+using TechHaven.Shared.DTOs.Common;
+using TechHaven.Shared.DTOs.Customers;
+
+namespace TechHaven.Presentation.WinUI.ViewModel
+{
+    public partial class CustomerViewModel : ObservableObject
+    {
+        // Service to fetch data - can be injected or use default HttpCustomerService
+        private readonly ICustomerService _customerService;
+
+        // CancellationTokenSource for debouncing search
+        private CancellationTokenSource? _searchCts;
+
+        // Request counter to identify latest load request and ignore stale responses
+        private int _loadRequestCounter = 0;
+
+        // Collection of sortable properties
+        public ObservableCollection<string> SortableProperties { get; } = new()
+        {
+            "Không",
+            "Tên",
+            "Hạng",
+            "Tổng Mua"
+        };
+        // Collection of sort directions
+        public ObservableCollection<string> SortDirections { get; } = new()
+        {
+            "Không",
+            "Tăng dần",
+            "Giảm dần"
+        };
+
+        // Collection of customers for data binding
+        public ObservableCollection<CustomerDto> Customers { get; } = new ObservableCollection<CustomerDto>();
+
+        // Sortable Properties
+        [ObservableProperty]
+        private string _selectedProperty = "Không";
+
+        // Sort Direction
+        [ObservableProperty]
+        private string _selectedDirection = "Không";
+
+        // Search term property
+        [ObservableProperty]
+        private string _searchTerm;
+
+        // Filter: Customer type - explicit property
+        private CustomerType? _selectedType;
+        public CustomerType? SelectedType
+        {
+            get => _selectedType;
+            set => SetProperty(ref _selectedType, value);
+        }
+
+        // Filter: CreatedAt date range - explicit properties
+        private DateTime? _createdAtStart;
+        public DateTime? CreatedAtStart
+        {
+            get => _createdAtStart;
+            set => SetProperty(ref _createdAtStart, value);
+        }
+
+        private DateTime? _createdAtEnd;
+        public DateTime? CreatedAtEnd
+        {
+            get => _createdAtEnd;
+            set => SetProperty(ref _createdAtEnd, value);
+        }
+
+        // PAGING PROPERTIES
+        [ObservableProperty]
+        private int _pageNumber = 1;
+
+        [ObservableProperty]
+        private int _pageSize = AppState.PageSize;
+
+        [ObservableProperty]
+        private bool _canGoNext;
+
+        [ObservableProperty]
+        private bool _canGoPrevious;
+
+        [ObservableProperty]
+        private string _pageInfo;
+
+        public CustomerViewModel(ICustomerService customerService = null)
+        {
+            // Use injected service or create HttpCustomerService with default HttpClient
+            _customerService = customerService ?? CreateDefaultHttpCustomerService();
+
+            // Initialize local page size from global AppState
+            _pageSize = AppState.PageSize;
+
+            // Subscribe to property changed to react to filter changes
+            this.PropertyChanged += CustomerViewModel_PropertyChanged;
+
+            // NOTE: do not auto-load here; Page.OnNavigatedTo will call LoadCustomersCommand
+        }
+
+        private void CustomerViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            // Debounced search: wait 500ms after user stops typing
+            if (e.PropertyName == nameof(SearchTerm))
+            {
+                // Cancel any previous debounce token
+                _searchCts?.Cancel();
+                _searchCts = new CancellationTokenSource();
+
+                var token = _searchCts.Token;
+
+                // Wait 500ms before triggering search
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500, token);
+
+                        // If not cancelled, trigger search on UI thread
+                        if (!token.IsCancellationRequested)
+                        {
+                            PageNumber = 1;
+                            await LoadCustomersAsync();
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Expected when user types again before delay completes
+                    }
+                }, token);
+                return;
+            }
+
+            // Page number changed -> reload
+            if (e.PropertyName == nameof(PageNumber))
+            {
+                _ = LoadCustomersAsync();
+                return;
+            }
+
+            // Other filters -> reset to first page and reload
+            if (e.PropertyName == nameof(SelectedProperty)
+                || e.PropertyName == nameof(SelectedDirection)
+                || e.PropertyName == nameof(SelectedType)
+                || e.PropertyName == nameof(CreatedAtStart)
+                || e.PropertyName == nameof(CreatedAtEnd))
+            {
+                PageNumber = 1;
+                _ = LoadCustomersAsync();
+            }
+        }
+
+        // Create default HttpCustomerService
+        private static ICustomerService CreateDefaultHttpCustomerService()
+        {
+            var httpClient = ApiClientFactory.GetHttpClient();
+            return new HttpCustomerService(httpClient);
+        }
+
+        // Build query from current UI state
+        private CustomerListQueryDto BuildQuery()
+        {
+            return new CustomerListQueryDto
+            {
+                SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm,
+                Type = SelectedType,
+                CreatedAt = (CreatedAtStart.HasValue || CreatedAtEnd.HasValue)
+                    ? new DateRangeFilter { StartDate = CreatedAtStart, EndDate = CreatedAtEnd }
+                    : null,
+                Sorting = GetSorting(),
+                PageNumber = PageNumber,
+                // Use global AppState PageSize
+                PageSize = AppState.PageSize
+            };
+        }
+
+        private SortingOption? GetSorting()
+        {
+            if (string.IsNullOrWhiteSpace(SelectedProperty) || SelectedProperty == "Không")
+                return null;
+
+            string sortBy = SelectedProperty switch
+            {
+                "Tên" => "CustomerName",
+                "Hạng" => "Type",
+                "Tổng Mua" => "TotalPurchased",
+                _ => SelectedProperty
+            };
+
+            bool desc = SelectedDirection == "Giảm dần";
+            if (string.IsNullOrWhiteSpace(sortBy)) return null;
+            return new SortingOption { SortBy = sortBy, Desc = desc };
+        }
+
+        // Command to load customers
+        [RelayCommand]
+        private async Task LoadCustomersAsync()
+        {
+            // Capture request id so we can ignore stale responses
+            var requestId = Interlocked.Increment(ref _loadRequestCounter);
+
+            var query = BuildQuery();
+
+            try
+            {
+                var response = await _customerService.QueryCustomersAsync(query);
+
+                // If a newer request was started, ignore this response
+                if (requestId != _loadRequestCounter)
+                {
+                    Debug.WriteLine("Ignoring stale response for LoadCustomersAsync");
+                    return;
+                }
+
+                if (response == null)
+                {
+                    Debug.WriteLine("QueryCustomersAsync returned null response");
+                    return;
+                }
+
+                if (!response.Success)
+                {
+                    Debug.WriteLine($"QueryCustomersAsync failed: {response.Message}");
+                    if (response.Errors != null)
+                    {
+                        foreach (var e in response.Errors)
+                            Debug.WriteLine(" - " + e);
+                    }
+                    return;
+                }
+
+                if (response.Data?.Items == null)
+                {
+                    Debug.WriteLine("QueryCustomersAsync returned empty data or items");
+                    return;
+                }
+
+                // Clear collection before adding latest results (only after response validated)
+                Customers.Clear();
+
+                // Prevent duplicates within the incoming page: track IDs seen in this response
+                var addedIds = new HashSet<int>();
+
+                foreach (var customer in response.Data.Items)
+                {
+                    if (customer == null) continue;
+
+                    if (addedIds.Add(customer.CustomerId))
+                    {
+                        Customers.Add(customer);
+                    }
+                }
+
+                // Update paging state with accurate information
+                var totalPages = response.Data.TotalPages;
+                CanGoPrevious = PageNumber > 1;
+                CanGoNext = PageNumber < totalPages;
+                PageInfo = $"Trang {PageNumber} / {totalPages} (Tổng: {response.Data.TotalCount} khách hàng)";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception in LoadCustomersAsync: " + ex);
+            }
+        }
+
+        // Command for "Add Customer" button
+        [RelayCommand]
+        private void AddCustomer()
+        {
+            // Logic to open dialog/page
+            Console.WriteLine("Nút Add Customer đã được nhấn!");
+        }
+
+        // Public API for dialog to create a customer and refresh list
+        public async Task<ResponseWrapper<CustomerDto>?> CreateCustomerAsync(CustomerUpsertRequestDto dto)
+        {
+            if (dto == null) return null;
+
+            try
+            {
+                var response = await _customerService.CreateCustomerAsync(dto);
+                if (response?.Success == true)
+                {
+                    // refresh list after successful creation
+                    await LoadCustomersAsync();
+                }
+                return response;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        // Public API for dialog to update a customer and refresh list
+        public async Task UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
+        {
+            var response = await _customerService.UpdateCustomerAsync(id, dto);
+
+            if (response?.Success == true)
+            {
+                await LoadCustomersAsync();
+            }
+        }
+
+        // Public API for dialog to delete a customer and refresh list
+        public async Task DeleteCustomerAsync(int id)
+        {
+            var response = await _customerService.DeleteCustomerAsync(id);
+
+            if (response?.Success == true)
+            {
+                await LoadCustomersAsync();
+            }
+        }
+
+        // NEXT / PREVIOUS PAGE COMMANDS
+        [RelayCommand]
+        private async Task NextPageAsync()
+        {
+            if (!CanGoNext) return;
+            PageNumber++;
+            await LoadCustomersAsync();
+        }
+
+        [RelayCommand]
+        private async Task PreviousPageAsync()
+        {
+            if (!CanGoPrevious) return;
+            PageNumber = Math.Max(1, PageNumber - 1);
+            await LoadCustomersAsync();
+        }
+
+        // Ensure initial load uses default page size
+        public async Task EnsureInitialLoadAsync()
+        {
+            PageNumber = 1;
+            PageSize = AppState.PageSize;
+            await LoadCustomersAsync();
+        }
+
+        // Deprecated helper - kept for compatibility
+        private async Task SearchCustomersAsync(string searchTerm)
+        {
+            PageNumber = 1;
+            await LoadCustomersAsync();
+        }
+    }
+}

@@ -14,6 +14,111 @@
     </Window.SystemBackdrop>
 
     <Grid>
+        <Grid.Resources>
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#3A5FC0"/>
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White"/>
+        </Grid.Resources>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
+        <!-- BÊN TRÁI: Logo + Gradient -->
+        <Grid>
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#0D47A1" Offset="0.0" />
+                    <GradientStop Color="#000000" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- Biểu tượng minh họa hai vòng tròn -->
+                <Canvas Width="90" Height="60">
+                    <Ellipse Width="60" Height="60" Stroke="White" StrokeThickness="5" Canvas.Left="0" />
+                    <Ellipse Width="60" Height="60" Stroke="White" StrokeThickness="5" Canvas.Left="30" />
+                </Canvas>
+
+                <TextBlock
+                    Text="TECH HAVEN"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    FontSize="28"
+                    Margin="0,20,0,0"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <!-- BÊN PHẢI: Form đăng nhập -->
+        <Grid Grid.Column="1" Background="#F7F7F7" RequestedTheme="Light">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top-left: Version -->
+            <TextBlock Grid.Row="0" x:Name="versionTextBlock" Text="v1.0.0" Foreground="#3A5FC0" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0" />
+
+            <StackPanel
+                Grid.Row="1"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+
+                <TextBlock Text="Login" FontSize="28" FontWeight="Bold" Foreground="#0D47A1" />
+                <TextBlock Text="Welcome back! Please login to your account."
+                           Foreground="#3A5FC0"
+                           Margin="0,5,0,20"/>
+
+                <TextBlock Text="Username" FontWeight="SemiBold" Margin="0,10,0,5" Foreground="#3A5FC0" />
+                <TextBox x:Name ="usernameBox" Text="{Binding Username, Mode=TwoWay}" PlaceholderText="Enter your user"
+                         BorderBrush="#3A5FC0"
+                         BorderThickness="1"
+                         CornerRadius="4"
+                         Padding="8,6" 
+                         Foreground="Black"
+                         Background="White"/>
+
+                <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,15,0,5" Foreground="#3A5FC0"/>
+                <PasswordBox x:Name="passwordBox" Password="{Binding Password, Mode=TwoWay}" PlaceholderText="Enter your password"
+                             BorderBrush="#3A5FC0"
+                             BorderThickness="1"
+                             CornerRadius="4"
+                             Padding="8,6" 
+                             Foreground="Black"
+                             Background="White"/>
+
+                <Grid Margin="0,10,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <CheckBox Content="Remember me" Foreground="#3A5FC0" IsChecked="{Binding RememberMe, Mode=TwoWay}" />
+                    <TextBlock Grid.Column="1" Text="Forgot password?" Foreground="#3A5FC0" Margin="10,0,0,0" VerticalAlignment="Center" />
+                </Grid>
+
+                <Button x:Name="loginButton" Content="Log In"
+                        Background="#0D47A1"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        CornerRadius="5"
+                        Height="40"
+                        Width="200"
+                        HorizontalAlignment="Center"
+                        Margin="0,10"
+                        Click="loginButton_Click"
+                        />
+
+                <!-- Settings link to configure API URL -->
+                <TextBlock x:Name="configTextBlock" Text="Settings" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="configTextBlock_Tapped" />
+
+                <!-- Error message hidden - shown in dialog instead -->
+                <!-- <TextBlock x:Name="errorTextBlock" Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="350"/> -->
+
+                <!-- Advanced DB Config link -->
+                <TextBlock x:Name="advancedConfigTextBlock" Text="Advanced (Database Config)" Foreground="#3A5FC0" Margin="0,12,0,0" HorizontalAlignment="Center" TextDecorations="Underline" Tapped="advancedConfigTextBlock_Tapped" />
+
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

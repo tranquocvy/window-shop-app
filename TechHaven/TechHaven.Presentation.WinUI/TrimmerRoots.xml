@@ -1,0 +1,17 @@
+<linker>
+  <!-- Preserve all DTOs for JSON serialization -->
+  <assembly fullname="TechHaven.Shared">
+    <type fullname="TechHaven.Shared.DTOs.*" preserve="all" />
+  </assembly>
+  
+  <!-- Preserve System.Text.Json serialization -->
+  <assembly fullname="System.Text.Json">
+    <type fullname="System.Text.Json.*" preserve="all" />
+  </assembly>
+
+  <!-- Preserve all ViewModels -->
+  <assembly fullname="TechHaven.Presentation.WinUI">
+    <type fullname="TechHaven.Presentation.WinUI.ViewModel.*" preserve="all" />
+    <type fullname="TechHaven.Presentation.WinUI.Services.*" preserve="all" />
+  </assembly>
+</linker>

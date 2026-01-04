@@ -1,0 +1,13 @@
+{
+    "ProductName": "Samsung Galaxy A07 4GB 128GB",
+    "BrandName": "Samsung",
+    "Color": "Titan",
+    "StorageCapacity": 128,
+    "Processor": "MediaTek Helio G99",
+    "ScreenSize": 6.7,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "samsung-galaxy-a07_main.jpg",
+    "ImageGalleryJson": "[\"samsung-galaxy-a07_gallery_1.jpg\", \"samsung-galaxy-a07_gallery_2.jpg\"]",
+    "SellPrice": 7900000.0,
+    "Description": "Độ sáng tối đa 480 nits\nKính cường lực Panda"
+}

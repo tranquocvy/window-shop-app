@@ -1,0 +1,13 @@
+{
+    "ProductName": "realme Note 60x 3GB 64GB",
+    "BrandName": "Realme",
+    "Color": "Titan",
+    "StorageCapacity": 64,
+    "Processor": "Unisoc T612",
+    "ScreenSize": 6.74,
+    "BatteryCapacity": 5000,
+    "ImageUrl": "realme-note-60x_main.jpg",
+    "ImageGalleryJson": "[\"realme-note-60x_gallery_1.jpg\", \"realme-note-60x_gallery_2.jpg\"]",
+    "SellPrice": 15900000.0,
+    "Description": "Tần số quét 90 Hz"
+}

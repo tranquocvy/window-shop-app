@@ -1,0 +1,13 @@
+{
+    "ProductName": "iPhone 15 256GB | Chính hãng VN/A",
+    "BrandName": "Apple",
+    "Color": "Titan",
+    "StorageCapacity": 256,
+    "Processor": "Apple A16 Bionic 6 nhân",
+    "ScreenSize": 6.1,
+    "BatteryCapacity": 3349,
+    "ImageUrl": "iphone-15-256gb_main.jpg",
+    "ImageGalleryJson": "[\"iphone-15-256gb_gallery_1.jpg\", \"iphone-15-256gb_gallery_2.jpg\"]",
+    "SellPrice": 20000000,
+    "Description": "Dynamic Island\nHDR display\nTrue Tone\nWide color (P3)\nHaptic Touch\nLớp phủ oleophobia chống dấu vân tay\nĐộ sáng tối đa: 2000 nits\nMặt kính cảm ứng: Kính cường lực Ceramic Shield\nTần số quét 60 Hz"
+}
