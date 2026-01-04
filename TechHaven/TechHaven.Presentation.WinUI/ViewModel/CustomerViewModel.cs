@@ -20,7 +20,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         // Service to fetch data - can be injected or use default HttpCustomerService
         private readonly ICustomerService _customerService;
 
-        // CancellationTokenSource for debouncing search (kept for possible future use)
+        // CancellationTokenSource for debouncing search
         private CancellationTokenSource? _searchCts;
 
         // Request counter to identify latest load request and ignore stale responses
@@ -112,15 +112,34 @@ namespace TechHaven.Presentation.WinUI.ViewModel
 
         private void CustomerViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Immediate search: call API as the user types
+            // Debounced search: wait 500ms after user stops typing
             if (e.PropertyName == nameof(SearchTerm))
             {
-                // Cancel any previous debounce token (for future use if reintroducing debounce)
+                // Cancel any previous debounce token
                 _searchCts?.Cancel();
+                _searchCts = new CancellationTokenSource();
 
-                // Immediately request first page and load
-                PageNumber = 1;
-                _ = LoadCustomersAsync();
+                var token = _searchCts.Token;
+
+                // Wait 500ms before triggering search
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500, token);
+
+                        // If not cancelled, trigger search on UI thread
+                        if (!token.IsCancellationRequested)
+                        {
+                            PageNumber = 1;
+                            await LoadCustomersAsync();
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Expected when user types again before delay completes
+                    }
+                }, token);
                 return;
             }
 
@@ -289,7 +308,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public async Task UpdateCustomerAsync(int id, CustomerUpsertRequestDto dto)
         {
             var response = await _customerService.UpdateCustomerAsync(id, dto);
-            
+
             if (response?.Success == true)
             {
                 await LoadCustomersAsync();
@@ -300,7 +319,7 @@ namespace TechHaven.Presentation.WinUI.ViewModel
         public async Task DeleteCustomerAsync(int id)
         {
             var response = await _customerService.DeleteCustomerAsync(id);
-            
+
             if (response?.Success == true)
             {
                 await LoadCustomersAsync();

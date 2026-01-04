@@ -9,7 +9,7 @@ namespace TechHaven.Presentation.WinUI.Helpers
 {
     public static class AppState
     {
-        private const string DefaultApiBaseUrl = "https://nphoang.me/";
+        private const string DefaultApiBaseUrl = "https://techhaven.nphoang.me/";
 
         public static UserDto? CurrentUser { get; set; }
         public static bool IsLoggedIn => CurrentUser != null;

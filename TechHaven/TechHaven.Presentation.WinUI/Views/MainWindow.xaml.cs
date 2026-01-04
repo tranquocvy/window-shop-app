@@ -19,7 +19,7 @@ namespace TechHaven.Presentation.WinUI.Views
     {
         private MainWindowViewModel _viewModel;
         // App version constant - update this value to change shown version
-        private const string AppVersion = "v1.0.1";
+        private const string AppVersion = "v1.0.2";
 
         public MainWindow()
         {
