@@ -6,50 +6,47 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using QuestPDF.Helpers;
 using QuestPDF.Drawing;
-using System.Linq;
 using System.Reflection;
+using System.Net.Http;
 
 namespace TechHaven.Presentation.WinUI.Helpers
 {
     /// <summary>
-    /// Production-ready PDF generator using QuestPDF.
-    /// Attempts to include an optional logo from the application's assets (prefers StoreLogo.png).
+    /// PDF generator using QuestPDF.
+    /// Uses a fixed remote logo URL for the order header.
     /// </summary>
     public class OrderPdfService : IOrderPdfService
     {
-        private readonly byte[]? _logoBytes;
+        private static readonly HttpClient _httpClient = new HttpClient();
+
+        // Remote logo URL (always used)
+        private const string RemoteLogoUrl = "https://qweidvjhsgecpcdskvop.supabase.co/storage/v1/object/public/techhaven-images/72e4a4ca-5fc4-4f0a-81fc-776b3b93a02a.png";
 
         public OrderPdfService()
         {
-            // Try load logo from application directory (assets/StoreLogo.png, assets/logo.png, or StoreLogo.png)
+            // No local asset lookup - logo will be downloaded on demand from RemoteLogoUrl
+        }
+
+        public async Task<byte[]> GenerateOrderPdfAsync(OrderDto order)
+        {
+            if (order == null) throw new System.ArgumentNullException(nameof(order));
+
+            byte[]? logoBytes = null;
+
             try
             {
-                var baseDir = System.AppContext.BaseDirectory ?? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
-                var candidates = new[]
+                using var resp = await _httpClient.GetAsync(RemoteLogoUrl);
+                if (resp.IsSuccessStatusCode)
                 {
-                    Path.Combine(baseDir, "assets", "StoreLogo.png"),
-                    Path.Combine(baseDir, "assets", "logo.png"),
-                    Path.Combine(baseDir, "StoreLogo.png"),
-                };
-
-                foreach (var candidate in candidates)
-                {
-                    if (File.Exists(candidate))
-                    {
-                        _logoBytes = File.ReadAllBytes(candidate);
-                        break;
-                    }
+                    var bytes = await resp.Content.ReadAsByteArrayAsync();
+                    if (bytes != null && bytes.Length > 0)
+                        logoBytes = bytes;
                 }
             }
             catch
             {
-                _logoBytes = null;
+                logoBytes = null;
             }
-        }
-
-        public Task<byte[]> GenerateOrderPdfAsync(OrderDto order)
-        {
-            if (order == null) throw new System.ArgumentNullException(nameof(order));
 
             using var ms = new MemoryStream();
 
@@ -61,14 +58,14 @@ namespace TechHaven.Presentation.WinUI.Helpers
                     page.Margin(40);
                     page.DefaultTextStyle(x => x.FontSize(11));
 
-                    // Header with optional logo
+                    // Header with logo from remote URL
                     page.Header().Row(row =>
                     {
-                        if (_logoBytes != null)
+                        if (logoBytes != null)
                         {
                             row.ConstantColumn(100).Height(60).AlignMiddle().AlignLeft().Element(c =>
                             {
-                                c.Image(_logoBytes, ImageScaling.FitArea);
+                                c.Image(logoBytes, ImageScaling.FitArea);
                             });
                         }
                         else
@@ -142,7 +139,7 @@ namespace TechHaven.Presentation.WinUI.Helpers
                 });
             }).GeneratePdf(ms);
 
-            return Task.FromResult(ms.ToArray());
+            return ms.ToArray();
         }
     }
 }
