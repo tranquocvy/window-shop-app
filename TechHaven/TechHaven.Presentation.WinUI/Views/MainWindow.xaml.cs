@@ -19,7 +19,7 @@ namespace TechHaven.Presentation.WinUI.Views
     {
         private MainWindowViewModel _viewModel;
         // App version constant - update this value to change shown version
-        private const string AppVersion = "v1.0.2";
+        private const string AppVersion = "v1.0.3";
 
         public MainWindow()
         {
@@ -451,44 +451,76 @@ namespace TechHaven.Presentation.WinUI.Views
             {
                 verifyButton.IsEnabled = false;
                 _viewModel.OtpInput = otpBox.Text?.Trim() ?? string.Empty;
-                await _viewModel.VerifyOtpCommand.ExecuteAsync(null);
-                if (!_viewModel.RequiresOtp)
+                
+                try
                 {
-                    verified = true;
-                    dialog.Hide();
+                    await _viewModel.VerifyOtpCommand.ExecuteAsync(null);
+                    if (!_viewModel.RequiresOtp)
+                    {
+                        verified = true;
+                        dialog.Hide();
+                    }
+                    else
+                    {
+                        // Show error message inline instead of opening another dialog
+                        var errorMsg = _viewModel.ErrorMessage;
+                        if (string.IsNullOrWhiteSpace(errorMsg))
+                        {
+                            errorMsg = "Mã OTP không hợp lệ. Vui lòng kiểm tra và thử lại.";
+                        }
+                        
+                        _ = this.DispatcherQueue.TryEnqueue(() => 
+                        {
+                            errorText.Text = errorMsg;
+                            verifyButton.IsEnabled = remaining > 0;
+                        });
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    await DialogHelper.ShowErrorAsync(
-                        this,
-                        "Lỗi xác thực OTP",
-                        _viewModel.ErrorMessage ?? "Mã OTP không hợp lệ. Vui lòng kiểm tra và thử lại.");
-                    _ = this.DispatcherQueue.TryEnqueue(() => verifyButton.IsEnabled = remaining > 0);
+                    // Show error inline instead of opening another dialog
+                    _ = this.DispatcherQueue.TryEnqueue(() => 
+                    {
+                        errorText.Text = $"Lỗi: {ex.Message}";
+                        verifyButton.IsEnabled = remaining > 0;
+                    });
                 }
             };
 
             resendButton.Click += async (_, _) =>
             {
-                await _viewModel.ResendOtpCommand.ExecuteAsync(null);
-                
-                // Kiểm tra lỗi khi resend
-                if (!string.IsNullOrEmpty(_viewModel.ErrorMessage))
+                try
                 {
-                    await DialogHelper.ShowErrorAsync(
-                        this,
-                        "Lỗi gửi lại OTP",
-                        _viewModel.ErrorMessage);
-                    return;
+                    await _viewModel.ResendOtpCommand.ExecuteAsync(null);
+                    
+                    // Kiểm tra lỗi khi resend
+                    if (!string.IsNullOrEmpty(_viewModel.ErrorMessage))
+                    {
+                        // Show error inline instead of opening another dialog
+                        _ = this.DispatcherQueue.TryEnqueue(() => 
+                        {
+                            errorText.Text = _viewModel.ErrorMessage;
+                        });
+                        return;
+                    }
+                    
+                    remaining = _viewModel.OtpRemaining;
+                    _ = this.DispatcherQueue.TryEnqueue(() =>
+                    {
+                        otpBox.Text = string.Empty;
+                        errorText.Text = string.Empty;
+                        countdownText.Text = FormatTime(_viewModel.OtpRemaining);
+                        verifyButton.IsEnabled = remaining > 0;
+                    });
                 }
-                
-                remaining = _viewModel.OtpRemaining;
-                _ = this.DispatcherQueue.TryEnqueue(() =>
+                catch (Exception ex)
                 {
-                    otpBox.Text = string.Empty;
-                    errorText.Text = string.Empty;
-                    countdownText.Text = FormatTime(_viewModel.OtpRemaining);
-                    verifyButton.IsEnabled = remaining > 0;
-                });
+                    // Show error inline instead of opening another dialog
+                    _ = this.DispatcherQueue.TryEnqueue(() => 
+                    {
+                        errorText.Text = $"Lỗi: {ex.Message}";
+                    });
+                }
             };
 
             closeButton.Click += (_, _) =>
