@@ -9,7 +9,7 @@
   <Identity
     Name="7e63b1e2-b918-4db9-a2b1-eb6d1a236fb1"
     Publisher="CN=admin"
-    Version="1.0.6.0" />
+    Version="1.0.7.0" />
 
   <Properties>
     <DisplayName>TechHaven</DisplayName>

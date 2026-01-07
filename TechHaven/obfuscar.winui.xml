@@ -1,0 +1,35 @@
+<?xml version='1.0'?>
+<Obfuscator>
+    <Var name="InPath" value=".\TechHaven.Presentation.WinUI\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64" />
+    <Var name="OutPath" value=".\Obfuscated_WinUI" />
+
+    <Var name="KeepPublicApi" value="true" />
+    <Var name="HideStrings" value="true" />
+    <Var name="RenameFields" value="true" />
+    <Var name="RenameProperties" value="true" />
+    <Var name="RenameMethods" value="true" />
+
+    <Module file="$(InPath)\TechHaven.Presentation.WinUI.dll">
+        <SkipType name="TechHaven.Presentation.WinUI.DeploymentManagerAutoInitializer" skipMethods="true" skipFields="true" skipProperties="true" />
+
+        <SkipType name="TechHaven.Presentation.WinUI.Program" skipMethods="true" />
+
+        <SkipType name="TechHaven.Presentation.WinUI.App" skipMethods="true" skipProperties="true" />
+        <SkipType name="TechHaven.Presentation.WinUI.MainWindow" skipMethods="true" />
+        <SkipType name="TechHaven.Presentation.WinUI.ShellWindow" skipMethods="true" />
+
+        <SkipType name="TechHaven.Presentation.WinUI.XamlTypeInfo.*" />
+        <SkipType name="TechHaven.Presentation.WinUI.XamlMetadata.*" />
+
+        <SkipNamespace name="TechHaven.Presentation.WinUI.ViewModel" />
+        <SkipNamespace name="TechHaven.Presentation.WinUI.Views" />
+        <SkipNamespace name="TechHaven.Presentation.WinUI.Views.Order" />
+        <SkipNamespace name="TechHaven.Presentation.WinUI.Views.Product" />
+    </Module>
+
+    <Module file="$(InPath)\TechHaven.Shared.dll">
+        <SkipNamespace name="TechHaven.Shared.DTOs" />
+        <SkipNamespace name="TechHaven.Shared.Enums" />
+    </Module>
+
+</Obfuscator>

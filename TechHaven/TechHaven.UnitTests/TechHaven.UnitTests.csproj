@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<DebugType>full</DebugType>
+
+		<PlatformTarget>x64</PlatformTarget>
+
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<Platforms>AnyCPU;x64</Platforms>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Mappings\**" />
+	  <EmbeddedResource Remove="Mappings\**" />
+	  <None Remove="Mappings\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Features\Auth\General\RefreshTokenCommandHandlerTests.cs" />
+	  <Compile Remove="Features\Report\GetSalesTrend\GetSalesTrendQueryHandlerTest.cs" />
+	  <Compile Remove="Features\Report\GetSalesTrend\GetSalesTrendQueryValidatorTests.cs" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <None Include="Features\Auth\General\RefreshTokenCommandHandlerTests.cs" />
+    <None Include="Features\Report\GetSalesTrend\GetSalesTrendQueryValidatorTests.cs" />
+    <None Include="Features\Report\GetSalesTrend\GetSalesTrendQueryHandlerTest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TechHaven.Application\TechHaven.Application.csproj" />
+    <ProjectReference Include="..\TechHaven.Domain\TechHaven.Domain.csproj" />
+    <ProjectReference Include="..\TechHaven.Shared\TechHaven.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.0.0" />
+    <PackageReference Include="Bogus" Version="35.6.5" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
